@@ -1,0 +1,44 @@
+
+
+di <phy_drv#>					- Initialise disk
+ds <phy_drv#>					- Show disk status
+dd <phy_drv#> [<sector>]		- Dump sector 
+
+bd <addr>						- Dump (show) R/W buffer
+br <phy_drv#> <sector> [<n>]	- Read disk into R/W buffer
+be <addr> [<data>] ...			- Edit R/W buffer
+bw <phy_drv#> <sector> [<n>]	- Write R/W buffer into disk
+bf <n>							- Fill working buffer with <n>
+
+fi <log drv#>					- Initialise logical drive
+fs [<path>]						- Show logical drive status
+fj <drive#>						- Change current drive
+fm <logi drv#> <part type: 0: FDISK> <bytes/cluster>
+								- Create file system (format drive) [mkfs]
+
+fq								- Show current directory path [pwd]
+fg <path>						- Change current directory [cd]
+fk <name>						- Create a directory [mkdir]
+fl [<path>]						- Directory listing [ll]
+fu <name>						- Unlink (delete) a file or directory [rm, rmdir]
+
+fn <old_name> <new_name>		- Change file or directory name [mv]
+fa <atrr> <mask> <name>			- Change file or directory attribute [chmod]
+ft <yyyy> <mm> <dd> <HH> <mm> <ss> <name>
+								- Change file or directory time [utime]
+
+fx <src_name> <dst_name>		- Copy file [cp]
+
+fo <mode> <name>				- Open a file
+fe <ptr>						- Seek (set) file pointer
+fr <len>						- read file
+fd <len>						- read and dump file from current file pointer
+fw <len> <val>					- write file
+fv								- Truncate file at current file pointer
+fy								- Sync a file [sync]
+fc								- Close a file
+
+t [<year yy> <month mm> <date dd> <day: Sun=1> <hour hh> <minute mm> <second ss>] - read or set RTC [time]
+
+
+
