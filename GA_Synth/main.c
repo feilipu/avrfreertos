@@ -833,12 +833,11 @@ void FT_touchTrackInit(void)
 	synth.note_table_ptr = concertNoteTable;
 
 	// initialise the IIR filter
-	// these are the default values, so they're actually optionally set here.
-	filter.sample_rate = SAMPLE_RATE;
-	synth.vcf_cutoff = filter.cutoff = 0x8000;	// normalised frequency. Half the maximum frequency = (SAMPLE_RATE>>1 / 2)
-	synth.vcf_peak = filter.peak = 0x2d41;	    // normalised Q (resonance). 1/sqrt(2) = M_SQRT1_2 *
-
 	setIIRFilterLPF( &filter );		// initialise the filter and coefficients.
+	
+	// use the default values.
+	synth.vcf_cutoff = filter.cutoff;   // normalised frequency. Half the maximum frequency = (SAMPLE_RATE>>1 / 2)
+	synth.vcf_peak = filter.peak;	    // normalised Q (resonance). 1/sqrt(2) = M_SQRT1_2 *
 }
 
 uint8_t FT_touch(void)
