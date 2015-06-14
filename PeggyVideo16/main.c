@@ -55,20 +55,22 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+
 #include <avr/io.h>
 #include <avr/pgmspace.h>
+#include <avr/interrupt.h>
 
 // freeRTOS Scheduler include files.
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 // freeRTOS added i2c Interface include file.
 // I2C_BUFFER_SIZE Set this to the largest message size that will be sent including address byte.
-#include <i2cMultiMaster.h>
-#include <spi.h>
-#include <lib_crc.h>
+#include "i2cMultiMaster.h"
+#include "spi.h"
+#include "lib_crc.h"
 
 // Peggy Video include file.
 #include "PeggyVideo16.h"
@@ -85,14 +87,14 @@ Pixel frameBuffer[DISP_COLUMN_LENGTH][DISP_BYTES_LENGTH];
 inline void setPixel(uint8_t x,uint8_t y, uint8_t brightness);
 
 ///////////////////// Main program loop ////////////////
-int16_t main(void) __attribute__((OS_main));
+int main(void) __attribute__((OS_main));
 
-int16_t main(void)
+int main(void)
 {
 
     xTaskCreate(
         TaskReadI2CVideo
-        ,  (const signed portCHAR *)"ReadI2CVideo"
+        ,  (const portCHAR *)"ReadI2CVideo"
         ,  256				// Tested x free
         ,  NULL
         ,  2
@@ -101,7 +103,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskWriteLED
-		,  (const signed portCHAR *)"WriteLED"
+		,  (const portCHAR *)"WriteLED"
 		,  208				// Tested x free
 		,  NULL
 		,  1
@@ -115,11 +117,11 @@ int16_t main(void)
 
 
 
-static void TaskReadI2CVideo(void *pvParameters) // Read i2c Bus for Real Time Clock DS1307
+static void TaskReadI2CVideo(void *pvParameters) // Read i2c Bus for video frames being sent.
 {
     (void) pvParameters;;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -138,7 +140,7 @@ static void TaskReadI2CVideo(void *pvParameters) // Read i2c Bus for Real Time C
         I2C_Slave_Start_Transceiver();
 
     	while( I2C_statusReg.RxDataInBuf == false )
-    		vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_RATE_MS ) ); // adjust later
+    		vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_PERIOD_MS ) ); // adjust later
 
 		I2C_Slave_Get_Data_From_Transceiver( (uint8_t *)&xVideoRow, sizeof(xVideoRow) );
 
@@ -157,9 +159,9 @@ static void TaskReadI2CVideo(void *pvParameters) // Read i2c Bus for Real Time C
 
 static void TaskWriteLED(void *pvParameters) // Write to LED
 {
-    (void) pvParameters;;
+    (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -173,12 +175,12 @@ static void TaskWriteLED(void *pvParameters) // Write to LED
 
 
     // turn OFF serial RX/TX, necessary if using arduino bootloader
-	UCSR0B =0;
+	UCSR0B = 0;
 
 	// need to set output for SPI clock, MOSI, and SS.
 	// Even though SS is not connected it must be set as output to remain in Master mode
 	// set the speed to fsk/2
-	spiBegin(SS_PB2);
+	spiBegin(Default);
 	spiSetClockDivider(SPI_CLOCK_DIV2);
 
 	// set the latch pin as output.
@@ -361,7 +363,7 @@ static void TaskWriteLED(void *pvParameters) // Write to LED
     	// This means we can sustain 250 Hz frame rate.
 
     	if( currentRow == 0 && currentBrightness == 0)
-    		vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_RATE_MS ) ); // setting 200Hz frame rate
+    		vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_PERIOD_MS ) ); // setting 200Hz frame rate
 
 
     	PORTD = portD;     // set row
@@ -406,8 +408,8 @@ inline void setPixel(uint8_t x,uint8_t y, uint8_t brightness)
 /*-----------------------------------------------------------*/
 
 
-void vApplicationStackOverflowHook( xTaskHandle xTask,
-                                    signed portCHAR *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    portCHAR *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.

@@ -11,23 +11,24 @@
 #include <avr/io.h>
 
 /* Scheduler include files. */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
-#include <lib_crc.h>
+#include "lib_crc.h"
 
 /* serial interface include file. */
-#include <lib_serial.h>
+#include "serial.h"
+
+/* extended string to integer */
+#include "xatoi.h"
 
 /* RAMFS RAM file system interface include file. */
-#include <ramfs.h>
+#include "ramfs.h"
 
 /* LCD (Freetronics 16x2) interface include file. */
-//#include <hd44780.h>
-
-#include "xitoa.h"
+//#include "hd44780.h"
 
 /*--------------------  Definitions  ---------------------------*/
 
@@ -35,7 +36,7 @@
 
 /*-------------------- Global Variables ------------------------*/
 
-xComPortHandle xSerialPort;				// Create a handle for the serial port.
+extern xComPortHandle xSerialPort;				// Create a handle for the serial port.
 
 uint8_t * LineBuffer;					// put line buffer on heap (with pvPortMalloc).
 
@@ -52,20 +53,20 @@ static void TaskMonitor(void *pvParameters);		// Serial monitor for XRAMFS Testi
 /*-----------------------------------------------------------*/
 
 /* Main program loop */
-int16_t main(void) __attribute__((OS_main));
+int main(void) __attribute__((OS_main));
 
-int16_t main(void)
+int main(void)
 {
 
     // turn on the serial port for debugging or for other USART reasons.
-	xSerialPort = xSerialPortInitMinimal( 115200, portSERIAL_BUFFER, portSERIAL_BUFFER); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER, portSERIAL_BUFFER); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
 	avrSerialPrint_P(PSTR("\r\n\n\nHello World!\r\n")); // Ok, so we're alive...
 
 	// DO NOT FLASH THE LED on PB5. It hangs off the SPI bus and kills things for other clients. etc.
 /*    xTaskCreate(
 		TaskBlinkGreenLED
-		,  (const signed portCHAR *)"GreenLED" // Main Arduino Uno 328p (Green) LED Blink
+		,  (const portCHAR *)"GreenLED" // Main Arduino Uno 328p (Green) LED Blink
 		,  96
 		,  NULL
 		,  1
@@ -74,7 +75,7 @@ int16_t main(void)
 
     xTaskCreate(
  		TaskMonitor
- 		,  (const signed portCHAR *)"Monitor" // Serial Monitor
+ 		,  (const portCHAR *)"Monitor" // Serial Monitor
  		,  172
  		,  NULL
  		,  3
@@ -94,7 +95,7 @@ static void TaskBlinkGreenLED(void *pvParameters) // Main Green LED Flash
 {
     (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -106,10 +107,10 @@ static void TaskBlinkGreenLED(void *pvParameters) // Main Green LED Flash
     while(1)
     {
     	PORTB |=  _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_PERIOD_MS ) );
 
 		PORTB &= ~_BV(PORTB5);       // main (red PB5) LED off. Arduino LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 400 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 400 / portTICK_PERIOD_MS ) );
 
 //		xSerialPrintf_P(PSTR("GreenLED - Stack HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
     }
@@ -122,7 +123,7 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
     (void) pvParameters;
 
 	uint8_t *ptr;
-	uint32_t p1;
+	int32_t p1;
 
 	// create the buffer on the heap (so they can be moved later).
 	if(LineBuffer == NULL) // if there is no Line buffer allocated (pointer is NULL), then allocate buffer.
@@ -137,7 +138,7 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 
 	while(1)
     {
-    	xSerialPutChar(xSerialPort, '>', 100 / portTICK_RATE_MS);
+    	xSerialPutChar(&xSerialPort, '>');
 
 		ptr = LineBuffer;
 		get_line(ptr, (uint8_t)(sizeof(uint8_t)* LINE_SIZE));
@@ -194,7 +195,7 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 				for (uint16_t i = 0; i < testRAMFS.ram_size; i+=8)
 				{
 					xSerialPrintf_P(PSTR("%4x: %2x %2x %2x %2x %2x %2x %2x %2x\r\n"), testRAMFS.ram_addr + i, pLocalRAM[i],pLocalRAM[i+1],pLocalRAM[i+2],pLocalRAM[i+3],pLocalRAM[i+4],pLocalRAM[i+5],pLocalRAM[i+6],pLocalRAM[i+7]);
-					vTaskDelay(  10 / portTICK_RATE_MS );
+					vTaskDelay(  10 / portTICK_PERIOD_MS );
 				}
 			xSerialPrint_P(PSTR("\r\n"));
 			break;
@@ -236,7 +237,7 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 			break;
 
 
-		case 't' : // Write, Read, randomise, Swap, randomise, and repeat checking for errors.
+		case 'x' : // Write, Read, randomise, Swap, randomise, and repeat checking for errors.
 
 			// Set the Command for Write (to XRAMFS)
 			testRAMFS.ram_cmd = Write;
@@ -318,17 +319,18 @@ void get_line (uint8_t *buff, uint8_t len)
 	uint8_t i = 0;
 
 	for (;;) {
-		xSerialGetChar(xSerialPort, &c, portMAX_DELAY);
+		while ( ! xSerialGetChar( &xSerialPort, &c ))
+			vTaskDelay( 1 );
 
 		if (c == '\r') break;
 		if ((c == '\b') && i) {
 			--i;
-			xSerialPutChar(xSerialPort, c, 100 / portTICK_RATE_MS);
+			xSerialPutChar(&xSerialPort, c );
 			continue;
 		}
 		if (c >= ' ' && i < len - 1) {	/* Visible chars */
 			buff[i++] = c;
-			xSerialPutChar(xSerialPort, c, 100 / portTICK_RATE_MS);
+			xSerialPutChar(&xSerialPort, c );
 		}
 	}
 	buff[i] = 0;
@@ -348,8 +350,8 @@ void vApplicationStackOverflowHook( xTaskHandle xTask,
 
 -----------------------------------------------------------*/
 
-void vApplicationStackOverflowHook( xTaskHandle xTask,
-									signed portCHAR *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+									portCHAR *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:

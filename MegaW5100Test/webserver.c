@@ -12,25 +12,26 @@
 
 #include <util/delay.h>
 
-
 /* Scheduler include files. */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
-#include <ff.h>			// SD file handling
 
-#include <w5100.h>
-#include <socket.h>
-#include <inet.h>
+#include "ff.h"			// SD file handling
+
+#include "socket.h"
+#include "inet.h"
+
+#include "time.h"
 
 #if defined (portRTC_DEFINED)
-#include <rtc.h>		/* RTC interface include file. */
+#include "rtc.h"		/* RTC interface include file. */
 #endif
 
 #ifdef WEB_DEBUG
-#include <lib_serial.h> // serial port for diagnostics
+#include "serial.h" // serial port for diagnostics
 #endif
 
 #define EVB_PAGES_SERVED	"$PAGES_SERVED$" // 14 characters (to erase) including \0
@@ -42,17 +43,12 @@ extern uint8_t *pHTTPResponse;				// < Pointer to HTTP response - declared in ht
 
 extern uint32_t pagesServed EEMEM;					// non-volatile storage for total pages served.
 
-#ifdef portRTC_DEFINED
-extern pRTCArray CurrTimeDate; 				// set up some pointers to the RTC info.
-extern pRTCArraySto SetTimeDate;			// this one for storing the time to be set.
-#endif
-
 static uint16_t replace_sys_env_value(uint8_t* base, uint16_t len);	// Replace HTML's variables to system configuration value
 
 /**
  @brief	Analyse HTTP request and then services WEB.
 */
-void proc_http(
+void process_HTTP(
 	SOCKET s, 			/**< http server socket */
 	uint8_t * buffer, 	/**< buffer pointer included http request */
 	uint16_t length		/**< length of http request */
@@ -63,7 +59,7 @@ void proc_http(
 	uint16_t wait_send;
 	FIL source_file;	/* File object for the source file */
 
-	parse_http_request(pHTTPRequest, buffer);			// After analysing request, convert into pHTTPRequest
+	parse_HTTP_request(pHTTPRequest, buffer);			// After analysing request, convert into pHTTPRequest
 
 	/* method Analyse */
 	switch (pHTTPRequest->METHOD)
@@ -72,7 +68,7 @@ void proc_http(
 		case METHOD_GET :
 		case METHOD_POST :
 
-			name = get_http_uri_name(pHTTPRequest->URI);
+			name = get_HTTP_URI_name(pHTTPRequest->URI);
 
 			if (!strcmp((const char *)name, "/")) strcpy((char *)name,"index.htm");	// If URI is "/", respond by index.htm
 
@@ -81,7 +77,7 @@ void proc_http(
 			else xSerialPrint_P(PSTR("\r\nFILENAME TOO LONG"));
 #endif
 
-			find_http_uri_type(&pHTTPRequest->TYPE, name);	//Check file type (HTML, TEXT, GIF, JPEG, ZIP are included)
+			find_HTTP_URI_type(&pHTTPRequest->TYPE, name);	//Check file type (HTML, TEXT, GIF, JPEG, ZIP are included)
 
 			// OK now we start to respond to the info we've decoded.
 
@@ -102,7 +98,7 @@ void proc_http(
 			else
 			{	// if file open success
 
-				make_http_response_head( pHTTPResponse, pHTTPRequest->TYPE, source_file.fsize);
+				make_HTTP_response_header( pHTTPResponse, pHTTPRequest->TYPE, source_file.fsize);
 
 #ifdef WEB_DEBUG
 				xSerialPrintf_P(PSTR("HTTP Opened file: %s  Source Size: %u \r\n"), name, source_file.fsize);
@@ -112,7 +108,9 @@ void proc_http(
 				send(s, (const uint8_t*)pHTTPResponse, strlen((char*)pHTTPResponse ));
 
 				wait_send = 0;
-				while(getSn_TX_FSR(s)!= getW5100_TxMAX(s))
+
+				while(getSn_TX_FSR(s)!= WIZCHIP_getTxMAX(s))
+
 				{
 					if(wait_send++ > 37500) // wait up to 1.5 Sec
 					{
@@ -139,7 +137,9 @@ void proc_http(
 						break;  // TCP/IP send error
 
 					wait_send = 0;
-					while(getSn_TX_FSR(s)!= getW5100_TxMAX(s))
+
+					while(getSn_TX_FSR(s)!= WIZCHIP_getTxMAX(s))
+
 					{
 						if(wait_send++ > 37500) // wait up to 1.5 Sec
 						{
@@ -173,7 +173,6 @@ void proc_http(
 
 		default :
 			break;
-
 	}
 }
 
@@ -185,8 +184,10 @@ static uint16_t replace_sys_env_value(
 	uint16_t len
 	)
 {
-	uint8_t sys_string[16]; // if there are more characters to replace, then make this bigger
+	uint8_t sys_string[16]; // if there are more characters to substituted in response file, then make this bigger
 	uint8_t *tptr, *ptr;
+	time_t time_stamp;
+	tm local_time;
 
 	tptr = ptr = base;
 
@@ -194,10 +195,9 @@ static uint16_t replace_sys_env_value(
 	{
 		if((tptr = (uint8_t*)strstr((char*)ptr, EVB_PAGES_SERVED)))
 		{
-//			xSerialPrint_P(PSTR("Print Pages Served"));
 			memset(tptr,0x20,14); // erase system variable trigger string
 			if( eeprom_is_ready() )
-				sprintf_P((char *)sys_string, PSTR("%08ld"), eeprom_read_dword(&pagesServed) ); // number of pages served by the http server.
+				sprintf_P((char *)sys_string, PSTR("%08u"), eeprom_read_dword(&pagesServed) ); // number of pages served by the http server.
 			memcpy(tptr,sys_string,8); // copy the characters, but don't copy the /0
 			tptr+=8;
 		}
@@ -205,11 +205,19 @@ static uint16_t replace_sys_env_value(
 #if defined (portRTC_DEFINED)
 		else if((tptr = (uint8_t*)strstr((char*)ptr, EVB_RTC)))
 		{
-//			xSerialPrint_P(PSTR("Print Real Time"));
 			memset(tptr,0x20,11); // erase system variable trigger string
-			if (getDateTimeDS1307( CurrTimeDate ) == pdTRUE){
-				sprintf_P((char *)sys_string, PSTR("%02u:%02u:%02u"), CurrTimeDate->Hour, CurrTimeDate->Minute, CurrTimeDate->Second);
-			}
+			if ( getDateTimeDS1307( (tm*)&local_time ) == pdTRUE)
+				sprintf_P((char *)sys_string, PSTR("%02u:%02u:%02u"), local_time.tm_hour, local_time.tm_min, local_time.tm_sec);
+			memcpy(tptr,sys_string,8);  // copy the characters, but don't copy the /0
+			tptr+=8;
+		}
+#else
+		else if((tptr = (uint8_t*)strstr((char*)ptr, EVB_RTC)))
+		{
+			memset(tptr,0x20,11); // erase system variable trigger string
+	    	time(&time_stamp);
+	    	localtime_r( &time_stamp, &local_time);
+			sprintf_P((char *)sys_string, PSTR("%02d:%02d:%02d"), local_time.tm_hour, local_time.tm_min, local_time.tm_sec);
 			memcpy(tptr,sys_string,8);  // copy the characters, but don't copy the /0
 			tptr+=8;
 		}

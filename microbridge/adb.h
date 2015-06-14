@@ -26,18 +26,19 @@ extern "C" {
 #define MAX_PAYLOAD 4096;
 
 #define A_SYNC 0x434e5953
+#define A_CLSE 0x45534c43
+#define A_WRTE 0x45545257
+#define A_AUTH 0x48545541
 #define A_CNXN 0x4e584e43
 #define A_OPEN 0x4e45504f
 #define A_OKAY 0x59414b4f
-#define A_CLSE 0x45534c43
-#define A_WRTE 0x45545257
 
-#define ADB_CLASS 0xff
-#define ADB_SUBCLASS 0x42
-#define ADB_PROTOCOL 0x1
+#define ADB_CLASS				0xff
+#define ADB_SUBCLASS			0x42
+#define ADB_PROTOCOL			0x1
+#define ADB_USB_PACKETSIZE		0x40
 
-#define ADB_USB_PACKETSIZE 0x40
-#define ADB_CONNECTION_RETRY_TIME 1000 / portTICK_RATE_MS // should be 1000mS
+#define ADB_CONNECTION_RETRY_TIME 1000 / portTICK_PERIOD_MS // should be 1000mS
 
 typedef struct
 {
@@ -68,7 +69,7 @@ typedef struct
 	// Command ^ 0xffffffff
 	uint32_t magic;
 
-} adb_message;
+} __attribute__ ((packed)) adb_message;
 
 typedef enum
 {
@@ -84,6 +85,7 @@ typedef enum
 {
 	ADB_CONNECT = 0,
 	ADB_DISCONNECT,
+	ADB_AUTHORISATION,
 	ADB_CONNECTION_OPEN,
 	ADB_CONNECTION_CLOSE,
 	ADB_CONNECTION_FAILED,
@@ -98,23 +100,23 @@ typedef void(adb_eventHandler)(adb_connection * connection, adb_eventType event,
 struct _adb_connection
 {
 	char * connectionString;
-	uint32_t localID, remoteID;
-//	uint32_t lastConnectionAttempt;
-	uint16_t lastConnectionAttempt;   // from freeRTOS in ticks (not millis), so can count less.
+	uint8_t localID;
+	uint8_t remoteID;
+	TickType_t lastConnectionAttempt;   // from freeRTOS in ticks (not millis), so can count less.
 	uint16_t dataSize, dataRead;
 	adb_connectionStatus status;
-	boolean reconnect;
+	uint8_t reconnect;
 	adb_eventHandler * eventHandler;
 	adb_connection * next;
-};
+} __attribute__ ((packed));
 
 void adb_init();
 void adb_poll();
 
 void adb_setEventHandler(adb_eventHandler * handler);
-adb_connection * adb_addConnection(const char * connectionString, boolean reconnect, adb_eventHandler * eventHandler);
-int adb_write(adb_connection * connection, uint16_t length, uint8_t * data);
-int adb_writeString(adb_connection * connection, char * str);
+adb_connection * adb_addConnection(const char * connectionString, uint8_t reconnect, adb_eventHandler * eventHandler);
+int16_t adb_write(adb_connection * connection, uint16_t length, void * data);
+int16_t adb_writeString(adb_connection * connection, char * str);
 
 #ifdef __cplusplus
 }

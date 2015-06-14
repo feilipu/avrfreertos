@@ -12,34 +12,34 @@ extern "C" {
 
 
 // Pin definitions - for Danger Shield
-#define SLIDER1  0
-#define SLIDER2  1
-#define SLIDER3  2
+// #define SLIDER1  0
+// #define SLIDER2  1
+// #define SLIDER3  2
 
-#define LED1 	 IO_D5 // 5
-#define LED2  	 IO_D6 // 6
+// #define LED1 	 IO_D5 // 5
+// #define LED2  	 IO_D6 // 6
 
-#define BUTTON1  IO_B2 // 10
-#define BUTTON2  IO_B3 // 11
-#define BUTTON3  IO_B4 // 12
+// #define BUTTON1  IO_B2 // 10
+// #define BUTTON2  IO_B3 // 11
+// #define BUTTON3  IO_B4 // 12
 
-#define DATA 	 IO_D4 // 4   SN74HC595 shift register
-#define LATCH 	 IO_D7 // 7
-#define CLOCK 	 IO_B0 // 8
+// #define DATA 	 IO_D4 // 4   SN74HC595 shift register
+// #define LATCH 	 IO_D7 // 7
+// #define CLOCK 	 IO_B0 // 8
 
 // for shiftOut();
-#define LSBFIRST 0
-#define MSBFIRST 1
+// #define LSBFIRST 0
+// #define MSBFIRST 1
 
 
 /* structure to pass the analogue sample parameters */
 typedef struct
 {
-	uint8_t   adc0;        // ADC value from sensor 0 Slider
-	uint8_t   adc1;        // ADC value from sensor 1 Slider
-	uint8_t   adc2;        // ADC value from sensor 2 Slider
-	uint8_t   adc3;        // ADC value from sensor 3 Photocell
-} xADCArray, * pADCArray;
+	uint16_t   adc0;        // ADC value from sensor 0 Slider
+	uint16_t   adc1;        // ADC value from sensor 1 Slider
+	uint16_t   adc2;        // ADC value from sensor 2 Slider
+	uint16_t   adc3;        // ADC value from sensor 3 Photocell
+} __attribute__ ((packed)) xADCArray, * pADCArray;
 
 
 
@@ -60,12 +60,12 @@ static void ReadADCSensors(void);		// Read ADC Sensor Values
 //	character = pgm_read_byte(&ledCharSet[(values.adc1 >> 3)]); // retrieve the character from PROGMEM; only do this once.
 // reduce the 8 bit value to 5 bits (32 values, 7 segment) code
 
-static void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t latchPin, uint8_t bitOrder, uint8_t bitVal);
+//static void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t latchPin, uint8_t bitOrder, uint8_t bitVal);
 //	shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character | 0b10000000)); // turn on decimal point
 //	shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character & 0b01111111)); // turn off decimal point
 
 /*-----------------------------------------------------------*/
-prog_uchar ledCharSet[]  = // put these characters in PROGMEM, to save RAM.
+const uint8_t  ledCharSet[] PROGMEM = // put these characters in PROGMEM, to save RAM.
 	   {
 			0b00111111, //  0	0  use pgm_read_byte(&ledCharSet[x])
 			0b00000110, //  1	1  to get them out of PROGMEM.

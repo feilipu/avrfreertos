@@ -6,11 +6,11 @@
 
 
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
-//#include <ctype.h>
+#include <string.h>
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 
 /* define CPU frequency in Hz here if not defined in Makefile */
 #ifndef F_CPU
@@ -18,22 +18,22 @@
 #endif
 
 /* Scheduler include files. */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
-/* digital and analog functions include file. */
-#include <digitalAnalog.h>
+/* digital and analogue functions include file. */
+#include "digitalAnalog.h"
 
 /* SPI Interface include file. */
-#include <SPI9master.h>
+#include "SPI9master.h"
 
 /* serial interface include file. */
-#include <lib_serial.h>
+#include "serial.h"
 
 /* Nokia 6100 LCDInterface include file. */
-#include <LCD_driver.h>
+#include "LCD_driver.h"
 
 /*-----------------------------------------------------------*/
 
@@ -41,36 +41,44 @@ static void TaskBlinkGreenLED(void *pvParameters); // Main Arduino (Green) LED B
 
 static void TaskWriteSPILCD(void *pvParameters);   // Write SPI LCD
 
-/* Create a Semaphore mutex flag for the SPI Bus. To ensure only single access. */
-xSemaphoreHandle xSPISemaphore;
+/* Semaphore mutex flag for the SPI Bus. To ensure only single access. */
+extern SemaphoreHandle_t xSPISemaphore;
 
 /* Create a Semaphore mutex flag for the LCD. To ensure only single access. */
-xSemaphoreHandle xLCDSemaphore;
+SemaphoreHandle_t xLCDSemaphore = NULL;
 
 /* Create a handle for the serial port. */
-// xComPortHandle xSerialPort; // To enable serial port
+extern xComPortHandle xSerialPort; // To enable serial port
 
 /*-----------------------------------------------------------*/
 
 
 /* Main program loop */
-int16_t main(void) __attribute__((OS_main));
+int main(void) __attribute__((OS_main));
 
-int16_t main(void)
+int main(void)
     {
 
-    xSPISemaphore = xSemaphoreCreateMutex(); // mutex semaphore for SPI bus
-    xLCDSemaphore = xSemaphoreCreateMutex(); // mutex semaphore for LCD
+    if( xLCDSemaphore == NULL ) 					// Check to see if the semaphore has not been created.
+    {
+    	xLCDSemaphore = xSemaphoreCreateBinary();	// binary semaphore for I2C bus
+		if( ( xLCDSemaphore ) != NULL )
+			xSemaphoreGive( ( xLCDSemaphore ) );	// make the LCD available
+    }
 
 //	To enable serial port for debugging or other purposes.
-//	xSerialPort = xSerialPortInitMinimal( 115200, 32, 8); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+	xSerialPort = xSerialPortInitMinimal( USART0, 115200, 32, 8); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
 //	avrSerialPrint... doesn't need the scheduler running, so we can see freeRTOS initiation issues
-//  avrSerialPrint_P(PSTR("\r\n\n\nHello World!\r\n")); // Ok, so we're alive...
+	avrSerialPrint_P(PSTR("\r\n\n\nHello World!\r\n")); // Ok, so we're alive...
+
+
+	DDRD |= _BV(DDD6);            // Turn off Audio Shield
+	PORTD &= ~_BV(PORTD6);
 
     xTaskCreate(
 		TaskBlinkGreenLED
-		,  (const signed portCHAR *)"Green LED"
+		,  (const portCHAR *)"Green LED"
 		,  168  // 23 bytes free. This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  3
@@ -79,16 +87,15 @@ int16_t main(void)
 
     xTaskCreate(
     		TaskWriteSPILCD
-		,  (const signed portCHAR *)"Write LCD"
+		,  (const portCHAR *)"Write LCD"
 		,  188  // 39 bytes free. This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  1
 		,  NULL );
 
-
-//	avrSerialPrintf_P(PSTR("\r\n\nFree Heap Size: %u"),xPortGetFreeHeapSize() ); // needs heap_1.c or heap_2.c
-
-    vTaskStartScheduler();
+	avrSerialxPrintf_P(&xSerialPort, PSTR("Free Heap Size: %u\r\n"), xPortGetFreeHeapSize() ); // needs heap_1,  heap_2 or heap_4 for this function to succeed.
+	avrSerialxPrintf_P(&xSerialPort, PSTR("Minimum Free Heap Size: %u\r\n"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_4 for this function to succeed.
+	vTaskStartScheduler();
 
 //    avrSerialPrint_P(PSTR("\r\n\n\nGoodbye... no space for idle task!\r\n")); // Doh, so we're dead...
 
@@ -101,8 +108,9 @@ int16_t main(void)
 
     static void TaskBlinkGreenLED(void *pvParameters) // Main Arduino (Green) LED Flash
     {
-    (void) pvParameters;;
-    portTickType xLastWakeTime;
+    (void) pvParameters;
+
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -113,23 +121,21 @@ int16_t main(void)
     while(1)
         {
         setDigitalOutput( IO_B5, LOW);               // main green LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 500 / portTICK_RATE_MS ) ); // blink at 1s cycle.
+		vTaskDelayUntil( &xLastWakeTime, ( 500 / portTICK_PERIOD_MS ) ); // blink at 1s cycle.
 
         setDigitalOutput( IO_B5, HIGH);               // main green LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 500 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 500 / portTICK_PERIOD_MS ) );
 
-//		xLCDPrintf_P( 16, 4, BOLD, WHITE, GREEN, PSTR("LED HWM: %u"), uxTaskGetStackHighWaterMark(NULL));
+		xLCDPrintf_P( 16, 4, BOLD, WHITE, GREEN, PSTR("LED HWM: %u"), xPortGetMinimumEverFreeHeapSize());
 //		xSerialPrintf_P(PSTR("GreenLED HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
         }
     }
-
-
 
     static void TaskWriteSPILCD(void *pvParameters) // Write to SPI LCD
     {
     (void) pvParameters;;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -139,7 +145,7 @@ int16_t main(void)
     uint8_t	s1, s2, s3 = 0;
 
   	//*	setup the switches for input
-	//*	set the pull up resisters
+	//*	set the pull up registers
 	setDigitalInput(kSwitch1_PIN, HIGH);
 	setDigitalInput(kSwitch2_PIN, HIGH);
 	setDigitalInput(kSwitch3_PIN, HIGH);
@@ -162,7 +168,7 @@ int16_t main(void)
 			{
 				// See if we can obtain the semaphore.  If the semaphore is not available
 				// wait 10 ticks to see if it becomes free.
-				if( xSemaphoreTake( xLCDSemaphore, ( portTickType ) 10 ) == pdTRUE )
+				if( xSemaphoreTake( xLCDSemaphore, ( TickType_t ) 10 ) == pdTRUE )
 				{
 					// We were able to obtain the semaphore and can now access the
 					// shared resource.
@@ -170,7 +176,7 @@ int16_t main(void)
 					{
 						// See if we can obtain the semaphore.  If the semaphore is not available
 						// wait 10 ticks to see if it becomes free.
-						if(  xSemaphoreTake( xSPISemaphore, ( portTickType ) 10 ) == pdTRUE  )
+						if(  xSemaphoreTake( xSPISemaphore, ( TickType_t ) 10 ) == pdTRUE  )
 						{
 
 								s1	=	isDigitalInputHigh(kSwitch1_PIN);
@@ -178,7 +184,7 @@ int16_t main(void)
 								s3	=	isDigitalInputHigh(kSwitch3_PIN);
 
 
-								if (!s1)
+								if (s1 == 0)
 								{
 									xLCDClear(WHITE);    // Clear LCD to WHITE
 									xLCDPrint_P( 0, 4, BOLD, ORANGE, WHITE, PSTR("Lines!")); // Write information on display
@@ -204,7 +210,7 @@ int16_t main(void)
 
 								}
 
-								else if (!s2)
+								else if (s2 == 0)
 								{ 	//  LCDDrawRect(x0, y0, x1, y1, fill, color);
 									xLCDClear(WHITE);    // Clear LCD to WHITE
 									xLCDPrint_P( 0, 4, BOLD, ORANGE, WHITE, PSTR("Rectangles!")); // Write information on display
@@ -220,7 +226,7 @@ int16_t main(void)
 									xLCDDrawRect(20, 70, 50, 120, 0, BLUE);// Unfilled rectangle number 3
 								}
 
-								else if (!s3)
+								else if (s3 == 0)
 								{
 									xLCDClear(WHITE);    // Clear LCD to WHITE
 									xLCDPrint_P( 0, 4, BOLD, ORANGE, WHITE, PSTR("Circles!")); // Write information on display
@@ -234,18 +240,16 @@ int16_t main(void)
 									xLCDDrawCircle (85, 85, 10, FULLCIRCLE, GREEN); // draw a circle
 
 								}
-
+//							xLCDPrintf_P( 12, 4, NORMAL, WHITE, RED, PSTR("Tick#: %u"), xTaskGetTickCount() );
 							xSemaphoreGive( xSPISemaphore );
 						}
 					}
-					xLCDPrintf_P( 12, 4, NORMAL, WHITE, RED, PSTR("Tick#: %u"), xTaskGetTickCount() );
 					xSemaphoreGive( xLCDSemaphore );
 				}
 			}
 //			xSerialPrintf_P(PSTR("LCD HighWater @ %u Executed in %u ticks\r\n"), uxTaskGetStackHighWaterMark(NULL), xTaskGetTickCount()-xLastWakeTime);
 
-			vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_RATE_MS ) ); // yield, and wait for 100ms exactly
-//			taskYIELD(); // give other tasks a chance to run, before resuming at next tick.
+			vTaskDelayUntil( &xLastWakeTime, ( 10 / portTICK_PERIOD_MS ) ); // yield, and wait for 10ms exactly
 
 		}
     }
@@ -253,8 +257,8 @@ int16_t main(void)
 /*-----------------------------------------------------------*/
 
 
-void vApplicationStackOverflowHook( xTaskHandle xTask,
-									signed portCHAR *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+									portCHAR *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.

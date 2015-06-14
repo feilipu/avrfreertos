@@ -55,7 +55,7 @@
 #include "uip.h"
 
 
-extern struct uip_eth_addr uip_ethaddr;
+extern struct uip_eth_addr uip_lladdr;
 
 /**
  * The Ethernet header.
@@ -63,12 +63,12 @@ extern struct uip_eth_addr uip_ethaddr;
 struct uip_eth_hdr {
   struct uip_eth_addr dest;
   struct uip_eth_addr src;
-  u16_t type;
+  uint16_t type;
 };
 
-#define UIP_ETHTYPE_ARP 0x0806
-#define UIP_ETHTYPE_IP  0x0800
-#define UIP_ETHTYPE_IP6 0x86dd
+#define UIP_ETHTYPE_ARP  0x0806
+#define UIP_ETHTYPE_IP   0x0800
+#define UIP_ETHTYPE_IPV6 0x86dd
 
 
 /* The uip_arp_init() function must be called before any of the other
@@ -132,12 +132,12 @@ void uip_self_arp_out(void);
  *
  * \hideinitializer
  */
-#define uip_setethaddr(eaddr) do {uip_ethaddr.addr[0] = eaddr.addr[0]; \
-                              uip_ethaddr.addr[1] = eaddr.addr[1];\
-                              uip_ethaddr.addr[2] = eaddr.addr[2];\
-                              uip_ethaddr.addr[3] = eaddr.addr[3];\
-                              uip_ethaddr.addr[4] = eaddr.addr[4];\
-                              uip_ethaddr.addr[5] = eaddr.addr[5];} while(0)
+#define uip_setethaddr(eaddr) do {uip_lladdr.addr[0] = eaddr.addr[0]; \
+                              uip_lladdr.addr[1] = eaddr.addr[1];\
+                              uip_lladdr.addr[2] = eaddr.addr[2];\
+                              uip_lladdr.addr[3] = eaddr.addr[3];\
+                              uip_lladdr.addr[4] = eaddr.addr[4];\
+                              uip_lladdr.addr[5] = eaddr.addr[5];} while(0)
 
 /** @} */
 /** @} */

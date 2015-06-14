@@ -14,16 +14,16 @@
 
 
 /* serial interface include file. */
-#include <lib_serial.h>
+#include "serial.h"
 
 /* i2c Interface include file. */
-#include <i2cMultiMaster.h>
+#include "i2cMultiMaster.h"
 
 /* RFID Reader code */
 #include "avr-sm130/sm130.h"
 
 /* CLI include file. */
-#include "xitoa.h"
+#include "xatoi.h"
 
 /*--------------Global Variables--------------------*/
 
@@ -57,7 +57,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 	uint8_t string[33];		// data converted to a string for printing
 	uint8_t authResult;		// flag to show whether we've opened the sector
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -80,11 +80,11 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 
 	// Read firmware version
 	while (sm130_getFirmwareVersion(data) != pdTRUE)
-			vTaskDelayUntil( &xLastWakeTime, ( 20 / portTICK_RATE_MS ) );
+			vTaskDelayUntil( &xLastWakeTime, ( 20 / portTICK_PERIOD_MS ) );
 
 	arrayToHex(string, &data[1], 3);
 	xSerialPrintf_P(PSTR("\r\nFirmware: %s"), string);
-	vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_RATE_MS ) );
+	vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_PERIOD_MS ) );
 
     while(1)
     {
@@ -92,7 +92,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 		for (uint8_t i = 0; i < 6; ++i)	data[i] = 0; // clear data array for tag.
 
 		xSerialPrint_P(PSTR("\r\nSeek Tag... "));
-		vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_PERIOD_MS ) );
 
 		// Read tag data
 		if(sm130_seekTag(data) == RESP_SUCCESS) // Wait on DREADY semaphore for up to 60 seconds,
@@ -100,7 +100,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 		{
 			arrayToHex(string, &data[1], 4);
 			xSerialPrintf_P(PSTR("Type: %x  Tag#: %s  "), data[0], string);
-			vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_RATE_MS ) );
+			vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_PERIOD_MS ) );
 
 #ifdef RANDOM
 			srandom( xTaskGetTickCount() ); // seed the random number generator for each attack.
@@ -120,7 +120,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 				for (uint8_t block = 0; block < 4; ++block)
 				{
 					xSerialPrintf_P(PSTR("\r\nSector: %u  Block: %u"), sector, block);
-					vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_RATE_MS ) );
+					vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_PERIOD_MS ) );
 
 #ifdef RANDOM
 					do{ // do the authentication, searching over random keySpace until the key is correct.
@@ -131,7 +131,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 
 							arrayToHex(string, key, 6);
 							xSerialPrintf_P(PSTR("\r\n  Key# %u : %s IS RANDOM -"), j, string); // print the key being used
-							vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+							vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 						}
 #endif
 
@@ -144,7 +144,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 							{
 								arrayToHex(string, key, 6);
 								xSerialPrintf_P(PSTR("\r\n  Key# %u: %s IN LIBRARY -"), j, string); // print the key being used
-								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 							} else
 								break;
 						}
@@ -160,7 +160,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 
 							arrayToHex(string, key, 6);
 							xSerialPrintf_P(PSTR("\r\n  Key# %u: %s IS BRUTE -"), j, string); // print the key being used
-							vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+							vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 						}
 #endif
 
@@ -173,29 +173,29 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 						{
 							case RESP_SUCCESS:
 								xSerialPrint_P(PSTR(" RESP_SUCCESS")); // print the key being used is successful
-//								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+//								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 
 								break;
 
 							case RESP_W_R_FAIL: // Error reading or writing -> try the key again
 								xSerialPrint_P(PSTR(" RESP_W_R_FAIL"));
-//								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+//								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 
 								for (uint8_t i = 0; i < 6; ++i)	data[i] = 0; // clear data array for tag.
 
 								while (sm130_selectTag(data) != MIFARE_1K )// reselect the Tag (need to do this if authentication fails).
-									vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_RATE_MS ) );
+									vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_PERIOD_MS ) );
 
 								break;
 
 							case RESP_FAIL: // Couldn't log in -> try a new key
 								xSerialPrint_P(PSTR(" RESP_FAIL"));
-//								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+//								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 
 								for (uint8_t i = 0; i < 6; ++i)	data[i] = 0; // clear data array for tag.
 
 								while (sm130_selectTag(data) != MIFARE_1K )// reselect the Tag (need to do this if authentication fails).
-									vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_RATE_MS ) );
+									vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_PERIOD_MS ) );
 
 								++j; // select the next library key and / or
 									 // just increment the number of keys we've tested.
@@ -204,7 +204,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 
 							case RESP_INVALID_KEY: // This shouldn't happen. We aren't storing EEPROM keys on SM130
 								xSerialPrint_P(PSTR(" RESP_INVALID_KEY"));
-//								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+//								vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 								break;
 
 							default:
@@ -216,7 +216,7 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 					if( authResult == RESP_SUCCESS ) // if we've got a good key, then grab data from that sector.
 					{
 						xSerialPrintf_P(PSTR("\r\nSector: %u  Block: %u"), sector, block);
-						vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+						vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 
 						for (uint8_t i = 0; i < 16; ++i) data[i] = 0; // clear data array for data.
 
@@ -225,15 +225,15 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 
 						arrayToHex(string, data, 16);
 						xSerialPrintf_P(PSTR("  Data: %s"), string);
-						vTaskDelayUntil( &xLastWakeTime, ( 80 / portTICK_RATE_MS ) );
+						vTaskDelayUntil( &xLastWakeTime, ( 80 / portTICK_PERIOD_MS ) );
 					}
 					else
 						break;
 
 //		xSerialPrintf_P(PSTR("\r\nvRFID_Task HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
-//		vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_RATE_MS ) );
+//		vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_PERIOD_MS ) );
 //		xSerialPrintf_P(PSTR("vRFID_Task Free Heap Size: %u\r\n\n"),xPortGetFreeHeapSize() ); // needs heap_1 or heap_2 or heap_4 for this function to succeed.
-//		vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_RATE_MS ) );
+//		vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_PERIOD_MS ) );
 
 				}
 			}
@@ -246,7 +246,6 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 		/*-----------------------------------------------------------*/
 		/* Monitor                                                   */
 		/*-----------------------------------------------------------*/
-
 		static
 		void get_line (uint8_t *buff, uint8_t len)
 		{
@@ -254,24 +253,23 @@ void vRFID_Task(void *pvParameters) // RFID Processing
 			uint8_t i = 0;
 
 			for (;;) {
-				xSerialGetChar(xSerialPort, &c, portMAX_DELAY);
+				while ( ! xSerialGetChar( &xSerialPort, &c ))
+					vTaskDelay( 1 );
 
 				if (c == '\r') break;
 				if ((c == '\b') && i) {
 					--i;
-					xSerialPutChar(xSerialPort, c, 100 / portTICK_RATE_MS);
+					xSerialPutChar( &xSerialPort, c );
 					continue;
 				}
 				if (c >= ' ' && i < len - 1) {	/* Visible chars */
 					buff[i++] = c;
-					xSerialPutChar(xSerialPort, c, 100 / portTICK_RATE_MS);
+					xSerialPutChar( &xSerialPort, c );
 				}
 			}
 			buff[i] = 0;
-			xSerialPrint((uint8_t *)"\r\n");
+			xSerialPrint_P(PSTR("\r\n"));
 		}
-
-
 
 
 

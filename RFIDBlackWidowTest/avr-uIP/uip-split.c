@@ -44,15 +44,23 @@
 
 #define BUF ((struct uip_tcpip_hdr *)&uip_buf[UIP_LLH_LEN])
 
+#ifdef UIP_SPLIT_CONF_SIZE
+#define UIP_SPLIT_SIZE UIP_SPLIT_CONF_SIZE
+#else /* UIP_SPLIT_CONF_SIZE */
+#define UIP_SPLIT_SIZE UIP_TCP_MSS
+#endif /* UIP_SPLIT_CONF_SIZE */
+
 /*-----------------------------------------------------------------------------*/
 void
 uip_split_output(void)
 {
-  u16_t tcplen, len1, len2;
+  uint16_t tcplen, len1, len2;
 
-  /* We only try to split maximum sized TCP segments. */
+  /* We only split TCP segments that are larger than or equal to
+     UIP_SPLIT_SIZE, which is configurable through
+     UIP_SPLIT_CONF_SIZE. */
   if(BUF->proto == UIP_PROTO_TCP &&
-     uip_len == UIP_BUFSIZE - UIP_LLH_LEN) {
+     uip_len >= UIP_SPLIT_SIZE + UIP_TCPIP_HLEN) {
 
     tcplen = uip_len - UIP_TCPIP_HLEN;
     /* Split the segment in two. If the original packet length was
@@ -105,7 +113,7 @@ uip_split_output(void)
 #endif /* UIP_CONF_IPV6 */
 
     /*    uip_appdata += len1;*/
-    memcpy(uip_appdata, (u8_t *)uip_appdata + len1, len2);
+    memcpy(uip_appdata, (uint8_t *)uip_appdata + len1, len2);
 
     uip_add32(BUF->seqno, len1);
     BUF->seqno[0] = uip_acc32[0];

@@ -17,19 +17,17 @@
 
 
 /* Scheduler include files. */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
-#include <digitalAnalog.h>
-#include <lib_serial.h>
-
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+#include "digitalAnalog.h"
+#include "serial.h"
 
 /* Microbridge include files. */
-#include <avr.h>
-#include <adb.h>
+#include "adb.h"
 
-/* Danger ADB include files. */
+/* Danger Shield include files. */
 #include "danger.h"
 
 /*-----------------------------------------------------------*/
@@ -38,7 +36,7 @@
 xComPortHandle xSerialPort;
 
 // Create a Semaphore mutex flag for the ADC. To ensure only single access.
-xSemaphoreHandle xADCSemaphore;
+SemaphoreHandle_t xADCSemaphore;
 
 
 // Variables for the analogue conversion on ADC Sensors
@@ -55,25 +53,27 @@ static void adbEventHandler(adb_connection * connection, adb_eventType event, ui
 	switch (event)
 	{
 	case ADB_CONNECT:
-		xSerialPrint_P(PSTR("ADB EVENT CONNECT\r\n"));
+		xSerialPrint_P(PSTR("\r\nADB EVENT CONNECT"));
 		break;
 	case ADB_DISCONNECT:
-		xSerialPrint_P(PSTR("ADB EVENT DISCONNECT\r\n"));
+		xSerialPrint_P(PSTR("\r\nADB EVENT DISCONNECT"));
+		break;
+	case ADB_AUTHORISATION:
+		xSerialPrintf_P(PSTR("\r\nADB EVENT AUTH connection=[%s]"), connection->connectionString);
 		break;
 	case ADB_CONNECTION_OPEN:
-		xSerialPrintf_P(PSTR("ADB EVENT OPEN connection=[%s]\r\n"), connection->connectionString);
+		xSerialPrintf_P(PSTR("\r\nADB EVENT OPEN connection=[%s]"), connection->connectionString);
 		break;
 	case ADB_CONNECTION_CLOSE:
-		xSerialPrintf_P(PSTR("ADB EVENT CLOSE connection=[%s]\r\n"), connection->connectionString);
+		xSerialPrintf_P(PSTR("\r\nADB EVENT CLOSE connection=[%s]"), connection->connectionString);
 		break;
 	case ADB_CONNECTION_FAILED:
-		xSerialPrintf_P(PSTR("ADB EVENT FAILED connection=[%s]\r\n"), connection->connectionString);
+		xSerialPrintf_P(PSTR("\r\nADB EVENT FAILED connection=[%s]"), connection->connectionString);
 		break;
 	case ADB_CONNECTION_RECEIVE:
-
-		for (int16_t i=0; i<length; i++)
+		xSerialPrint_P(PSTR("\r\nADB EVENT RECIEVE \r\n"));
+		for (int16_t i=0; i<length; ++i)
 			xSerialPrintf_P(PSTR("%c"), data[i]);
-
 		break;
 	}
 
@@ -90,13 +90,14 @@ int16_t main(void)
 
     vSemaphoreCreateBinary( xADCSemaphore ); // binary semaphore for ADC
 
-    xSerialPort = xSerialPortInitMinimal( 115200, 80, 16); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+    // turn on the serial port for setting or querying the time .
+	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
     avrSerialPrint_P(PSTR("\r\n\n\n\nHello World!\r\n")); // Ok, so we're alive...
 
     xTaskCreate(
 		TaskBlinkYellowLED
-		,  (const signed portCHAR *)"YellowLED"
+		,  (const portCHAR *)"YellowLED"
 		,  168 // tested 2 free
 		,  NULL
 		,  2
@@ -104,8 +105,8 @@ int16_t main(void)
 
    xTaskCreate(
 		TaskADB
-		,  (const signed portCHAR *)"ADB"
-		,  720
+		,  (const portCHAR *)"ADB"
+		,  1024
 		,  NULL
 		,  1
 		,  NULL ); // */
@@ -113,13 +114,13 @@ int16_t main(void)
 
 /*    xTaskCreate(
 		TaskWrite7SEG
-		,  (const signed portCHAR *)"Write7SEG"
+		,  (const portCHAR *)"Write7SEG"
 		,  168 // tested 4 free
 		,  NULL
 		,  3
 		,  NULL ); // */
 
-    avrSerialPrintf_P(PSTR("\r\n\nFree Heap Size: %u\r\n"),xPortGetFreeHeapSize() );
+    avrSerialPrintf_P(PSTR("\r\nFree Heap Size: %u\r\n"),xPortGetFreeHeapSize() );
 
     vTaskStartScheduler();
 
@@ -132,35 +133,34 @@ int16_t main(void)
 static void TaskBlinkYellowLED(void *pvParameters) // Main Yellow LED Flash
     {
     (void) pvParameters;;
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	// The xLastWakeTime variable needs to be initialised with the current tick
 	// count.  Note that this is the only time we access this variable.  From this
 	// point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
 	// API function.
 	xLastWakeTime = xTaskGetTickCount();
 
-	setDigitalOutput(IO_D5, LOW); // initialise Yellow D5 LED
-	setDigitalOutput(IO_D6, LOW); // initialise Yellow D6 LED + Used for testing only
+	DDRB |= _BV(DDB7);
 
 	uint8_t cRxedChar; // store a received character
 
     while(1)
         {
-    	setDigitalOutput( IO_D6, 0);               // main (green IO_D6) LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+    	PORTB |=  _BV(PORTB7);       // main (red IO_B7) LED on. EtherMega LED on
+		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 
-		setDigitalOutput( IO_D6, 1);               // main (green IO_D6) LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+		PORTB &= ~_BV(PORTB7);       // main (red IO_B7) LED off. EtherMega LED off
+		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 
-        while(  xSerialGetChar( xSerialPort, &cRxedChar, xNoBlock ) )
+        while(  xSerialGetChar( &xSerialPort, &cRxedChar ) )
 		{
-			xSerialPutChar( xSerialPort,  cRxedChar, xNoBlock );
-//        	if (shell->status==ADB_OPEN)
+			xSerialPutChar( &xSerialPort,  cRxedChar );
+        	if (shell->status==ADB_OPEN)
 			{
-//				adb_write(shell, 1, cRxedChar);
+				adb_write(shell, 1, &cRxedChar);
 			}
 		}
-//		xSerialPrintf_P(PSTR("\r\nYellowLED HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
+//		xSerialPrintf_P(PSTR("\r\nRedLED HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
         }
     }
 
@@ -169,7 +169,7 @@ static void TaskBlinkYellowLED(void *pvParameters) // Main Yellow LED Flash
 static void TaskADB(void *pvParameters) // ADB Setup and Poll
     {
     (void) pvParameters;;
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -179,34 +179,31 @@ static void TaskADB(void *pvParameters) // ADB Setup and Poll
 	adb_init(); 					// Initialise USB host shield.
 
 	// Create a new ADB connection, run command (eg. logcat) on the phone
-	shell = adb_addConnection("shell:exec", true, adbEventHandler);
+	shell = adb_addConnection("shell:ls /", true, adbEventHandler);
 
-	xSerialPrintf_P(PSTR("adb_addConnection: %u @ Tick: %u\r\n"), shell->connectionString, xTaskGetTickCount() ); // FIXME remove this debugging
+	xSerialPrintf_P(PSTR("\r\nadb_addConnection: %s @ Tick: %u"), shell->connectionString, xTaskGetTickCount() ); // FIXME remove this debugging
 
-	// Create a new ADB connection, open TCP port 4567 on the phone
-	connection = adb_addConnection("tcp:4567", true, adbEventHandler);
+	// Create a new ADB connection, open TCP port 4568 on the phone
+	connection = adb_addConnection("tcp:4568", true, adbEventHandler);
 
-	xSerialPrintf_P(PSTR("adb_addConnection: %u @ Tick: %u\r\n"), connection->connectionString, xTaskGetTickCount() ); // FIXME remove this debugging
-
+	xSerialPrintf_P(PSTR("\r\nadb_addConnection: %s @ Tick: %u"), connection->connectionString, xTaskGetTickCount() ); // FIXME remove this debugging
 
 	while(1)
         {
 
-
-		setDigitalOutput( IO_D5, 0);               // yellow D5 LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 
 		adb_poll();
 
-		setDigitalOutput( IO_D5, 1);               // yellow D5 LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
 
     	ReadADCSensors(); // use this slow task to read ADC and write global values.
 
 		if (connection->status==ADB_OPEN) // this is the link to Android
-			adb_write(connection, 1, &values.adc1);
+			adb_write(connection, 2, &values.adc0);
 
-		xSerialPrintf_P(PSTR("\r\nADB HighWater @ %u"), uxTaskGetStackHighWaterMark(NULL));
+
+//		xSerialPrintf_P(PSTR("\r\nADB HighWater @ %u"), uxTaskGetStackHighWaterMark(NULL));
 
         }
     }
@@ -221,7 +218,7 @@ static void TaskWrite7SEG(void *pvParameters) // Write to 7 Segment display (via
 {
     (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -231,9 +228,9 @@ static void TaskWrite7SEG(void *pvParameters) // Write to 7 Segment display (via
     uint8_t i;
     uint8_t character;
 
-    setDigitalOutput(LATCH, LOW);				// Latch  IO_D7 // 7
-    setDigitalOutput(CLOCK, LOW);				// Clock  IO_B0 // 8
-    setDigitalOutput(DATA,  LOW);				// Data   IO_D4 // 4
+//    setDigitalOutput(LATCH, LOW);				// Latch  IO_D7 // 7
+//   setDigitalOutput(CLOCK, LOW);				// Clock  IO_B0 // 8
+//    setDigitalOutput(DATA,  LOW);				// Data   IO_D4 // 4
 
     while(1)
 	{
@@ -246,14 +243,14 @@ static void TaskWrite7SEG(void *pvParameters) // Write to 7 Segment display (via
 //			if (connection->status==ADB_OPEN) // this is the link to Android
 //				adb_write(connection, 1, &xValues.adc1);
 
-		shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character | 0b10000000)); // turn on decimal point
-		vTaskDelayUntil( &xLastWakeTime, ( 40 / portTICK_RATE_MS ) );
-		shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character & 0b01111111)); // turn off decimal point
+//		shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character | 0b10000000)); // turn on decimal point
+		vTaskDelayUntil( &xLastWakeTime, ( 40 / portTICK_PERIOD_MS ) );
+//		shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character & 0b01111111)); // turn off decimal point
 
 //		xSerialPrintf_P(PSTR("A0: %3u, A1: %3u, A2: %3u, Photo: %3u \r"), values.adc0, values.adc1, values.adc2, values.adc3);
 //		xSerialPrintf_P(PSTR("Write7Seg HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
 
-		vTaskDelayUntil( &xLastWakeTime, ( 160 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 160 / portTICK_PERIOD_MS ) );
 //		taskYIELD();     // yield until we want to display again
 	}
 }
@@ -270,14 +267,14 @@ static void ReadADCSensors(void)  // Read ADC Sensors
 	{
 		// See if we can obtain the semaphore.  If the semaphore is not available
 		// wait 10 ticks to see if it becomes free.
-		if( xSemaphoreTake( xADCSemaphore, ( portTickType ) 10 ) == pdTRUE )
+		if( xSemaphoreTake( xADCSemaphore, ( TickType_t ) 10 ) == pdTRUE )
 		{
 		// We were able to obtain the semaphore and can now access the
 		// shared resource.
 		// We want to have the ADC for us alone, as it takes some time to sample,
 		// so we don't want it getting stolen during the middle of a conversion.
 
-			setAnalogMode(MODE_8_BIT);    // 8-bit analogue-to-digital conversions
+			setAnalogMode(MODE_10_BIT);    // 10-bit analogue-to-digital conversions
 
 			startAnalogConversion(0, 0);   // start next conversion
 			while( analogIsConverting() )
@@ -321,7 +318,7 @@ static void ReadADCSensors(void)  // Read ADC Sensors
 
 //	shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character & 0b01111111)); // turn off decimal point
 
-
+#if 0
 static void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t latchPin, uint8_t bitOrder, uint8_t bitVal)
 {
   uint8_t i;
@@ -340,6 +337,18 @@ static void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t latchPin, uint8_
   setDigitalOutput(latchPin,HIGH); // move the shift register values into store on +ve edge.
 }
 
+#endif
+
+/*-----------------------------------------------------------*/
+
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    portCHAR *pcTaskName )
+{
+
+	DDRB  |= _BV(DDB7);
+	PORTB |= _BV(PORTB7);       // main (red PB7) LED on. Mega main LED on and die.
+	while(1);
+}
 
 /*-----------------------------------------------------------*/
 

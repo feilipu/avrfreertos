@@ -12,23 +12,23 @@
 #include <util/delay.h>			// Needed for _delay_us()
 
 /* Scheduler include files. */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
-#include <ext_ram.h>
-#include <spi.h>
-#include <lib_crc.h>
+#include "ext_ram.h"
+#include "spi.h"
+#include "lib_crc.h"
 
 /* RAMFS RAM file system interface include file. */
-#include <ramfs.h>
+#include "ramfs.h"
 
-#include <diskio.h>
+#include "diskio.h"
 
 /*--------------------Global Variables---------------------------*/
 
-// xComPortHandle xSerialPort;				// Create a handle for the serial port.
+// extern xComPortHandle xSerialPort;				// Create a handle for the serial port.
 
 /*--------------Tasks ------------------------------*/
 
@@ -39,19 +39,19 @@ static void TaskRAMFSManager(void *pvParameters);	// RAMFS Manager.
 /*-----------------------------------------------------------*/
 
 /* Main program loop */
-int16_t main(void) __attribute__((OS_main));
+int main(void) __attribute__((OS_main));
 
-int16_t main(void)
+int main(void)
 {
 
     // turn on the serial port for debugging or for other USART reasons.
-//	xSerialPort = xSerialPortInitMinimal( 115200, portSERIAL_BUFFER, portSERIAL_BUFFER); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+//	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER, portSERIAL_BUFFER); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
 //	avrSerialPrint_P(PSTR("\r\n\n\nHello World!\r\n")); // Ok, so we're alive...
 
     xTaskCreate(
 		TaskBlinkRedLED
-		,  (const signed portCHAR *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
+		,  (const portCHAR *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
 		,  132
 		,  NULL
 		,  1
@@ -60,7 +60,7 @@ int16_t main(void)
 
     xTaskCreate(
     	TaskRAMFSManager
- 		,  (const signed portCHAR *)"RAMFS" // RAMFS Manager
+ 		,  (const portCHAR *)"RAMFS" // RAMFS Manager
  		,  256
  		,  NULL
  		,  3
@@ -81,7 +81,7 @@ static void TaskBlinkRedLED(void *pvParameters) // Main Red LED Flash
 {
     (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -94,10 +94,10 @@ static void TaskBlinkRedLED(void *pvParameters) // Main Red LED Flash
     {
 
     	PORTB |=  _BV(PORTB7);       // main (red IO_B7) LED on. EtherMega LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_PERIOD_MS ) );
 
 		PORTB &= ~_BV(PORTB7);       // main (red IO_B7) LED off. EtherMega LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 900 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 900 / portTICK_PERIOD_MS ) );
 
 //		xSerialPrintf_P(PSTR("RedLED HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
     }
@@ -132,9 +132,9 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 	setMemoryBank(0, false);		// use switchHeap_ false to ignore the heap for portEXT_RAMFS usage.
 
 	spiSetClockDivider(SPI_CLOCK_DIV8); // hopefully we can go faster than DIV8, later. But for now, it is robust.
-	spiBegin(SS_PB0);				// standard SS for Arduino Mega.
+	spiBegin(Default);				// standard SS for Arduino Mega.
 
-	spiSelect (SS_PB0);				// Select that we're using the SPI bus (in case there are multiple SPI tasks)
+	spiSelect (Default);			// Select that we're using the SPI bus (in case there are multiple SPI tasks)
 
 	DDRB |= _BV(DDB6);				// Set a led between PORTB6 (Pin 12) and GND. So we have a visual idea of transactions.
 
@@ -150,7 +150,7 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 
 		PORTB &= ~_BV(PORTB6);       // activity (IO_B6) LED off.
 
-		if( xQueueReceive( xRAMFSCallQueue, &ISRrequest, 1000 / portTICK_RATE_MS) == pdTRUE )// block, until there is a request on the queue to grab.
+		if( xQueueReceive( xRAMFSCallQueue, &ISRrequest, 1000 / portTICK_PERIOD_MS) == pdTRUE )// block, until there is a request on the queue to grab.
 		{
 			uint8_t i;
 			uint8_t pin;
@@ -169,7 +169,7 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 			if( (ISRrequest ^ 0x0001<<arduinoBank) != 0x0000) // check if there are any more requests, that didn't get their own interrupt.
 			{
 				ISRrequest ^= 0x0001<<arduinoBank;
-				xQueueSendToFront( xRAMFSCallQueue, &ISRrequest, ( portTickType ) 0 );	// push remainder of this request back onto the front of the queue,
+				xQueueSendToFront( xRAMFSCallQueue, &ISRrequest, ( TickType_t ) 0 );	// push remainder of this request back onto the front of the queue,
 																						// but don't wait about.
 																						// This catches simultaneous Client requests.
 			}
@@ -235,26 +235,26 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 				case Read : // read from RAMFS - write to SPI bus
 					if( !spiMultiByteTx( (uint8_t *)(activeRAMFSblock.ram_addr), activeRAMFSblock.ram_size )) break;
 		            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-		        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+		        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 					break;
 
 				case Write : // write to RAMFS - read on SPI bus
 					if( !spiMultiByteRx( (uint8_t *)(activeRAMFSblock.ram_addr), activeRAMFSblock.ram_size )) break;
 		            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-		        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+		        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 					break;
 
 				case Swap :	// swap the contents of RAMFS - bidirectional transfer "FASTEST THROUGHPUT" (simultaneous Read & Write)
 					if( !spiMultiByteTransfer( (uint8_t *)(activeRAMFSblock.ram_addr), activeRAMFSblock.ram_size )) break;
 		            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-		        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+		        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 					break;
 
 
 				case Disk_Status : // get remote disk status (from RAM)
 					spiTransfer( (uint8_t)disk_status(0) ); 						// transfer the disk status
 		            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-		        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+		        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 					break;
 
 				case Disk_Init : // initialise the remote disk
@@ -263,21 +263,21 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 						// initialise the disk if it needs to be so.
 						spiTransfer( (uint8_t)disk_status(0) );						// transfer the disk status
 			            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-			        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+			        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 
 			            // Start the Disk operations.
-			            spiDeselect (SS_PB0);				// Deselect the SPI bus (to make sure we can take the semaphore in disk_initialise)
+			            spiDeselect (Default);				// Deselect the SPI bus (to make sure we can take the semaphore in disk_initialise)
 
 			            disk_last_command_result[arduinoBank] = disk_initialize((uint8_t) 0);
 
 			        	spiSetClockDivider(SPI_CLOCK_DIV8); // hopefully we can go faster than DIV8, later. But for now, it is robust.
-			        	spiSelect (SS_PB0);					// Select that we're using the SPI bus (in case there are multiple SPI tasks)
+			        	spiSelect (Default);				// Select that we're using the SPI bus (in case there are multiple SPI tasks)
 
 					}else{
 						// otherwise just report its condition.
 						spiTransfer( (uint8_t)disk_status(0) );						// transfer the disk status
 			            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-			        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+			        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 					}
 					break;
 
@@ -289,7 +289,7 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 					{
 						if( !spiMultiByteTx( (uint8_t *)(activeRAMFSblock.ram_addr), activeRAMFSblock.ram_size )) break;
 			            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-			        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+			        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 
 			            disk_last_command_result[arduinoBank] = RES_OK;
 					}
@@ -297,16 +297,16 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 					{
 
 			            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-			        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+			        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 
 			            // Start the Disk operations.
-			            spiDeselect (SS_PB0);				// Deselect the SPI bus (to make sure we can take the semaphore in disk_read)
+			            spiDeselect (Default);				// Deselect the SPI bus (to make sure we can take the semaphore in disk_read)
 			        	spiSetClockDivider(SPI_CLOCK_DIV2); // SD Card can go at full speed.
 
 			            disk_last_command_result[arduinoBank] = disk_read( (uint8_t) 0, (uint8_t *)(activeRAMFSblock.ram_addr), activeRAMFSblock.disk_sector , activeRAMFSblock.disk_sector_count );
 
 			        	spiSetClockDivider(SPI_CLOCK_DIV8); // hopefully we can go faster than DIV8, later. But for now, it is robust.
-			        	spiSelect (SS_PB0);					// Select that we're using the SPI bus (in case there are multiple SPI tasks)
+			        	spiSelect (Default);				// Select that we're using the SPI bus (in case there are multiple SPI tasks)
 
 			        	if (disk_last_command_result[arduinoBank] == RES_OK)
 			        		disk_last_command_result[arduinoBank] = RES_PENDING;
@@ -317,16 +317,16 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 				case Disk_Write : // write to the disk
 					if( !spiMultiByteRx( (uint8_t *)(activeRAMFSblock.ram_addr), activeRAMFSblock.ram_size )) break;
 		            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-		        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+		        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 
 		            // Start the Disk operations.
-		            spiDeselect (SS_PB0);				// Deselect the SPI bus (to make sure we can take the semaphore in disk_write)
+		            spiDeselect (Default);				// Deselect the SPI bus (to make sure we can take the semaphore in disk_write)
 		        	spiSetClockDivider(SPI_CLOCK_DIV2); // SD Card can go at full speed.
 
 		            disk_last_command_result[arduinoBank] = disk_write( (uint8_t) 0, (const uint8_t *)(activeRAMFSblock.ram_addr), activeRAMFSblock.disk_sector , activeRAMFSblock.disk_sector_count );
 
 		        	spiSetClockDivider(SPI_CLOCK_DIV8); // hopefully we can go faster than DIV8, later. But for now, it is robust.
-		        	spiSelect (SS_PB0);					// Select that we're using the SPI bus (in case there are multiple SPI tasks)
+		        	spiSelect (Default);				// Select that we're using the SPI bus (in case there are multiple SPI tasks)
 
 					break;
 
@@ -338,7 +338,7 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 					{
 						if( !spiMultiByteTx( (uint8_t *)(activeRAMFSblock.ram_addr), activeRAMFSblock.ram_size )) break;
 			            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-			        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+			        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 
 			            disk_last_command_result[arduinoBank] = RES_OK;
 					}
@@ -346,17 +346,17 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 					{
 
 			            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we finished OK.
-			        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+			        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 
 			            // Start the Disk operations.
-			            spiDeselect (SS_PB0);				// Deselect the SPI bus (to make sure we can take the semaphore in disk_ioctl)
+			            spiDeselect (Default);				// Deselect the SPI bus (to make sure we can take the semaphore in disk_ioctl)
 			        	spiSetClockDivider(SPI_CLOCK_DIV2); // SD Card can go at full speed.
 
 			            disk_last_command_result[arduinoBank] = disk_ioctl( (uint8_t) 0, activeRAMFSblock.disk_sector_count, (uint8_t *)(activeRAMFSblock.ram_addr) );
 			            									// using activeRAMFSblock.disk_sector_count for the IOCtl cmd just to make things tricky.
 
 			        	spiSetClockDivider(SPI_CLOCK_DIV8); // hopefully we can go faster than DIV8, later. But for now, it is robust.
-			        	spiSelect (SS_PB0);					// Select that we're using the SPI bus (in case there are multiple SPI tasks)
+			        	spiSelect (Default);				// Select that we're using the SPI bus (in case there are multiple SPI tasks)
 
 			        	if (disk_last_command_result[arduinoBank] == RES_OK)
 			        		disk_last_command_result[arduinoBank] = RES_PENDING;
@@ -365,15 +365,15 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 
 				case Test :
 		            spiTransfer(0x5A);	// give back the check byte so the Arduino Client SPI Slave knows we're OK.
-		        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+		        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 					break;
 
-				case Huh :	// just break out of here, if the Client doesn't really want us to talk to it.
-		        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+				case Huh :				// just break out of here, if the Client doesn't really want us to talk to it.
+		        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 					break;
 
 				default :
-		        	init16PCINTpins();				// reset PCINT pins, to allow Clients to signal their requests.
+		        	init16PCINTpins();	// reset PCINT pins, to allow Clients to signal their requests.
 					break;
 			}
 		}
@@ -389,8 +389,8 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 /*-----------------------------------------------------------*/
 
 
-void vApplicationStackOverflowHook( xTaskHandle xTask,
-                                    signed portCHAR *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    portCHAR *pcTaskName )
 {
 
 	DDRB  |= _BV(DDB7);

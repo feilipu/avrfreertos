@@ -11,19 +11,19 @@
 #include <avr/io.h>
 
 /* Scheduler include files. */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 /* serial interface include file. */
-#include <lib_serial.h>
+#include "serial.h"
 
 #include "avr-uIP/g2100.h"
 
 /*-----------------------------------------------------------*/
 /* Create a handle for the serial port. */
-xComPortHandle xSerialPort;
+extern xComPortHandle xSerialPort;
 
 extern void vRFID_Task(void *pvParameters); 			//* The task that handles all RFID data. */
 extern void vuIP_Task( void *pvParameters);				//* The task that handles all uIP data. */
@@ -37,13 +37,13 @@ int16_t main(void)
 {
 
     // turn on the serial port for debugging or for other USART reasons.
-	xSerialPort = xSerialPortInitMinimal( 115200, portSERIAL_BUFFER, portSERIAL_BUFFER); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER, portSERIAL_BUFFER); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
 	avrSerialPrint_P(PSTR("\r\n\nHello World!\r\n")); // Ok, so we're alive...
 
-    xTaskCreate(
+/*    xTaskCreate(
     	vRFID_Task
-		,  (const signed portCHAR *)"RFID Task" // RFID task
+		,  (const portCHAR *)"RFID Task" // RFID task
 		,  200
 		,  NULL
 		,  1
@@ -51,7 +51,7 @@ int16_t main(void)
 
     xTaskCreate(
     	vuIP_Task
-		,  (const signed portCHAR *)"uIP Task" // IP task including httpd
+		,  (const portCHAR *)"uIP Task" // IP task including httpd
 		,  380				// Tested x free
 		,  NULL
 		,  2
@@ -67,7 +67,7 @@ int16_t main(void)
 
 /*-----------------------------------------------------------*/
 
-void vApplicationStackOverflowHook( xTaskHandle xTask,
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
                                     signed portCHAR *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);

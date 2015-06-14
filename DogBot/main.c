@@ -17,13 +17,13 @@
 #include <pololu/orangutan.h>
 
 /* Scheduler include files. */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 /* i2c Interface include file. */
-#include <i2cMultiMaster.h>
+#include "i2cMultiMaster.h"
 
 /* Dogbot include file. */
 #include "dogbot.h"
@@ -66,7 +66,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskBlinkGreenLED
-		,  (const signed portCHAR *)"GreenLED"
+		,  (const portCHAR *)"GreenLED"
 		,  128
 		,  NULL
 		,  3
@@ -75,7 +75,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskNavigation
-		,  (const signed portCHAR *)"Navigation"
+		,  (const portCHAR *)"Navigation"
 		,  128
 		,  NULL
 		,  2
@@ -84,7 +84,7 @@ int16_t main(void)
 
     xTaskCreate(
         TaskReadADCSensors
-        ,  (const signed portCHAR *)"ReadADCSensors"
+        ,  (const portCHAR *)"ReadADCSensors"
         ,  128
         ,  NULL
         ,  1
@@ -92,7 +92,7 @@ int16_t main(void)
 
 /*    xTaskCreate(
         TaskReadI2CThermopile
-        ,  (const signed portCHAR *)"ReadI2CThermopile"
+        ,  (const portCHAR *)"ReadI2CThermopile"
         ,  128
         ,  NULL
         ,  2
@@ -100,7 +100,7 @@ int16_t main(void)
 
     xTaskCreate(
         TaskReadI2CSonar
-        ,  (const signed portCHAR *)"ReadI2CSonar"
+        ,  (const portCHAR *)"ReadI2CSonar"
         ,  128
         ,  NULL
         ,  1
@@ -109,7 +109,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskWriteAnalogLCD
-		,  (const signed portCHAR *)"WriteAnalogLCD"
+		,  (const portCHAR *)"WriteAnalogLCD"
 		,  128
 		,  NULL
 		,  2
@@ -117,7 +117,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskWriteSonarLCD
-		,  (const signed portCHAR *)"WriteSonarLCD"
+		,  (const portCHAR *)"WriteSonarLCD"
 		,  128
 		,  NULL
 		,  2
@@ -125,7 +125,7 @@ int16_t main(void)
 
 /*   xTaskCreate(
 		TaskWriteThermopileLCD
-		,  (const signed portCHAR *)"WriteThermopileLCD"
+		,  (const portCHAR *)"WriteThermopileLCD"
 		,  128
 		,  NULL
 		,  3
@@ -133,7 +133,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskTransport
-		,  (const signed portCHAR *)"TransportManagement"
+		,  (const portCHAR *)"TransportManagement"
 		,  128
 		,  NULL
 		,  2
@@ -159,10 +159,10 @@ static void TaskBlinkGreenLED(void *pvParameters) // Main Green LED Flash
     while(1)
     {
         set_digital_output( IO_C4, 0);               // main (green IO_C4) LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_PERIOD_MS ) );
 
         set_digital_output( IO_C4, 1);               // main (green IO_C4) LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_PERIOD_MS ) );
     }
 }
 
@@ -202,7 +202,7 @@ static void TaskNavigation(void *pvParameters) // Main Navigation Task
                 }
             }
         }
-        vTaskDelayUntil( &xLastWakeTime, ( 30000 / portTICK_RATE_MS ) );
+        vTaskDelayUntil( &xLastWakeTime, ( 30000 / portTICK_PERIOD_MS ) );
     }
 }
 
@@ -286,7 +286,7 @@ static void TaskReadADCSensors(void *pvParameters) // Read ADC Sensors
                     xQueueSendToBack( xADCQueue, &values, ( portTickType ) 10 );
                 }
 
-                vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_RATE_MS ) );
+                vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_PERIOD_MS ) );
             }
         }
     }
@@ -408,7 +408,7 @@ static void TaskReadI2CThermopile(void *pvParameters) // Read i2c Bus for Thermo
         samples = 0;
 
 
-        vTaskDelayUntil( &xLastWakeTime, ( 400 / portTICK_RATE_MS ) );
+        vTaskDelayUntil( &xLastWakeTime, ( 400 / portTICK_PERIOD_MS ) );
     }
 }
 
@@ -473,7 +473,7 @@ static void TaskReadI2CSonar(void *pvParameters) // Read i2c Bus for Sonar
         xSemaphoreGive( xI2CSemaphore );
 
        /*  echo echo echo time */
-       vTaskDelayUntil( &xLastWakeTime, ( 80 / portTICK_RATE_MS ) );
+       vTaskDelayUntil( &xLastWakeTime, ( 80 / portTICK_PERIOD_MS ) );
 
        if( xI2CSemaphore != NULL )
        {
@@ -508,7 +508,7 @@ static void TaskReadI2CSonar(void *pvParameters) // Read i2c Bus for Sonar
 
         // Reset our variable for new averaging.
         range = 0;
-        vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_RATE_MS ) );
+        vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_PERIOD_MS ) );
 
     }
 }
@@ -666,12 +666,12 @@ static void TaskWriteThermopileLCD(void *pvParameters) // Write thermopileto LCD
 
 
                 set_digital_output( IO_D1, 0);               // red LED on to show process
-                vTaskDelay(  500 / portTICK_RATE_MS );
+                vTaskDelay(  500 / portTICK_PERIOD_MS );
                 set_digital_output( IO_D1, 1);               // red LED on to show process
-                vTaskDelay( 1000 / portTICK_RATE_MS );
+                vTaskDelay( 1000 / portTICK_PERIOD_MS );
 
                 set_digital_output( IO_D1, 0);               // red LED on to show process
-                vTaskDelay( 500 / portTICK_RATE_MS );
+                vTaskDelay( 500 / portTICK_PERIOD_MS );
                 set_digital_output( IO_D1, 1);               // red LED on to show process
 
 

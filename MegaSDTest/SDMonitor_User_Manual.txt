@@ -3,6 +3,7 @@
 di <phy_drv#>					- Initialise disk
 ds <phy_drv#>					- Show disk status
 dd <phy_drv#> [<sector>]		- Dump sector 
+dx <iterations>					- Destructively Test DISKIO Functions - !!! DESTROYS DISK FORMATTING !!!
 
 bd <addr>						- Dump (show) R/W buffer
 br <phy_drv#> <sector> [<n>]	- Read disk into R/W buffer
@@ -41,4 +42,14 @@ fc								- Close a file
 t [<year yy> <month mm> <date dd> <day: Sun=1> <hour hh> <minute mm> <second ss>] - read or set RTC [time]
 
 
+**** THINGS TO REMEMBER ****
+Options for linker for ATmega2560 (Arduino Mega)
 
+Here freeRTOS heap_4 and malloc heap are overlapping each other.
+-Wl,--section-start=.ext_ram_heap=0x802200  -Wl,--defsym=__heap_start=0x802200,--defsym=__heap_end=0x80ffff
+
+Here freeRTOS heap_4 and malloc heap are separate. freeRTOS heap can't be bigger than 32kB-1 anyway.
+-Wl,--section-start=.ext_ram_heap=0x808000  -Wl,--defsym=__heap_start=0x802200,--defsym=__heap_end=0x807fff
+
+Options for sizer for ATmega2560 (Arduino Mega)
+--remove-section=.ext_ram_heap

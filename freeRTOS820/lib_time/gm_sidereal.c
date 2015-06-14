@@ -1,0 +1,61 @@
+/*
+ * (C)2012 Michael Duane Rice All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer. Redistributions in binary
+ * form must reproduce the above copyright notice, this list of conditions
+ * and the following disclaimer in the documentation and/or other materials
+ * provided with the distribution. Neither the name of the copyright holders
+ * nor the names of contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/* $Id$ */
+
+/*
+    Greenwich Mean Sidereal Time. A sidereal second is somewhat shorter than a standard second,
+    about 1.002737909350795 sidereal seconds per standard second.
+
+    We resort to fixed point math due to the insufficient resolution of a 'double', using...
+
+        timestamp * ( 1.002737909350795 << 31 )
+        --------------------------------------- + Te
+                        1 << 31
+
+    Where Te is the sidereal time at the epoch.
+
+*/
+
+#include <stdint.h>
+
+#include "time.h"
+
+uint32_t
+gm_sidereal(const time_t * timer)
+{
+    uint64_t        tmp;
+
+    tmp = *timer;
+    tmp *= 0x8059B740;
+    tmp /= 0x80000000;
+    tmp += (uint64_t) 23991;
+
+    tmp %= ONE_DAY;
+    return tmp;
+}

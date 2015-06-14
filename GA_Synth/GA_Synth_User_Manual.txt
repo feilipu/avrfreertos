@@ -1,0 +1,18 @@
+s  - show minimum ever heap size
+h  - show this message
+b  - reboot ft800 device
+i  - show ft800 logo
+r  - reset to blank display
+t  - set / show the time: t [<year yyyy> <month mm> <date dd> <hour hh> <minute mm> <second ss>]
+z  - set the time zone +-hours (before you first set the time): z [<timezone zz>] 
+
+Time input via touch screen now enabled.
+
+Touch the clock to set the time (screen goes red).
+Touch the clock again to return to the time, with no effect.
+
+Touch TZ to set the right time zone in hours.
+
+Touch + and - increase or decrease a value.
+
+Set using the SET button.

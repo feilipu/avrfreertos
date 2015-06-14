@@ -64,13 +64,13 @@ static uint16_t lastRssi;
 static uint8_t scan_cnt;
 static uint8_t wpa_psk_key[32];
 
-extern xSemaphoreHandle xZGIntrSemaphore;
+extern SemaphoreHandle_t xZGIntrSemaphore;
 
 void zg_init()
 {
 	uint8_t clr;
 
-	spiBegin(SS_PB2);
+//	spiBegin(SS_PB2);
 	spiSetClockDivider(SPI_CLOCK_DIV2);
 	clr = SPSR;
 	clr = SPDR;
@@ -104,12 +104,12 @@ void zg_init()
 void spi_transfer(uint8_t *buf, uint16_t len, uint8_t toggle_cs)
 {
 
-	spiSelect (SS_PB2);
+//	spiSelect (SS_PB2);
 
 	spiMultiByteTransfer(buf, len);
 
 	if (toggle_cs)
-		spiDeselect (SS_PB2);
+//		spiDeselect (SS_PB2);
 
 	return;
 }
