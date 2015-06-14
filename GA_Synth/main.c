@@ -124,9 +124,6 @@ const int16_t sineWave[LUT_SIZE] PROGMEM =
 	#include "SineLUT.inc"
 };
 
-/*---------IIR coefficient variables----------------*/
-
-int16_t b0,b1,b2,a1,a2; // Coefficients in 8.8 format
 
 /*--------------Functions---------------------------*/
 
