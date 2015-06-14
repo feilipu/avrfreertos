@@ -62,21 +62,21 @@
 #include <util/delay.h>
 
 // freeRTOS Scheduler include files.
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 // freeRTOS added i2c Interface include file.
 // I2C_BUFFER_SIZE: Set this to the largest message size that will be sent including address byte.
 
-#include <i2cMultiMaster.h>
-#include <spi.h>
-#include <lib_crc.h>
+#include "i2cMultiMaster.h"
+#include "spi.h"
+#include "lib_crc.h"
 
 /* serial interface & Digital include file. */
-#include <lib_serial.h>  // only need this for testing
-#include <digitalAnalog.h>
+#include "serial.h"  // only need this for testing
+#include "digitalAnalog.h"
 
 // Peggy Video include file.
 #include "PeggyVideoPong.h"
@@ -120,22 +120,27 @@ const int8_t *buzzerSequence;
 uint8_t buzzerInitialized;
 
 ///////////////////// Main program loop ////////////////
-int16_t main(void) __attribute__((OS_main));
+int main(void) __attribute__((OS_main));
 
-int16_t main(void)
+int main(void)
 {
 	// Serial port just for testing. Remove or the game runs quite slow.
-//	xSerialPort = xSerialPortInitMinimal( 115200, 80, 16); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+//	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
-    vSemaphoreCreateBinary( xADCSemaphore ); // binary semaphore for ADC
+    if( xADCSemaphore == NULL ) 					// Check to see if the ADC semaphore has not been created.
+     {
+    	xADCSemaphore = xSemaphoreCreateBinary();	// binary semaphore for ADC
+ 		if( ( xADCSemaphore ) != NULL )
+ 			xSemaphoreGive( ( xADCSemaphore ) );	// make the ADC available
+     }
 
     xI2CQueue = xQueueCreate( 2, sizeof( uint8_t) );  // queue for i2c video buffer values
 
-//	avrSerialPrint_P(PSTR("\r\n\n\nHello World!\r\n")); // Ok, so we're alive...
+//	avrSerialPrint_P(PSTR("\r\nHello World!\r\n")); // Ok, so we're alive...
 
     xTaskCreate(
 		TaskPong							// This will be the ball and scoring at 200Hz
-		,  (const signed portCHAR *)"Pong"
+		,  (const portCHAR *)"Pong"
 		,  256				// Tested 13 free
 		,  NULL
 		,  3
@@ -143,7 +148,7 @@ int16_t main(void)
 
 /*   xTaskCreate(
 		TaskBall							// This is a bouncing ball (instead of Pong + SlowLoop)
-		,  (const signed portCHAR *)"Ball"
+		,  (const portCHAR *)"Ball"
 		,  186				// Tested 5 free
 		,  NULL
 		,  3
@@ -151,7 +156,7 @@ int16_t main(void)
 
 /*    xTaskCreate(
 		TaskFace							// This is a digital face (instead of Pong + SlowLoop)
-		,  (const signed portCHAR *)"Face"
+		,  (const portCHAR *)"Face"
 		,  186				// Tested 20 free
 		,  NULL
 		,  3
@@ -159,35 +164,34 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskSlowLoop						// This is the borders, paddles, scoring & ADC running at 20Hz
-		,  (const signed portCHAR *)"SlowLoop"
-		,  196				// Tested 23 free
+		,  (const portCHAR *)"SlowLoop"
+		,  186				// Tested 23 free
 		,  NULL
 		,  2
 		,  NULL ); // */
 
     xTaskCreate(
         TaskWriteI2CVideo					// This writes to I2C on 200Hz frame rate
-        ,  (const signed portCHAR *)"WriteI2CVideo"
+        ,  (const portCHAR *)"WriteI2CVideo"
         ,  240				// Tested x free
         ,  NULL
         ,  2
         ,  NULL ); // */
 
-    // check the available heap left.
-//    avrSerialPrintf_P(PSTR("\r\n\nFree Heap Size: %u"),xPortGetFreeHeapSize() ); // needs heap_1 or heap_2 for this function.
+//	avrSerialxPrintf_P(&xSerialPort, PSTR("Free Heap Size: %u\r\n"), xPortGetFreeHeapSize() ); // needs heap_1,  heap_2 or heap_4 for this function to succeed.
 
 	vTaskStartScheduler();
 
 	// check whether the scheduler started properly. If there's no free RAM, then it won't start.
-//	avrSerialPrint_P(PSTR("\r\n\n\nGoodbye... no space for idle task!\r\n")); // Doh, so we're dead...
+//	avrSerialxPrint_P(&xSerialPort, PSTR("\r\n\n\nGoodbye... no space for idle task!\r\n")); // Doh, so we're dead...
 
 }
 
-static void TaskPong(void *pvParameters) // Write to LED Buffer
+static void TaskPong(void *pvParameters) // xxx Write to LED Buffer
 {
-    (void) pvParameters;;
+    (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -219,9 +223,9 @@ static void TaskPong(void *pvParameters) // Write to LED Buffer
     uint8_t serve = false;		// serve the ball if it left the field.
 	uint8_t initialise = true;	// start a new game.
 
-	playFromProgramSpace(guminam);		// play a little Guminam (or Bach) to kick things off.
+//	playFromProgramSpace(guminam);		// play a little Guminam (or Bach) to kick things off.
 
-   	vTaskDelayUntil( &xLastWakeTime, ( 16000 / portTICK_RATE_MS ) ); // 16 sec pause.
+// 	vTaskDelayUntil( &xLastWakeTime, ( 16000 / portTICK_PERIOD_MS ) ); // 16 sec pause.
 
     while(1)
     {
@@ -287,10 +291,10 @@ static void TaskPong(void *pvParameters) // Write to LED Buffer
 
 		if (! isDigitalInputHigh(PAUSE)) // PAUSE
 		{
-			vTaskDelayUntil( &xLastWakeTime, ( 20 / portTICK_RATE_MS ) ); // debounce
+			vTaskDelayUntil( &xLastWakeTime, ( 20 / portTICK_PERIOD_MS ) ); // debounce
 			while ( isDigitalInputHigh(PAUSE) )
-				vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_RATE_MS ) ); // wait for button press
-			vTaskDelayUntil( &xLastWakeTime, ( 20 / portTICK_RATE_MS ) ); // debounce
+				vTaskDelayUntil( &xLastWakeTime, ( 100 / portTICK_PERIOD_MS ) ); // wait for button press
+			vTaskDelayUntil( &xLastWakeTime, ( 20 / portTICK_PERIOD_MS ) ); // debounce
 		}
 
 
@@ -399,7 +403,7 @@ static void TaskPong(void *pvParameters) // Write to LED Buffer
 			// This step is optional, but signals to WriteI2CVideo for the row to be sent first.
 			// Send the newly set row number.  Wait for 0 ticks for space to become
 			// available before proceeding.
-			xQueueSendToBack( xI2CQueue, &yp, ( portTickType ) 0 );
+			xQueueSendToBack( xI2CQueue, &yp, ( TickType_t ) 0 );
 
 		}
 
@@ -410,7 +414,7 @@ static void TaskPong(void *pvParameters) // Write to LED Buffer
 		xOld = xNew;
 		yOld = yNew;
 
-        vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_RATE_MS ) );
+        vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_PERIOD_MS ) );
 
         // check the amount of RAM consumed by the task, with respect to the amount allocated at creation.
 //		xSerialPrintf_P(PSTR("TaskPong HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
@@ -422,11 +426,11 @@ static void TaskPong(void *pvParameters) // Write to LED Buffer
 
 
 
-static void TaskBall(void *pvParameters) // Write to LED Buffer
+static void TaskBall(void *pvParameters) // xxx Write to LED Buffer
 {
-    (void) pvParameters;;
+    (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -449,7 +453,6 @@ static void TaskBall(void *pvParameters) // Write to LED Buffer
 	// uint8_t for writing to the frame buffer
 	uint8_t xp = 0;
 	uint8_t yp = 0;
-
 
     while(1)
     {
@@ -574,7 +577,7 @@ static void TaskBall(void *pvParameters) // Write to LED Buffer
 		// Send the newly set row number.  Wait for 0 ticks for space to become
         // available if necessary.
 
-		xQueueSendToBack( xI2CQueue, &yp, ( portTickType ) 0 );
+		xQueueSendToBack( xI2CQueue, &yp, ( TickType_t ) 0 );
 
 
 		//Age variables for the next iteration
@@ -584,7 +587,7 @@ static void TaskBall(void *pvParameters) // Write to LED Buffer
 		xOld = xNew;
 		yOld = yNew;
 
-        vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_RATE_MS ) );
+        vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_PERIOD_MS ) );
 
         // check the amount of RAM consumed by the task, with respect to the amount allocated at creation.
 //		xSerialPrintf_P(PSTR("TaskBall HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
@@ -595,27 +598,34 @@ static void TaskBall(void *pvParameters) // Write to LED Buffer
 /*-----------------------------------------------------------*/
 
 
-static void TaskFace(void *pvParameters) // Write to LED Buffer
+static void TaskFace(void *pvParameters) // xxx Write to LED Buffer
 {
-    (void) pvParameters;;
+    (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
 	API function. */
  	xLastWakeTime = xTaskGetTickCount();
 
+
     while(1)
     {
+
+
+		shiftOut(DATA, CLOCK, LATCH, MSBFIRST, (0b01111111)); // turn on 7 Segment decimal point
+
     	for ( uint8_t y = 0; y < DISP_ROW_LENGTH; y++)
     	{
     		for ( uint8_t x = 0; x < DISP_ROW_LENGTH; x++)
-//    			drawPixel( x, y, pgm_read_byte(&Picture[ y * DISP_ROW_LENGTH + x ] ))
-    		;		// XXX uncomment & uncomment picture in header file
+    			drawPixel( x, y, pgm_read_byte_near(&Picture[ y * DISP_ROW_LENGTH + x ] ));
+    			// XXX uncomment pgm_read_byte line & uncomment picture in header file
     	}
 
-        vTaskDelayUntil( &xLastWakeTime, ( 1000 / portTICK_RATE_MS ) ); // remove later
+     	vTaskDelayUntil( &xLastWakeTime, ( 1000 / portTICK_PERIOD_MS ) ); // 1 sec pause.
+
+		shiftOut(DATA, CLOCK, LATCH, MSBFIRST, (0b11111111)); // turn off 7 Segment decimal point
 
     	for ( uint8_t y = 0; y < DISP_ROW_LENGTH; y++)
     	{
@@ -623,10 +633,10 @@ static void TaskFace(void *pvParameters) // Write to LED Buffer
     			drawPixel( x, y, 0 );
     	} // */
 
-        vTaskDelayUntil( &xLastWakeTime, ( 1000 / portTICK_RATE_MS ) ); // remove later
-
         // check the amount of RAM consumed by the task, with respect to the amount allocated at creation.
-//		xSerialPrintf_P(PSTR("TaskFace HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
+//		xSerialxPrintf_P(&xSerialPort, PSTR("TaskFace HighWater @ %u "), uxTaskGetStackHighWaterMark(NULL));
+
+        vTaskDelayUntil( &xLastWakeTime, ( 1000 / portTICK_PERIOD_MS ) ); // 1 sec pause
 
 	}
 }
@@ -634,11 +644,11 @@ static void TaskFace(void *pvParameters) // Write to LED Buffer
 
 /*-----------------------------------------------------------*/
 
-static void TaskSlowLoop(void *pvParameters) // Write to 7 Segment display (via shift register)
+static void TaskSlowLoop(void *pvParameters) // xxx Write to 7 Segment display (via shift register)
     {
     (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -649,11 +659,9 @@ static void TaskSlowLoop(void *pvParameters) // Write to 7 Segment display (via 
 
     while(1)
 	{
-
     	ReadADCSensors(); // use this slow loop 20Hz task to read ADC and write global values.
 
 		// Get the locations of the paddles
-
 		p1_y =   (values.adc0 >> 3) - 3; // reduce the 8 bit paddle location value to 5 bits (32 values) and centre
 		p2_y =   (values.adc2 >> 3) - 3;
 		paddle = (values.adc1 >> 6) + 1; // reduce the 8 bit paddle length value to 2 bits (4 values)
@@ -684,21 +692,20 @@ static void TaskSlowLoop(void *pvParameters) // Write to 7 Segment display (via 
 		drawLine( PLAYER1_X + 1, 24 - 22, PLAYER1_X + 1 + score_p1, 24 - 22, 4); // Player 1 Paddle
 		drawLine( PLAYER2_X - 1, 24 - 22, PLAYER2_X - 1 - score_p2, 24 - 22, 4); // Player 2 Paddle
 
-		character = pgm_read_byte(&ledCharSet[(values.adc3 >> 3)]); // retrieve the character from PROGMEM; only do this once.
+		character = pgm_read_byte_near(&ledCharSet[(values.adc3 >> 3)]); // retrieve the character from PROGMEM; only do this once.
 		// For Photo resistor (just as a test) reduce the 8 bit value to 5 bits (32 values, 7 segment) code
 
 		shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character | 0b10000000)); // turn on decimal point
-		vTaskDelayUntil( &xLastWakeTime, ( 10 / portTICK_RATE_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 10 / portTICK_PERIOD_MS ) );
 
-		shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character & 0b01111111)); // turn off decimal point
-		vTaskDelayUntil( &xLastWakeTime, ( 40 / portTICK_RATE_MS ) );
-
-//		xSerialPrintf_P(PSTR("A0: %3u, A1: %3u, A2: %3u\r"), values.adc0, values.adc1, values.adc2 );
+//		xSerialxPrintf_P(&xSerialPort, PSTR("A0: %3u, A1: %3u, A2: %3u\r\n"), values.adc0, values.adc1, values.adc2 );
 
         // check the amount of RAM consumed by the task, with respect to the amount allocated at creation.
-//		xSerialPrintf_P(PSTR("Write7Seg HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
+//		xSerialxPrintf_P(&xSerialPort, PSTR("Write Scoring HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
+//		xSerialxPrintf_P(&xSerialPort, PSTR("Minimum Free Heap Size: %u\r\n"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_4 for this function to succeed.
 
-
+		shiftOut(DATA,CLOCK,LATCH,MSBFIRST,~(character & 0b01111111)); // turn off decimal point
+		vTaskDelayUntil( &xLastWakeTime, ( 40 / portTICK_PERIOD_MS ) );
 	}
 }
 
@@ -706,11 +713,11 @@ static void TaskSlowLoop(void *pvParameters) // Write to 7 Segment display (via 
 
 /*-----------------------------------------------------------*/
 
-static void TaskWriteI2CVideo(void *pvParameters) // Write i2c Bus for video frame Pong or whatever
+static void TaskWriteI2CVideo(void *pvParameters) // xxx Write i2c Bus for video frame Pong or whatever
 {
     (void) pvParameters;;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -773,7 +780,7 @@ static void TaskWriteI2CVideo(void *pvParameters) // Write i2c Bus for video fra
 				I2C_Master_Start_Transceiver_With_Data( (uint8_t *)&xVideoRow, sizeof(xVideoRow) );
 
 		}
-    	vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_RATE_MS ) ); // 200Hz Frame refresh rate.
+    	vTaskDelayUntil( &xLastWakeTime, ( 5 / portTICK_PERIOD_MS ) ); // 200Hz Frame refresh rate.
 
         // check the amount of RAM consumed by the task, with respect to the amount allocated at creation.
 //		xSerialPrintf_P(PSTR("TaskWriteI2CVideo HighWater2 @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
@@ -791,7 +798,7 @@ static void ReadADCSensors(void)  // Read ADC Sensors
 	{
 		// See if we can obtain the semaphore.  If the semaphore is not available
 		// wait 10 ticks to see if it becomes free.
-		if( xSemaphoreTake( xADCSemaphore, ( portTickType ) 10 ) == pdTRUE )
+		if( xSemaphoreTake( xADCSemaphore, ( TickType_t ) 10 ) == pdTRUE )
 		{
 		// We were able to obtain the semaphore and can now access the
 		// shared resource.
@@ -1039,8 +1046,8 @@ void drawCircle (int8_t xCenter, int8_t yCenter, int8_t radius, int8_t circleTyp
 /*-----------------------------------------------------------*/
 
 
-void vApplicationStackOverflowHook( xTaskHandle xTask,
-                                    signed portCHAR *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+                                    portCHAR *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.

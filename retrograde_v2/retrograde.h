@@ -11,8 +11,9 @@ extern "C" {
 
 #include <avr/eeprom.h>
 
+
 /* RTC interface (using I2C) include file */
-#include <rtc.h>
+#include "rtc.h"
 
 
 /*--------------Definitions-------------------*/
@@ -31,37 +32,12 @@ extern "C" {
 /* structure to receive the DS1307 RTC & Temperature parameters */
 typedef struct
 {
-	xRTCArray 	DateTime;      // Structure containing the Date and Time
-    portFLOAT	Temperature;   // Insert a Temperature, eg for Maximum or Minimum temps.
+	tm			DateTime;      // Structure containing the Date and Time
+    float		Temperature;   // Insert a Temperature, eg for Maximum or Minimum temps.
 } xRTCTempArray, * pRTCTempArray;
 
 
-/*--------------Global Variables--------------------*/
-
-
-xTaskHandle xTaskWriteRTCRetrograde;	// make a Task handle so we can suspend and resume the Retrograde hands task.
-
-/* Create a Semaphore binary flag for the ADC. To ensure only single access. */
-xSemaphoreHandle xADCSemaphore;
-
-/* Create a handle for the serial port. */
-xComPortHandle xSerialPort;
-
-uint8_t * LineBuffer;					// put line buffer on heap (with pvPortMalloc).
-
-pRTCArraySto SetTimeDate;				// this pointer to a structure for storing the time to be set.
-
-xRTCTempArray xCurrentTempTime; 		// structure to hold the I2C Current time value
-xRTCTempArray xMaximumTempTime;
-xRTCTempArray xMinimumTempTime;
-
-//  EEPROM structures to hold the extreme temperatures, and the time these were achieved.
-xRTCTempArray EEMEM xMaximumEverTempTime;
-xRTCTempArray EEMEM xMinimumEverTempTime;
-
-
-
-/*-----------------------------------------------------------*/
+/*---------------------Function Declarations----------------------------*/
 
 static void TaskWriteLCD(void *pvParameters); // Write to LCD
 

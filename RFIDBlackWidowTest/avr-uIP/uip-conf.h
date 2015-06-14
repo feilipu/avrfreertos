@@ -43,24 +43,6 @@
 #include "apps-conf.h"
 
 /**
- * 8 bit data type
- *
- * This typedef defines the 8-bit type used throughout uIP.
- *
- * \hideinitializer
- */
-typedef uint8_t u8_t;
-
-/**
- * 16 bit data type
- *
- * This typedef defines the 16-bit type used throughout uIP.
- *
- * \hideinitializer
- */
-typedef uint16_t u16_t;
-
-/**
  * Statistics data type
  *
  * This typedef defines the data type used for keeping statistics in

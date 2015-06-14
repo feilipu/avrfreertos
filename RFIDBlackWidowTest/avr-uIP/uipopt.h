@@ -83,6 +83,8 @@
  * netmask, default router and Ethernet address are appliciable only
  * if uIP should be run over Ethernet.
  *
+ * This options are meaningful only for the IPv4 code.
+ *
  * All of these should be changed to suit your project.
 */
 
@@ -110,7 +112,7 @@
  * \hideinitializer
  */
 #ifdef UIP_CONF_PINGADDRCONF
-#define UIP_PINGADDRCONF UIP_CONF_PINGADDRCONF
+#define UIP_PINGADDRCONF (UIP_CONF_PINGADDRCONF)
 #else /* UIP_CONF_PINGADDRCONF */
 #define UIP_PINGADDRCONF 0
 #endif /* UIP_CONF_PINGADDRCONF */
@@ -142,6 +144,13 @@
 #define UIP_TTL         64
 
 /**
+ * The maximum time an IP fragment should wait in the reassembly
+ * buffer before it is dropped.
+ *
+ */
+#define UIP_REASS_MAXAGE 60 /*60s*/
+
+/**
  * Turn on support for IP packet reassembly.
  *
  * uIP supports reassembly of fragmented IP packets. This features
@@ -154,25 +163,73 @@
  *
  * \hideinitializer
  */
-
-#ifndef UIP_REASSEMBLY
-#warning "\nUIP_REASSEMBLY should be defined as 1 (ON) or 0 (OFF) in your project area"
+#ifdef UIP_CONF_REASSEMBLY
+#define UIP_REASSEMBLY (UIP_CONF_REASSEMBLY)
+#else /* UIP_CONF_REASSEMBLY */
 #define UIP_REASSEMBLY 0
-#endif
+#endif /* UIP_CONF_REASSEMBLY */
+/** @} */
 
+/*------------------------------------------------------------------------------*/
 /**
- * The maximum time an IP fragment should wait in the reassembly
- * buffer before it is dropped.
+ * \defgroup uipoptipv6 IPv6 configuration options
+ * @{
  *
  */
-#define UIP_REASS_MAXAGE 40
 
+/** The maximum transmission unit at the IP Layer*/
+#define UIP_LINK_MTU 1280
+
+#ifndef UIP_CONF_IPV6
+/** Do we use IPv6 or not (default: no) */
+#define UIP_CONF_IPV6                 0
+#endif
+
+#ifndef UIP_CONF_IPV6_QUEUE_PKT
+/** Do we do per %neighbor queuing during address resolution (default: no) */
+#define UIP_CONF_IPV6_QUEUE_PKT       0
+#endif
+
+#ifndef UIP_CONF_IPV6_CHECKS
+/** Do we do IPv6 consistency checks (highly recommended, default: yes) */
+#define UIP_CONF_IPV6_CHECKS          1
+#endif
+
+#ifndef UIP_CONF_IPV6_REASSEMBLY
+/** Do we do IPv6 fragmentation (default: no) */
+#define UIP_CONF_IPV6_REASSEMBLY      0
+#endif
+
+#ifndef UIP_CONF_NETIF_MAX_ADDRESSES
+/** Default number of IPv6 addresses associated to the node's interface */
+#define UIP_CONF_NETIF_MAX_ADDRESSES  3
+#endif
+
+#ifndef UIP_CONF_DS6_PREFIX_NBU
+/** Default number of IPv6 prefixes associated to the node's interface */
+#define UIP_CONF_DS6_PREFIX_NBU     2
+#endif
+
+#ifndef UIP_CONF_DS6_NBR_NBU
+/** Default number of neighbors that can be stored in the %neighbor cache */
+#define UIP_CONF_DS6_NBR_NBU    4
+#endif
+
+#ifndef UIP_CONF_DS6_DEFRT_NBU
+/** Minimum number of default routers */
+#define UIP_CONF_DS6_DEFRT_NBU       2
+#endif
 /** @} */
 
 /*------------------------------------------------------------------------------*/
 /**
  * \name UDP configuration options
  * @{
+ *
+ * \note The UDP support in uIP is still not entirely complete; there
+ * is no support for sending or receiving broadcast or multicast
+ * packets, but it works well enough to support a number of vital
+ * applications such as DNS queries, though
  */
 
 /**
@@ -195,9 +252,9 @@
  * \hideinitializer
  */
 #ifdef UIP_CONF_UDP_CHECKSUMS
-#define UIP_UDP_CHECKSUMS UIP_CONF_UDP_CHECKSUMS
+#define UIP_UDP_CHECKSUMS (UIP_CONF_UDP_CHECKSUMS)
 #else
-#define UIP_UDP_CHECKSUMS 0
+#define UIP_UDP_CHECKSUMS (UIP_CONF_IPV6)
 #endif
 
 /**
@@ -206,7 +263,7 @@
  * \hideinitializer
  */
 #ifdef UIP_CONF_UDP_CONNS
-#define UIP_UDP_CONNS UIP_CONF_UDP_CONNS
+#define UIP_UDP_CONNS (UIP_CONF_UDP_CONNS)
 #else /* UIP_CONF_UDP_CONNS */
 #define UIP_UDP_CONNS    10
 #endif /* UIP_CONF_UDP_CONNS */
@@ -226,30 +283,45 @@
  */
 
 /**
+ * Toggles whether UDP support should be compiled in or not.
+ *
+ * \hideinitializer
+ */
+#ifdef UIP_CONF_TCP
+#define UIP_TCP (UIP_CONF_TCP)
+#else /* UIP_CONF_UDP */
+#define UIP_TCP           1
+#endif /* UIP_CONF_UDP */
+
+/**
  * Determines if support for opening connections from uIP should be
  * compiled in.
  *
  * If the applications that are running on top of uIP for this project
- * do not need to open outgoing TCP connections, this configration
+ * do not need to open outgoing TCP connections, this configuration
  * option can be turned off to reduce the code size of uIP.
  *
  * \hideinitializer
  */
+#ifndef UIP_CONF_ACTIVE_OPEN
 #define UIP_ACTIVE_OPEN 1
+#else /* UIP_CONF_ACTIVE_OPEN */
+#define UIP_ACTIVE_OPEN (UIP_CONF_ACTIVE_OPEN)
+#endif /* UIP_CONF_ACTIVE_OPEN */
 
 /**
  * The maximum number of simultaneously open TCP connections.
  *
  * Since the TCP connections are statically allocated, turning this
  * configuration knob down results in less RAM used. Each TCP
- * connection requires approximatly 30 bytes of memory.
+ * connection requires approximately 30 bytes of memory.
  *
  * \hideinitializer
  */
 #ifndef UIP_CONF_MAX_CONNECTIONS
 #define UIP_CONNS       10
 #else /* UIP_CONF_MAX_CONNECTIONS */
-#define UIP_CONNS UIP_CONF_MAX_CONNECTIONS
+#define UIP_CONNS (UIP_CONF_MAX_CONNECTIONS)
 #endif /* UIP_CONF_MAX_CONNECTIONS */
 
 
@@ -263,7 +335,7 @@
 #ifndef UIP_CONF_MAX_LISTENPORTS
 #define UIP_LISTENPORTS 20
 #else /* UIP_CONF_MAX_LISTENPORTS */
-#define UIP_LISTENPORTS UIP_CONF_MAX_LISTENPORTS
+#define UIP_LISTENPORTS (UIP_CONF_MAX_LISTENPORTS)
 #endif /* UIP_CONF_MAX_LISTENPORTS */
 
 /**
@@ -509,8 +581,8 @@ void httpd_appcall(void);
 #define UIP_APPCALL     httpd_appcall
 
 struct httpd_state {
-  u8_t state;
-  u16_t count;
+  uint8_t state;
+  uint16_t count;
   char *dataptr;
   char *script;
 };

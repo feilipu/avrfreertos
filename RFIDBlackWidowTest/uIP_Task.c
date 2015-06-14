@@ -14,10 +14,10 @@
 
 
 /* serial interface include file. */
-//#include <lib_serial.h>
+//#include "lib_serial.h"
 
 /* uIP includes. */
-#undef HTONS
+#undef UIP_HTONS
 
 #include "avr-uIP/global-conf.h"
 #include "avr-uIP/uip_arp.h"
@@ -55,7 +55,7 @@ uint8_t ssid_len;
 uint8_t security_passphrase_len;
 
 // signal the vuIP_TASK to resume execution.
-xSemaphoreHandle xZGIntrSemaphore;
+SemaphoreHandle_t xZGIntrSemaphore;
 
 static struct uip_eth_addr  my_eth_addr = { .addr = {UIP_ETHADDR0,UIP_ETHADDR1,UIP_ETHADDR2,UIP_ETHADDR3,UIP_ETHADDR4,UIP_ETHADDR5}};
 
@@ -79,7 +79,7 @@ uint8_t uip_buf[UIP_BUFSIZE+2];
 void vuIP_Task( void *pvParameters )
 {
 
-	static volatile portTickType xStartTime, xCurrentTime;
+	static volatile TickType_t xStartTime, xCurrentTime;
 	portBASE_TYPE xARPTimer, xSelfARPTimer;
 
 	uip_ipaddr_t ipaddr;
@@ -120,7 +120,6 @@ void vuIP_Task( void *pvParameters )
 		uip_setnetmask(ipaddr);
 	}
 
-
 	/* Initialize the uIP TCP/IP stack. */
 	network_init();
 
@@ -149,7 +148,7 @@ void vuIP_Task( void *pvParameters )
 			appropriate ARP functions depending on what kind of packet we
 			have received. If the packet is an IP packet, we should call
 			uip_input() as well. */
-			if( pucUIP_Buffer->type == htons( UIP_ETHTYPE_IP ) )
+			if( pucUIP_Buffer->type == uip_htons( UIP_ETHTYPE_IP ) )
 			{
 				uip_arp_ipin();
 				uip_input();
@@ -163,7 +162,7 @@ void vuIP_Task( void *pvParameters )
 					network_send();
 				}
 			}
-			else if( pucUIP_Buffer->type == htons( UIP_ETHTYPE_ARP ) )
+			else if( pucUIP_Buffer->type == uip_htons( UIP_ETHTYPE_ARP ) )
 			{
 				uip_arp_arpin();
 

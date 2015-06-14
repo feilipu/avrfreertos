@@ -56,9 +56,9 @@ struct pt {
 };
 
 #define PT_WAITING 0
-#define PT_EXITED  1
-#define PT_ENDED   2
-#define PT_YIELDED 3
+#define PT_YIELDED 1
+#define PT_EXITED  2
+#define PT_ENDED   3
 
 /**
  * \name Initialization
@@ -112,7 +112,7 @@ struct pt {
  *
  * \hideinitializer
  */
-#define PT_BEGIN(pt) { char PT_YIELD_FLAG = 1; LC_RESUME((pt)->lc)
+#define PT_BEGIN(pt) { char PT_YIELD_FLAG = 1; if (PT_YIELD_FLAG) {;} LC_RESUME((pt)->lc)
 
 /**
  * Declare the end of a protothread.
@@ -259,7 +259,7 @@ struct pt {
 /**
  * Schedule a protothread.
  *
- * This function shedules a protothread. The return value of the
+ * This function schedules a protothread. The return value of the
  * function is non-zero if the protothread is running or zero if the
  * protothread has exited.
  *
@@ -268,7 +268,7 @@ struct pt {
  *
  * \hideinitializer
  */
-#define PT_SCHEDULE(f) ((f) == PT_WAITING)
+#define PT_SCHEDULE(f) ((f) < PT_EXITED)
 
 /** @} */
 

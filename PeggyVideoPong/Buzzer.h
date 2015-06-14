@@ -159,7 +159,7 @@ void play(const int8_t *sequence);
 	// A version of play that takes a pointer to program space instead
 	// of RAM.  This is desirable since RAM is limited and the string
 	// must be in program space anyway.
-void playFromProgramSpace(const uint8_t PROGMEM *sequence_p);
+void playFromProgramSpace(const uint8_t *sequence_p);
 
 // Returns 1 if the buzzer is currently playing, otherwise it returns 0
 uint8_t isPlaying(void);

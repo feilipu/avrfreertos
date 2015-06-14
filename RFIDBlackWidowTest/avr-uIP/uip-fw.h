@@ -54,9 +54,9 @@
 struct uip_fw_netif {
   struct uip_fw_netif *next;  /**< Pointer to the next interface when
 				 linked in a list. */
-  u16_t ipaddr[2];            /**< The IP address of this interface. */
-  u16_t netmask[2];           /**< The netmask of the interface. */
-  u8_t (* output)(void);
+  uint16_t ipaddr[2];            /**< The IP address of this interface. */
+  uint16_t netmask[2];           /**< The netmask of the interface. */
+  uint8_t (* output)(void);
                               /**< A pointer to the function that
 				 sends a packet. */
 };
@@ -79,8 +79,8 @@ struct uip_fw_netif {
  */
 #define UIP_FW_NETIF(ip1,ip2,ip3,ip4, nm1,nm2,nm3,nm4, outputfunc) \
         NULL, \
-	{HTONS((ip1 << 8) | ip2), HTONS((ip3 << 8) | ip4)}, \
-	{HTONS((nm1 << 8) | nm2), HTONS((nm3 << 8) | nm4)}, \
+	{UIP_HTONS((ip1 << 8) | ip2), UIP_HTONS((ip3 << 8) | ip4)}, \
+	{UIP_HTONS((nm1 << 8) | nm2), UIP_HTONS((nm3 << 8) | nm4)}, \
         outputfunc
 
 /**
@@ -93,8 +93,8 @@ struct uip_fw_netif {
  * \hideinitializer
  */
 #define uip_fw_setipaddr(netif, addr) \
-        do { (netif)->ipaddr[0] = ((u16_t *)(addr))[0]; \
-             (netif)->ipaddr[1] = ((u16_t *)(addr))[1]; } while(0)
+        do { (netif)->ipaddr[0] = ((uint16_t *)(addr))[0]; \
+             (netif)->ipaddr[1] = ((uint16_t *)(addr))[1]; } while(0)
 /**
  * Set the netmask of a network interface.
  *
@@ -105,12 +105,12 @@ struct uip_fw_netif {
  * \hideinitializer
  */
 #define uip_fw_setnetmask(netif, addr) \
-        do { (netif)->netmask[0] = ((u16_t *)(addr))[0]; \
-             (netif)->netmask[1] = ((u16_t *)(addr))[1]; } while(0)
+        do { (netif)->netmask[0] = ((uint16_t *)(addr))[0]; \
+             (netif)->netmask[1] = ((uint16_t *)(addr))[1]; } while(0)
 
 void uip_fw_init(void);
-u8_t uip_fw_forward(void);
-u8_t uip_fw_output(void);
+uint8_t uip_fw_forward(void);
+uint8_t uip_fw_output(void);
 void uip_fw_register(struct uip_fw_netif *netif);
 void uip_fw_default(struct uip_fw_netif *netif);
 void uip_fw_periodic(void);

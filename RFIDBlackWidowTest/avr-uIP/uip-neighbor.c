@@ -54,7 +54,7 @@
 struct neighbor_entry {
   uip_ipaddr_t ipaddr;
   struct uip_neighbor_addr addr;
-  u8_t time;
+  uint8_t time;
 };
 static struct neighbor_entry entries[ENTRIES];
 
@@ -85,7 +85,7 @@ void
 uip_neighbor_add(uip_ipaddr_t ipaddr, struct uip_neighbor_addr *addr)
 {
   int i, oldest;
-  u8_t oldest_time;
+  uint8_t oldest_time;
 
   
   /* Find the first unused entry or the oldest used entry. */

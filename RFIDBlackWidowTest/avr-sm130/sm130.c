@@ -22,7 +22,7 @@
 #include <i2cMultiMaster.h>
 
 /* serial interface include file. */
-#include <lib_serial.h>
+#include <serial.h>
 
 #include "sm130.h"
 
@@ -74,7 +74,7 @@ void sm130_reset(uint8_t hardRESET)
 	{
 		RESET_on();
 		LEDFound_on();
-	 	vTaskDelay( ( 10 / portTICK_RATE_MS ) );
+	 	vTaskDelay( ( 10 / portTICK_PERIOD_MS ) );
 	 	LEDFound_off();
 	 	LEDFound_input();
 	 	RESET_off();
@@ -84,7 +84,7 @@ void sm130_reset(uint8_t hardRESET)
 		sm130_softReset();
 	}
 	// Allow enough time for reset
-	vTaskDelay( ( 250 / portTICK_RATE_MS ) );
+	vTaskDelay( ( 250 / portTICK_PERIOD_MS ) );
 
 	/* Create the semaphore used by the DREADY to indicate that a Tag has been read for processing. */
     vSemaphoreCreateBinary( xSM130IntrSemaphore );
@@ -127,7 +127,7 @@ uint8_t sm130_getFirmwareVersion(uint8_t *version)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the firmware version has length of 4
 		xData.CMD_Length = 4;
@@ -162,7 +162,7 @@ uint8_t sm130_seekTag(uint8_t *tag)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the seek Tag response has length of 2
 		xData.CMD_Length = 0x02;
@@ -171,7 +171,7 @@ uint8_t sm130_seekTag(uint8_t *tag)
 			if( xData.CMD_Length >= 1 && xData.CMD_Code == CMD_SEEK_TAG && xData.CMD_Data[0] == RESP_CMD_EXCECUTING )
 			{
 				// wait a minute (60,000 ms), or until we find a tag (signalled by interrupt on DREADY, giving semaphore).
-				xSemaphoreTake( xSM130IntrSemaphore, ( portTickType )(60000 / portTICK_RATE_MS) );
+				xSemaphoreTake( xSM130IntrSemaphore, ( TickType_t )(60000 / portTICK_PERIOD_MS) );
 
 				// expect that the seek Tag response has length of up to 6 bytes (Mifare Classic 1k and 4k)
 				xData.CMD_Length = 0x06;
@@ -204,7 +204,7 @@ uint8_t sm130_selectTag(uint8_t *tag)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the select Tag response has length of 6 bytes (Mifare Classic 1k and 4k)
 		xData.CMD_Length = 0x06;
@@ -241,7 +241,7 @@ uint8_t sm130_authenticate(uint8_t block, uint8_t keyType, uint8_t *key)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the authentication result has length of 2
 		xData.CMD_Length = 0x02;
@@ -275,7 +275,7 @@ uint8_t sm130_authenticateTransport(uint8_t block)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the authentication result has length of 2
 		xData.CMD_Length = 0x02;
@@ -310,7 +310,7 @@ uint8_t sm130_readBlock(uint8_t block, uint8_t *dataBlock)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporized.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the read result has length of 0x12 (18 bytes)
 		xData.CMD_Length = 0x12;
@@ -348,7 +348,7 @@ uint8_t sm130_writeBlock(uint8_t block, const uint8_t *dataBlock) // xxx
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the write result has length of 0x12, being the data read back
 		xData.CMD_Length = 0x12;
@@ -383,7 +383,7 @@ uint8_t sm130_writeKey(uint8_t block, uint8_t keyType, uint8_t *key)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the Key write result has length of 2
 		xData.CMD_Length = 0x02;
@@ -418,7 +418,7 @@ uint8_t sm130_setAntennaPower(uint8_t level)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the response has length of 2
 		xData.CMD_Length = 0x02;
@@ -447,7 +447,7 @@ uint8_t sm130_haltTag(void)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the response has length of 2
 		xData.CMD_Length = 2;
@@ -476,7 +476,7 @@ uint8_t sm130_sleep(void)
 		 // wait 5ms for the command to be executed, and a response prepared.
 		 // we have 50ms to get the response, before it is vaporised.
 
-		vTaskDelay( 5 / portTICK_RATE_MS );
+		vTaskDelay( 5 / portTICK_PERIOD_MS );
 
 		// expect that the response has length of 2
 		xData.CMD_Length = 2;
@@ -600,7 +600,7 @@ static uint8_t sm130_transmitData( pCMDArray xTransmitData) // xxx
 	{
 		// See if we can obtain the semaphore.  If the semaphore is not available
 		// wait 10 ticks to see if it becomes free.
-		if( xSemaphoreTake( xI2CSemaphore, ( portTickType ) 10 ) == pdTRUE )
+		if( xSemaphoreTake( xI2CSemaphore, ( TickType_t ) 10 ) == pdTRUE )
 		{
 			// We were able to obtain the semaphore and can now access the
 			// shared resource.
@@ -665,7 +665,7 @@ static uint8_t sm130_receiveData(pCMDArray xReceiveData) // xxx
 	{
 		// See if we can obtain the semaphore.  If the semaphore is not available
 		// wait 10 ticks to see if it becomes free.
-		if( xSemaphoreTake( xI2CSemaphore, ( portTickType ) 10 ) == pdTRUE )
+		if( xSemaphoreTake( xI2CSemaphore, ( TickType_t ) 10 ) == pdTRUE )
 		{
 			// We were able to obtain the semaphore and can now access the
 			// shared resource.
@@ -714,7 +714,7 @@ static uint8_t sm130_receiveData(pCMDArray xReceiveData) // xxx
 				I2C_Master_Get_Data_From_Transceiver( (uint8_t *)xReceiveData, i);
 
 				if (xReceiveData->CMD_Length == 0) // if we got nothing, then wait.
-					vTaskDelay( 5 / portTICK_RATE_MS );
+					vTaskDelay( 5 / portTICK_PERIOD_MS );
 				else
 					break; // we're golden. onwards.
 

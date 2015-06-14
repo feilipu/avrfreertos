@@ -53,17 +53,17 @@ void xLCDInit(void)
 	spi_LCD_init();					// initialise the SPI bus for 9 bit LCD transfers.
 	_delay_ms(100);
 
-	cbi(SPI_PORT, SPI_SCK);			//output_low (SPI_CLK);//output_low (SPI_MOSI);
-	cbi(SPI_PORT, SPI_MOSI);
+	cbi(SPI9_PORT, SPI9_SCK);			//output_low (SPI_CLK);//output_low (SPI_MOSI);
+	cbi(SPI9_PORT, SPI9_MOSI);
 	_delay_us(10);
-	sbi(SPI_PORT, LCD_SPI_SS);		//output_high (LCD_CS);
+	sbi(SPI9_PORT, LCD_SPI_SS);		//output_high (LCD_CS);
 	_delay_us(10);
-	cbi(SPI_PORT, LCD_RESET);		//output_low (LCD_RESET);
+	cbi(SPI9_PORT, LCD_RESET);		//output_low (LCD_RESET);
 	_delay_ms(100);
-	sbi(SPI_PORT, LCD_RESET);		//output_high (LCD_RESET);
+	sbi(SPI9_PORT, LCD_RESET);		//output_high (LCD_RESET);
 	_delay_ms(100);
-	sbi(SPI_PORT, SPI_SCK);
-	sbi(SPI_PORT, SPI_MOSI);
+	sbi(SPI9_PORT, SPI9_SCK);
+	sbi(SPI9_PORT, SPI9_MOSI);
 	_delay_us(10);
 
 	spi_LCD_command(DISCTL);	// display control(EPSON)
@@ -190,7 +190,7 @@ void xLCDContrast(uint8_t setting) {
 void xLCDDrawPixel(int16_t color, uint8_t x, uint8_t y)
 {
 	y	=	(COL_HEIGHT - 1) - y;
-    x   =   (ROW_LENGTH - 1) - x;
+	x   =   (ROW_LENGTH - 1) - x;
 
 	#ifdef EPSON
 		spi_LCD_command(PASET);	// page start/end ram
@@ -533,7 +533,7 @@ static void xLCDPutChar( int16_t x, int16_t y, uint8_t font, int16_t fColor, int
 
 
 
-const uint8_t PROGMEM FONT8x8[] = {
+const uint8_t FONT8x8[] PROGMEM = {
 
 0x08,0x08,0x08,0x00,0x00,0x00,0x00,0x00,        //  columns, rows, num_bytes_per_char
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,        //      space   0x20
@@ -634,7 +634,7 @@ const uint8_t PROGMEM FONT8x8[] = {
 0x1C,0x36,0x36,0x1C,0x00,0x00,0x00,0x00};       //      DEL
 
 
-const uint8_t PROGMEM FONT8x16[] = {
+const uint8_t FONT8x16[] PROGMEM = {
 
 0x08,0x10,0x10,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,	//  columns, rows, num_bytes_per_char
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,	//	space	0x20
@@ -733,94 +733,3 @@ const uint8_t PROGMEM FONT8x16[] = {
 0x00,0x00,0x70,0x18,0x18,0x18,0x0E,0x18,0x18,0x18,0x18,0x70,0x00,0x00,0x00,0x00,	//	}
 0x00,0x00,0x3B,0x6E,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,	//	~
 0x00,0x70,0xD8,0xD8,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};	//	DEL
-
-
-// *************************************************************************************************
-// LCDPutStr.c
-//
-// Draws a null-terminates PRGMEM character string at the specified (x,y) address and color
-//
-// Inputs: pString = pointer to character string to be displayed
-// x = row address (0 .. 131)
-// y = column address (0 .. 131)
-// fColor = 12-bit foreground color value rrrrggggbbbb
-// bColor = 12-bit background color value rrrrggggbbbb
-//
-// Returns: nothing
-//
-// Notes: Here's an example to display "Hello World!" at address (20,20)
-// LCDPutChar("Hello World!", 20, 20, WHITE, BLACK);
-//
-// Author: James P Lynch, August 30, 2007
-// Edited by Peter Davenport on August 23, 2010
-// For more information on how this code does it's thing look at this
-// "http://www.sparkfun.com/tutorial/Nokia%206100%20LCD%20Display%20Driver.pdf"
-// *************************************************************************************************
-
-// TRY NOT TO USE THIS. The xLCDPrint_P function is much nicer.
-
-/*
-static void xLCDPutStr_P( int16_t x, int16_t y, uint8_t font, int16_t fColor, int16_t bColor, PGM_P pString )
-{
- 	x += 16; // adjust for the right location for 0,0
-	y += 8;
-
-	// loop until null-terminator is seen
-	while (pgm_read_byte(pString) != 0x00)
-	{
-		// draw the character
-		xLCDPutChar( x, y, font, fColor, bColor, pgm_read_byte(pString++) );
-
-		// advance the y position
-		y += 8;
-
-		// bail out if y exceeds 130
-		if (y > ENDCOL) break;
-	}
-} // */
-
-
-// *************************************************************************************************
-// LCDPutStr.c
-//
-// Draws a null-terminates character string at the specified (x,y) address and color
-//
-// Inputs: pString = pointer to character string to be displayed
-// x = row address (0 .. 131)
-// y = column address (0 .. 131)
-// fColor = 12-bit foreground color value rrrrggggbbbb
-// bColor = 12-bit background color value rrrrggggbbbb
-//
-// Returns: nothing
-//
-// Notes: Here's an example to display "Hello World!" at address (20,20)
-// LCDPutChar("Hello World!", 20, 20, WHITE, BLACK);
-//
-// Author: James P Lynch, August 30, 2007
-// Edited by Peter Davenport on August 23, 2010
-// For more information on how this code does it's thing look at this
-// "http://www.sparkfun.com/tutorial/Nokia%206100%20LCD%20Display%20Driver.pdf"
-// *************************************************************************************************
-
-// TRY NOT TO USE THIS. The xLCDPrint function is much nicer.
-
-/*
-static void xLCDPutStr( int16_t x, int16_t y, uint8_t font, int16_t fColor, int16_t bColor, uint8_t *pString )
-{
- 	x += 16;  // adjust for the right location for 0,0
-	y += 8;
-
-	// loop until null-terminator is seen
-	while (*pString != 0x00)
-	{
-		// draw the character
-		xLCDPutChar(x, y, font, fColor, bColor, *pString++ );
-
-		// advance the y position
-		y += 8;
-
-		// bail out if y exceeds 131
-		if (y > ENDCOL) break;
-	}
-} // */
-

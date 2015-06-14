@@ -15,10 +15,10 @@ http://www.planetclegg.com/projects/Twi2Peggy.html
 In brief: The C firmware code is intended to be installed on an
 unmodified Peggy 2.0.   It sets the Peggy up as a TWI/I2C slave device,
 and requires a TWI Master to drive the display.  Makefile is included.  
-You will need avr-gcc toolchaing (WinAVR or AvrMacPack toolchains work well)
+You will need avr-gcc toolchain (WinAVR or AvrMacPack toolchains work well)
 to build this project, and you will need a AVR programmer that is 
 compatible with AVRDUDE and that supports a 6-pin ISP header to load the code.
-If you dont have a programmer but have a FTDI cable, you can use that assuming
+If you don't have a programmer but have a FTDI cable, you can use that assuming
 that the AVR has the Arduino bootloader installed.  (See the section at the 
 bottom of this file if you want to try to get the firmware working using the
 Arduino IDE and FTDI cable rather than AVR-GCC.)

@@ -14,65 +14,96 @@
 #include <util/delay.h>
 
 /* Scheduler include files. */
-#include <FreeRTOS.h>
-#include <task.h>
-#include <queue.h>
-#include <semphr.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 /* Pololu derived include files. */
-#include <digitalAnalog.h>
+#include "digitalAnalog.h"
 
 /* serial interface include file. */
-#include <lib_serial.h>
+#include "serial.h"
 
 /* i2c Interface include file. */
-#include <i2cMultiMaster.h>
+#include "i2cMultiMaster.h"
 
 /* RTC interface (using I2C) include file */
-#include <rtc.h>
+#include "rtc.h"
+
+/* extended string to integer */
+#include "xatoi.h"
 
 /* hd44780 LCD control interface file. */
-#include <hd44780.h>
+#include "hd44780.h"
 
 /* Servo PWM Timer include file */
-#include <servoPWM.h>
+#include "servoPWM.h"
 
 /* Clock include file. */
 #include "retrograde.h"
-#include "xitoa.h"
 
+
+/*--------------Global Variables--------------------*/
+
+TaskHandle_t xTaskWriteRTCRetrograde;	// make a Task handle so we can suspend and resume the Retrograde hands task.
+
+/* Create a Semaphore binary flag for the ADC. To ensure only single access. */
+SemaphoreHandle_t xADCSemaphore;
+
+uint8_t * LineBuffer;					// put line buffer on heap (with pvPortMalloc).
+
+#if defined (portRTC_DEFINED)
+
+tm SetTimeDate; // structure for storing the time to be set.
+
+xRTCTempArray xCurrentTempTime; 		// structure to hold the I2C Current time value
+
+xRTCTempArray xMaximumTempTime;
+xRTCTempArray xMinimumTempTime;
+
+//  EEPROM structures to hold the extreme temperatures, and the time these were achieved.
+xRTCTempArray EEMEM xMaximumEverTempTime;
+xRTCTempArray EEMEM xMinimumEverTempTime;
+
+#endif
 
 /*--------------PrivateFunctions-------------------*/
 
 static void get_line (uint8_t *buff, uint8_t len);
 
-static portFLOAT ReadADCSensors(void);   // Read ADC Sensor for thermal LM335z
+static float ReadADCSensors(void);   // Read ADC for Thermal Sensor LM335z
 
 /*--------------Functions---------------------------*/
 
 /* Main program loop */
-int16_t main(void) __attribute__((OS_main));
+int main(void) __attribute__((OS_main));
 
-int16_t main(void)
+int main(void)
 {
 
     // turn on the serial port for setting or querying the time .
-	xSerialPort = xSerialPortInitMinimal( 115200, portSERIAL_BUFFER, portSERIAL_BUFFER); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
     // Memory shortages mean that we have to minimise the number of
     // threads, hence there are no longer multiple threads using a resource.
     // Still, semaphores are useful to stop a thread proceeding, where it should be stopped because it is using a resource.
-    vSemaphoreCreateBinary( xADCSemaphore ); 		// binary semaphore for ADC - Don't sample temperature when hands are moving (voltage droop).
+    if( xADCSemaphore == NULL ) 					// Check to see if the ADC semaphore has not been created.
+    {
+    	xADCSemaphore = xSemaphoreCreateBinary();	// binary semaphore for ADC - Don't sample temperature when hands are moving (voltage droop).
+		if( ( xADCSemaphore ) != NULL )
+			xSemaphoreGive( ( xADCSemaphore ) );	// make the ADC available
+    }
 
 	// initialise I2C master interface, need to do this once only.
 	// If there are two I2C processes, then do it during the system initiation.
 	I2C_Master_Initialise((ARDUINO<<I2C_ADR_BITS) | (pdTRUE<<I2C_GEN_BIT));
 
-	avrSerialPrint_P(PSTR("\r\n\nHello World!\r\n")); // Ok, so we're alive...
+	avrSerialxPrint_P(&xSerialPort, PSTR("\r\nHello World!\r\n")); // Ok, so we're alive...
 
     xTaskCreate(
 		TaskWriteLCD
-		,  (const signed portCHAR *)"WriteLCD"
+		,  (const portCHAR *)"WriteLCD"
 		,  192
 		,  NULL
 		,  2
@@ -80,7 +111,7 @@ int16_t main(void)
 
    xTaskCreate(
 		TaskWriteRTCRetrograde
-		,  (const signed portCHAR *)"WriteRTCRetrograde"
+		,  (const portCHAR *)"WriteRTCRetrograde"
 		,  120
 		,  NULL
 		,  1
@@ -88,17 +119,17 @@ int16_t main(void)
 
    xTaskCreate(
 		TaskMonitor
-		,  (const signed portCHAR *)"SDMonitor" // Serial Monitor
-		,  208
+		,  (const portCHAR *)"SerialMonitor"
+		,  256
 		,  NULL
 		,  3
 		,  NULL ); // */
 
-	avrSerialPrintf_P(PSTR("\r\nFree Heap Size: %u\r\n"),xPortGetFreeHeapSize() ); // needs heap_1 or heap_2 for this function to succeed.
+	avrSerialPrintf_P(PSTR("\r\nFree Heap Size: %u\r\n"), xPortGetFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
 
     vTaskStartScheduler();
 
-	avrSerialPrint_P(PSTR("\r\n\n\nGoodbye... no space for idle task!\r\n")); // Doh, so we're dead...
+	avrSerialPrint_P(PSTR("\r\n\nGoodbye... no space for idle task!\r\n")); // Doh, so we're dead...
 
 #if defined (portHD44780_LCD)
 	lcd_Locate (0, 1);
@@ -113,58 +144,55 @@ int16_t main(void)
 
 static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 {
-    (void) pvParameters;;
+    (void) pvParameters;
 
 	uint8_t *ptr;
-	uint32_t p1;
+	int32_t p1;
 
 	// create the buffer on the heap (so they can be moved later).
 	if(LineBuffer == NULL) // if there is no Line buffer allocated (pointer is NULL), then allocate buffer.
 		if( !(LineBuffer = (uint8_t *) pvPortMalloc( sizeof(uint8_t) * LINE_SIZE )))
 			xSerialPrint_P(PSTR("pvPortMalloc for *LineBuffer fail..!\r\n"));
 
-#if defined (portRTC_DEFINED)
-
-	if(SetTimeDate == NULL) // if there is no SetTimeDate allocated (pointer is NULL), then allocate buffer.
-		if( !(SetTimeDate = (pRTCArraySto) pvPortMalloc( sizeof(xRTCArraySto) )))
-			xSerialPrint_P(PSTR("pvPortMalloc for *Buff fail..!\r\n"));
-#endif
-
 
     while(1)
     {
-
-    	xSerialPutChar(xSerialPort, '>', 100 / portTICK_RATE_MS);
+    	xSerialPutChar(&xSerialPort, '>');
 
 		ptr = LineBuffer;
 		get_line(ptr, (uint8_t)(sizeof(uint8_t)* LINE_SIZE)); //sizeof (Line);
 
 		switch (*ptr++) {
 
+		case 'h' : // help
+			xSerialPrint_P( PSTR("rt - reset maximum & minimum temperatures\r\n") );
+			xSerialPrint_P( PSTR("t  - show the time\r\n") );
+			xSerialPrint_P( PSTR("t  - set the time\r\nt [<year yy> <month mm> <date dd> <day: Sun=0> <hour hh> <minute mm> <second ss>]\r\n") );
+			break;
+
 #ifdef portRTC_DEFINED
-		case 't' :	/* t [<year yy> <month mm> <date dd> <day: Sun=1> <hour hh> <minute mm> <second ss>] */
+		case 't' :	/* t [<year yy> <month mm> <date dd> <day: Sun=0> <hour hh> <minute mm> <second ss>] */
 
 			if (xatoi(&ptr, &p1)) {
-				SetTimeDate->Year = (uint8_t)p1;
-				xatoi(&ptr, &p1); SetTimeDate->Month = (uint8_t)p1;
-				xatoi(&ptr, &p1); SetTimeDate->Date = (uint8_t)p1;
-				xatoi(&ptr, &p1); SetTimeDate->Day = (uint8_t)p1;
-				xatoi(&ptr, &p1); SetTimeDate->Hour = (uint8_t)p1;
-				xatoi(&ptr, &p1); SetTimeDate->Minute = (uint8_t)p1;
+				SetTimeDate.tm_year = (uint8_t)p1 + 100; 			// convert to (Gregorian - 1900)
+				xatoi(&ptr, &p1); SetTimeDate.tm_mon = (uint8_t)p1;
+				xatoi(&ptr, &p1); SetTimeDate.tm_mday = (uint8_t)p1;
+				xatoi(&ptr, &p1); SetTimeDate.tm_wday = (uint8_t)p1;
+				xatoi(&ptr, &p1); SetTimeDate.tm_hour = (uint8_t)p1;
+				xatoi(&ptr, &p1); SetTimeDate.tm_min = (uint8_t)p1;
 				if (!xatoi(&ptr, &p1))
 					break;
-				SetTimeDate->Second = (uint8_t)p1;
+				SetTimeDate.tm_sec = (uint8_t)p1;
 
-				xSerialPrintf_P(PSTR("Set: %u/%u/%u %2u:%02u:%02u\r\n"), SetTimeDate->Year, SetTimeDate->Month, SetTimeDate->Date, SetTimeDate->Hour, SetTimeDate->Minute, SetTimeDate->Second);
-				if (setDateTimeDS1307( SetTimeDate ) == pdTRUE)
+				xSerialPrintf_P(PSTR("Set: %u/%u/%u %2u:%02u:%02u\r\n"), SetTimeDate.tm_year, SetTimeDate.tm_mon, SetTimeDate.tm_mday, SetTimeDate.tm_hour, SetTimeDate.tm_min, SetTimeDate.tm_sec);
+				if (setDateTimeDS1307( &SetTimeDate ) == pdTRUE)
 					xSerialPrint_P( PSTR("Setting successful\r\n") );
 
 			} else {
 
 				if (getDateTimeDS1307( &xCurrentTempTime.DateTime) == pdTRUE)
-					xSerialPrintf_P(PSTR("Current: %u/%u/%u %2u:%02u:%02u\r\n"), xCurrentTempTime.DateTime.Year + 2000, xCurrentTempTime.DateTime.Month, xCurrentTempTime.DateTime.Date, xCurrentTempTime.DateTime.Hour, xCurrentTempTime.DateTime.Minute, xCurrentTempTime.DateTime.Second);
+					xSerialPrintf_P(PSTR("Current: %u/%u/%u %2u:%02u:%02u\r\n"), xCurrentTempTime.DateTime.tm_year + 1900, xCurrentTempTime.DateTime.tm_mon, xCurrentTempTime.DateTime.tm_mday, xCurrentTempTime.DateTime.tm_hour, xCurrentTempTime.DateTime.tm_min, xCurrentTempTime.DateTime.tm_sec);
 			}
-
 			break;
 #endif
 
@@ -177,8 +205,8 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 				// Now we commit the time and temperature to the EEPROM, forever...
 				eeprom_update_block(&xMaximumTempTime, &xMaximumEverTempTime, sizeof(xRTCTempArray));
 				eeprom_update_block(&xMinimumTempTime, &xMinimumEverTempTime, sizeof(xRTCTempArray));
-
 				break;
+
 			default :
 				break;
 			}
@@ -186,9 +214,10 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 
 		default :
 			break;
-
 		}
-// 		xSerialPrintf_P(PSTR("\r\nSD Monitor HighWater @ %u\r\n\n"), uxTaskGetStackHighWaterMark(NULL));
+// 		xSerialPrintf_P(PSTR("\r\nSerial Monitor: Stack HighWater @ %u"), uxTaskGetStackHighWaterMark(NULL));
+//		xSerialPrintf_P(PSTR("\r\nFree Heap Size: %u\r\n"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
+
     }
 
 }
@@ -201,7 +230,7 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 {
     (void) pvParameters;
 
-    portTickType xLastWakeTime;
+    TickType_t xLastWakeTime;
 	/* The xLastWakeTime variable needs to be initialised with the current tick
 	count.  Note that this is the only time we access this variable.  From this
 	point on xLastWakeTime is managed automatically by the vTaskDelayUntil()
@@ -246,27 +275,27 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 			else temperature_print = false;
 
 			lcd_Locate(0, 0);  // go to the first character of the first LCD line
-			switch( xCurrentTempTime.DateTime.Day )
+			switch( xCurrentTempTime.DateTime.tm_wday )
 			{
-				case Sunday:
+				case SUNDAY:
 					lcd_Print_P(PSTR("Sunday   "));
 					break;
-				case Monday:
+				case MONDAY:
 					lcd_Print_P(PSTR("Monday   "));
 					break;
-				case Tuesday:
+				case TUESDAY:
 					lcd_Print_P(PSTR("Tuesday  "));
 					break;
-				case Wednesday:
+				case WEDNESDAY:
 					lcd_Print_P(PSTR("Wednesday"));
 					break;
-				case Thursday:
+				case THURSDAY:
 					lcd_Print_P(PSTR("Thursday "));
 					break;
-				case Friday:
+				case FRIDAY:
 					lcd_Print_P(PSTR("Friday   "));
 					break;
-				case Saturday:
+				case SATURDAY:
 					lcd_Print_P(PSTR("Saturday "));
 					break;
 				default:
@@ -276,7 +305,7 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 
 			// display Day Date/Month/Year
 			lcd_Locate(0, 10);              // go to the eleventh character of the first LCD line
-			lcd_Printf_P( PSTR("%2u/%2u/%4u"), xCurrentTempTime.DateTime.Date, xCurrentTempTime.DateTime.Month, (xCurrentTempTime.DateTime.Year + 2000) );
+			lcd_Printf_P( PSTR("%2u/%2u/%4u"), xCurrentTempTime.DateTime.tm_mday, xCurrentTempTime.DateTime.tm_mon, (xCurrentTempTime.DateTime.tm_year + 1900) );
 
 			// display the current temperature
 			lcd_Locate(1, 1);			// LCD cursor to third character of the second LCD line
@@ -285,35 +314,35 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 
 			// display the current time
 			lcd_Locate(1, 9);             // go to the ninth character of the second LCD line
-			lcd_Printf_P(PSTR("%2u:%02u:%02u"),xCurrentTempTime.DateTime.Hour, xCurrentTempTime.DateTime.Minute, xCurrentTempTime.DateTime.Second);
+			lcd_Printf_P(PSTR("%2u:%02u:%02u"),xCurrentTempTime.DateTime.tm_hour, xCurrentTempTime.DateTime.tm_min, xCurrentTempTime.DateTime.tm_sec);
 
 			// display the maximum temperature, time and date
 			lcd_Locate(2, 0);          // go to the first character of the third LCD line
 			lcd_Printf_P(PSTR("Max%5.1f"),xMaximumTempTime.Temperature);			// print the maximum temperature value
 
 			lcd_Locate(2, 9);          // go to the ninth character of the third LCD line
-			lcd_Printf_P(PSTR("%2u:%02u %2u/%2u"),xMaximumTempTime.DateTime.Hour, xMaximumTempTime.DateTime.Minute, xMaximumTempTime.DateTime.Date, xMaximumTempTime.DateTime.Month );
+			lcd_Printf_P(PSTR("%2u:%02u %2u/%2u"),xMaximumTempTime.DateTime.tm_hour, xMaximumTempTime.DateTime.tm_min, xMaximumTempTime.DateTime.tm_mday, xMaximumTempTime.DateTime.tm_mon );
 
 			// display the m temperature, time and date
 			lcd_Locate(3, 0);          // go to the first character of the forth LCD line
 			lcd_Printf_P(PSTR("Min%5.1f"),xMinimumTempTime.Temperature);			// print the minimum temperature value
 
 			lcd_Locate(3, 9);          // go to the ninth character of the fourth LCD line
-			lcd_Printf_P(PSTR("%2u:%02u %2u/%2u"),xMinimumTempTime.DateTime.Hour, xMinimumTempTime.DateTime.Minute, xMinimumTempTime.DateTime.Date, xMinimumTempTime.DateTime.Month );
+			lcd_Printf_P(PSTR("%2u:%02u %2u/%2u"),xMinimumTempTime.DateTime.tm_hour, xMinimumTempTime.DateTime.tm_min, xMinimumTempTime.DateTime.tm_mday, xMinimumTempTime.DateTime.tm_mon );
 
-			if(xCurrentTempTime.DateTime.Second == 0)
+			if(xCurrentTempTime.DateTime.tm_sec == 0)
 			// resume the xTaskWriteRTCRetrograde() task, now that we need to write the analogue hands.
 				vTaskResume( xTaskWriteRTCRetrograde );
     	}
-//		xSerialPrintf_P(PSTR("LCD HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
-        vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_RATE_MS ) );
+//		xSerialPrintf_P(PSTR("LCD: Stack HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
+        vTaskDelayUntil( &xLastWakeTime, ( 200 / portTICK_PERIOD_MS ) );
 	}
 }
 
 
 static void TaskWriteRTCRetrograde(void *pvParameters) // Write RTC to Retrograde Hands
 {
-    (void) pvParameters;;
+    (void) pvParameters;
 
     uint16_t servoHours_uS = 1500;
     uint16_t servoMinutes_uS = 1500;
@@ -329,7 +358,7 @@ static void TaskWriteRTCRetrograde(void *pvParameters) // Write RTC to Retrograd
 		// Servos driving the hands, drags the Vcc down, drastically affecting the ADC0 (temperature) reading.
 
 		// delay 2000mS to ensure hands are stopped before releasing.
-		vTaskDelay( 2000 / portTICK_RATE_MS );
+		vTaskDelay( 2000 / portTICK_PERIOD_MS );
 
 		xSemaphoreGive( xADCSemaphore ); // now the ADC can be used again.
 	}
@@ -339,19 +368,19 @@ static void TaskWriteRTCRetrograde(void *pvParameters) // Write RTC to Retrograd
 		if( firstPass == pdTRUE) // Set hour hand servo on power-on once,
 		{
 			// convert to a range of 700uS to 2300uS over 24 hours.
-			servoHours_uS = (uint16_t)(2300 - ((float)xCurrentTempTime.DateTime.Minute + (float)xCurrentTempTime.DateTime.Hour*60 )/1439*(2300-700));
+			servoHours_uS = (uint16_t)(2300 - ((float)xCurrentTempTime.DateTime.tm_min + (float)xCurrentTempTime.DateTime.tm_hour*60 )/1439*(2300-700));
 			firstPass = pdFALSE;
 
 		} else {
 
-			switch( xCurrentTempTime.DateTime.Minute )  // otherwise update the hour hand once every quarter hour.
+			switch( xCurrentTempTime.DateTime.tm_min )  // otherwise update the hour hand once every quarter hour.
 			{
 				case 0:
 				case 15:
 				case 30:
 				case 45:
 					// convert to a range of 700uS to 2300uS over 24 hours.
-					servoHours_uS = (uint16_t)(2300 - ((float)xCurrentTempTime.DateTime.Minute + (float)xCurrentTempTime.DateTime.Hour*60 )/1439*(2300-700));
+					servoHours_uS = (uint16_t)(2300 - ((float)xCurrentTempTime.DateTime.tm_min + (float)xCurrentTempTime.DateTime.tm_hour*60 )/1439*(2300-700));
 					break;
 				default:
 					break;
@@ -360,7 +389,7 @@ static void TaskWriteRTCRetrograde(void *pvParameters) // Write RTC to Retrograd
 		}
 
 		// convert to a range of 700uS to 2300uS over 60 minutes.
-		servoMinutes_uS = (uint16_t)(2300 - (float)xCurrentTempTime.DateTime.Minute/59*(2300-700));
+		servoMinutes_uS = (uint16_t)(2300 - (float)xCurrentTempTime.DateTime.tm_min/59*(2300-700));
 
 		// See if we can obtain the ADC semaphore.  If the semaphore is not available
 		// wait for as long as we can to see if it becomes free.
@@ -374,14 +403,13 @@ static void TaskWriteRTCRetrograde(void *pvParameters) // Write RTC to Retrograd
 
 			// Servos driving, drags the Vcc down, drastically affecting the ADC0 reading.
 			// delay 2000mS to ensure hands are stopped before releasing.
-			vTaskDelay( 2000 / portTICK_RATE_MS );
+			vTaskDelay( 2000 / portTICK_PERIOD_MS );
 			xSemaphoreGive( xADCSemaphore ); // now the ADC can be used again.
 		}
 
-    	vTaskSuspend( NULL );	// suspend ourselves, until we're needed again.
-
-//		xSerialPrintf_P(PSTR("RTC Servo HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
-    }
+    	vTaskSuspend( NULL );	// suspend ourselves, until we're needed again. */
+//		xSerialPrintf_P(PSTR("RTC Servo: Stack HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
+	}
 }
 
 
@@ -389,11 +417,11 @@ static void TaskWriteRTCRetrograde(void *pvParameters) // Write RTC to Retrograd
 /* Additional helper functions */
 /*-----------------------------------------------------------*/
 
-portFLOAT ReadADCSensors(void) // Read ADC Sensor for Thermal LM335z
+float ReadADCSensors(void) // Read ADC Sensor for Thermal LM335z
 {
 	// Variables for the analogue conversion on ADC Sensors
 
-    uint32_t samples = 0;               		// holds the summated samples
+    uint32_t samples = 0;               		// holds the summated samples for decimation
     uint16_t i = (uint16_t) _BV(2 * ADC_SAMPLES); // 4 ^ ADC_SAMPLES
 
 	if( xADCSemaphore != NULL )
@@ -401,13 +429,14 @@ portFLOAT ReadADCSensors(void) // Read ADC Sensor for Thermal LM335z
 		// See if we can obtain the semaphore.  If the semaphore is not available
 		// wait 5 ticks to see if it becomes free.
 
-		if( xSemaphoreTake( xADCSemaphore, ( portTickType ) 5 ) == pdTRUE )
+		if( xSemaphoreTake( xADCSemaphore, ( TickType_t ) 5 ) == pdTRUE )
 		{
 			// We were able to obtain the semaphore and can now access the shared resource.
 			// We want to have the ADC for us alone, as it takes some time to sample,
 			// so we don't want it getting stolen during the middle of a conversion.
 
-		    setAnalogMode(MODE_10_BIT);    // 10-bit analog-to-digital conversions
+		    setAnalogMode(MODE_10_BIT);	// 10-bit analogue-to-digital conversions
+		    DIDR0 = _BV(ADC0D);			// Disable the digital IO circuit on the ADC0 pin, used for the temperature sensor.
 
 			do
 			{
@@ -415,7 +444,7 @@ portFLOAT ReadADCSensors(void) // Read ADC Sensor for Thermal LM335z
 				do _delay_loop_1(F_CPU / 5e5);     // wait until conversion read. This is about 6 uS, which should be enough.
 				while( analogIsConverting() );
 
-				samples += (uint32_t)analogConversionResult();	// sum the results
+				samples += analogConversionResult();	// sum the results
 
 			} while (--i);
 
@@ -445,7 +474,7 @@ portFLOAT ReadADCSensors(void) // Read ADC Sensor for Thermal LM335z
 			return 0; // no sample taken so return 0.
 		}
 	}
-	return ( (portFLOAT) samples * 497.0 / (((uint16_t)_BV(10 + ADC_SAMPLES)) -1) );  // and return the current Kelvin temp
+	return ( (float) samples * 497.0 / (((uint16_t)_BV(10 + ADC_SAMPLES)) -1) );  // and return the current Kelvin temp
 }
 
 /*-----------------------------------------------------------*/
@@ -459,17 +488,18 @@ void get_line (uint8_t *buff, uint8_t len)
 	uint8_t i = 0;
 
 	for (;;) {
-		xSerialGetChar(xSerialPort, &c, portMAX_DELAY);
+		while ( ! xSerialGetChar( &xSerialPort, &c ))
+			vTaskDelay( 1 );
 
 		if (c == '\r') break;
 		if ((c == '\b') && i) {
 			--i;
-			xSerialPutChar(xSerialPort, c, 100 / portTICK_RATE_MS);
+			xSerialPutChar( &xSerialPort, c );
 			continue;
 		}
 		if (c >= ' ' && i < len - 1) {	/* Visible chars */
 			buff[i++] = c;
-			xSerialPutChar(xSerialPort, c, 100 / portTICK_RATE_MS);
+			xSerialPutChar( &xSerialPort, c );
 		}
 	}
 	buff[i] = 0;
@@ -480,8 +510,8 @@ void get_line (uint8_t *buff, uint8_t len)
 /*-----------------------------------------------------------*/
 
 
-void vApplicationStackOverflowHook( xTaskHandle xTask,
-									signed portCHAR *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+									portCHAR *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:

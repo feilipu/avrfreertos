@@ -1,0 +1,16 @@
+make clean
+make mega2560
+make program
+
+make program
+will fail with error (expected bug), just ignore it.
+
+avrdude: verifying ...
+avrdude: verification error, first mismatch at byte 0x3e000
+         0x88 != 0xff
+avrdude: verification error; content mismatch
+
+avrdude: safemode: Fuses OK
+
+avrdude done.  Thank you.
+

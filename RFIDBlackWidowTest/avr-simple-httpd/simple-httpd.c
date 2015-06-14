@@ -16,7 +16,7 @@
 #include "queue.h"
 
 /* serial interface include file. */
-#include <lib_serial.h> // temporary
+#include <serial.h> // temporary
 
 /*------------------------------------------------------*/
 
@@ -46,7 +46,7 @@ static unsigned short fill_buf(void* blk);
 
 void simple_httpd_init(void)
 {
-	uip_listen(HTONS(80));
+	uip_listen(UIP_HTONS(80));
 }
 
 void simple_httpd_appcall(void)

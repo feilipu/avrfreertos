@@ -390,7 +390,7 @@ void play(const int8_t *notes)
 
 /*-----------------------------------------------------------*/
 
-void playFromProgramSpace(const uint8_t PROGMEM *notes_p)
+void playFromProgramSpace(const uint8_t *notes_p )
 {
 	TIMER2_INTERRUPT_DISABLE();	// prevent this from being interrupted
 	buzzerSequence = (const int8_t *) notes_p;
@@ -477,7 +477,7 @@ static int8_t currentCharacter(void)
 	do
 	{
 		if(use_program_space)
-			c = pgm_read_byte(buzzerSequence);
+			c = pgm_read_byte_near(buzzerSequence);
 		else
 			c = *buzzerSequence;
 

@@ -1,18 +1,34 @@
 
 #include <avr/io.h>
 
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+#include "spi.h"
+
 #include "SPI9master.h"
 
+
+/* Declare a binary Semaphore flag for the SPI Bus. To ensure only single access to SPI Bus. */
+extern SemaphoreHandle_t xSPISemaphore;
 
 //************************************************************************
 //Usage: spi_LCD_init(); initiate 9 bit transfers on SPI bus
 //Inputs: None
 //Outputs: None
 //************************************************************************
+
 void inline spi_LCD_init(void)
 {
-	SPI_DDR  |= ( ( uint8_t ) ((1<<LCD_RESET)|(1<<LCD_SPI_SS)|(1<<SPI_SCK)|(1<<SPI_SS)|(1<<SPI_MOSI)));
-    SPI_PORT |= ( ( uint8_t ) ((1<<LCD_RESET)|(1<<LCD_SPI_SS)) );
+	SPI9_DDR  |= ( ( uint8_t ) ((1<<LCD_RESET)|(1<<LCD_SPI_SS)|(1<<SPI9_SCK)|(1<<SPI9_SS)|(1<<SPI9_MOSI)));
+    SPI9_PORT |= ( ( uint8_t ) ((1<<LCD_RESET)|(1<<LCD_SPI_SS)) );
+
+    if( xSPISemaphore == NULL ) 					/* Check to see if the semaphore has not been created. */
+    {
+    	xSPISemaphore = xSemaphoreCreateBinary(); 	/* Then create the SPI bus binary semaphore */
+		if( ( xSPISemaphore ) != NULL )
+			xSemaphoreGive( ( xSPISemaphore ) );	/* make the SPI bus available */
+    }
 }
 
 
@@ -24,34 +40,34 @@ void inline spi_LCD_init(void)
 void spi_LCD_command(uint8_t data)
 {
 
-	cbi(SPI_PORT, LCD_SPI_SS);		// enable LCD chip, by setting low
-	cbi(SPI_PORT, SPI_MOSI);		// output low on data out (9th bit low = command)
-	
-	cbi(SPI_PORT, SPI_SCK);		    // send clock pulse
+	cbi(SPI9_PORT, LCD_SPI_SS);		// enable LCD chip, by setting low
+	cbi(SPI9_PORT, SPI9_MOSI);		// output low on data out (9th bit low = command)
+
+	cbi(SPI9_PORT, SPI9_SCK);		    // send clock pulse
 	asm volatile ("nop");
-	sbi(SPI_PORT, SPI_SCK);
-	
-	sbi(SPI_PORT, SPI_MOSI);		// output high on data out 
-	
+	sbi(SPI9_PORT, SPI9_SCK);
+
+	sbi(SPI9_PORT, SPI9_MOSI);		// output high on data out
+
 	asm volatile ("nop");
 
     SPCR |= (( uint8_t ) (1<<SPE)|(1<<MSTR));	// Enable Hardware SPI,
     SPSR |= (( uint8_t ) (1<<SPI2X));         // set clock rate fck/2
-    
+
     SPDR = data; 						// send data
-    
+
     while(!(SPSR & (1<<SPIF)));		    // wait until send complete
-    
-	sbi(SPI_PORT, LCD_SPI_SS);			    // disable LCD device CS
+
+	sbi(SPI9_PORT, LCD_SPI_SS);			    // disable LCD device CS
 
 
                                         // Disable Hardware SPI, this releases the SPI pins
-										// for general IO use. which is used to send the 1'st 
+										// for general IO use. which is used to send the 1'st
 										// bit out
     SPCR &= ~(( uint8_t ) (1<<SPE)|(1<<MSTR));
     SPSR &= ~(( uint8_t ) (1<<SPI2X));
 
-    sbi(SPI_PORT, LCD_SPI_SS);			// disable LCD chip
+    sbi(SPI9_PORT, LCD_SPI_SS);			// disable LCD chip
 }
 
 //************************************************************************
@@ -62,102 +78,33 @@ void spi_LCD_command(uint8_t data)
 void spi_LCD_data(uint8_t data)
 {
 
-	cbi(SPI_PORT, LCD_SPI_SS);			// enable chip by setting low
-	sbi(SPI_PORT, SPI_MOSI);			// output high on data out (9th bit high = data)
-	
-	cbi(SPI_PORT, SPI_SCK);		        // send clock pulse
+	cbi(SPI9_PORT, LCD_SPI_SS);			// enable chip by setting low
+	sbi(SPI9_PORT, SPI9_MOSI);			// output high on data out (9th bit high = data)
+
+	cbi(SPI9_PORT, SPI9_SCK);		        // send clock pulse
     asm volatile ("nop");
-	sbi(SPI_PORT, SPI_SCK);
-	
+	sbi(SPI9_PORT, SPI9_SCK);
+
 	asm volatile ("nop");
 
     SPCR |= (( uint8_t ) (1<<SPE)|(1<<MSTR));	// Enable Hardware SPI,
     SPSR |= (( uint8_t ) (1<<SPI2X));         // set clock rate fck/2
-    
+
     SPDR = data; 						// send data
-    
+
     while(!(SPSR & (1<<SPIF)));		    // wait until send complete
-    
-	sbi(SPI_PORT, LCD_SPI_SS);			    // disable LCD device CS
+
+	sbi(SPI9_PORT, LCD_SPI_SS);			    // disable LCD device CS
 
 
                                         // Disable Hardware SPI, this releases the SPI pins
-										// for general IO use. which is used to send the 1'st 
+										// for general IO use. which is used to send the 1'st
 										// bit out
     SPCR &= ~(( uint8_t ) (1<<SPE)|(1<<MSTR));
     SPSR &= ~(( uint8_t ) (1<<SPI2X));
 
-    sbi(SPI_PORT, LCD_SPI_SS);			// disable LCD chip
+    sbi(SPI9_PORT, LCD_SPI_SS);			// disable LCD chip
 }
 
-
-
-/*****************************************************************************
-//Usage: spi_MasterInit(void); Another way to do this using 8 bit transfers
-//Inputs: None
-//Outputs: None
-*****************************************************************************/
-
-void spi_MasterInit(void)
-{
-    /* Set MOSI, SCK & SS output, all others input */
-    SPI_DDR = ( uint8_t ) (1<<SPI_MOSI)|(1<<SPI_SCK)|(1<<SPI_SS);
-
-//  Make sure the SPI SS is disabling the chip
-    sbi(SPI_PORT, SPI_SS);
-
-
-//  Enable SPI, Master, set clock rate fck/2 (maximum)
-    SPCR = ( uint8_t ) (1<<SPE)|(1<<MSTR);
-    SPSR = ( uint8_t ) (1<<SPI2X);
-
-//   OR
-    
-//    Enable SPI, Master, set clock rate fck/4 */
-//    SPCR = ( uint8_t ) (1<<SPE)|(1<<MSTR);
-    
-//  OR
-
-//    Enable SPI, Master, set clock rate fck/16
-//    SPCR = ( uint8_t ) (1<<SPE)|(1<<MSTR)|(1<<SPR0);
-
-//  OR
-
-//    Enable SPI, Master, set clock rate fck/32
-//    SPCR = ( uint8_t ) (1<<SPE)|(1<<MSTR)|(1<<SPR1);
-//    SPSR = ( uint8_t ) (1<<SPI2X);
-
-//  OR
-
-//    Enable SPI, Master, set clock rate fck/128 (minimum)
-//    SPCR &= ~(( uint8_t ) (1<<SPE)|(1<<MSTR)|(1<<SPR1)|(1<<SPR0));
-}
-
-
-
-uint8_t inline spi_WriteRead(uint8_t dataout)
-{
-	uint8_t datain;
-    
-    // enable chip, goes low
-	cbi(SPI_PORT, SPI_SS);			
-	
-    // Start transmission (MOSI)
-    SPDR = dataout;
-
-    // Wait for transmission complete
-    while(!(SPSR & (1<<SPIF)));
-
-    // Get return Value;
-    datain = SPDR;
-
-	asm volatile ("nop"); // Hold pulse for 1 micro second      
-           
-    // Disable Latch & disable chip
-    sbi(SPI_PORT, SPI_SS);
-
-    // Return Serial In Value (MISO)
-    return datain;
-}
 
 

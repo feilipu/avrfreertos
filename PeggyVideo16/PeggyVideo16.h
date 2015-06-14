@@ -53,7 +53,7 @@ static void TaskReadI2CVideo(void *pvParameters);   // Read I2C Bus for Video
 static void TaskWriteLED(void *pvParameters); // Write Video to LED Display
 
 /*
-prog_uchar Picture[]  = // put these characters in PROGMEM, to save RAM.
+const uint8_t Picture[] PROGMEM  = // put these characters in PROGMEM, to save RAM.
 {
 //   use pgm_read_byte(&Picture[x]) to get them out of PROGMEM.
 

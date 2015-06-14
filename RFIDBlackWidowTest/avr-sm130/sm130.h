@@ -145,7 +145,7 @@ extern "C" {
 
 
 // signal the vuIP_TASK to resume execution.
-xSemaphoreHandle xSM130IntrSemaphore;
+SemaphoreHandle_t xSM130IntrSemaphore;
 
 // structure to pass the I2C Command Frames, for send and receive.
 typedef struct

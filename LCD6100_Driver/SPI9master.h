@@ -18,25 +18,18 @@ void spi_LCD_command(uint8_t data);
 void spi_LCD_data(uint8_t data);
 
 
-// initiate the SPI bus, using the 8 bit general case and normal CS line
-void spi_MasterInit(void);
+//*	Arduino Duemilanove SPI 9 bit defs
 
-// write & read the SPI bus, using 8 bit transfers
-uint8_t spi_WriteRead(uint8_t dataout);
+#define SPI9_DDR         DDRB
+#define SPI9_PORT        PORTB
 
+#define LCD_RESET        PB0
+#define LCD_SPI_SS       PB1
 
-//*	Arduino Duemilanove SPI defs
-
-#define SPI_DDR         DDRB
-#define SPI_PORT        PORTB
-
-#define LCD_RESET       PB0
-#define LCD_SPI_SS      PB1
-
-#define SPI_SS          PB2
-#define SPI_MOSI        PB3
-#define SPI_MISO        PB4
-#define SPI_SCK         PB5
+#define SPI9_SS          PB2
+#define SPI9_MOSI        PB3
+#define SPI9_MISO        PB4
+#define SPI9_SCK         PB5
 
 //*******************************************************
 //						Macros
