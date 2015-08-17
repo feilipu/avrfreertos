@@ -1,7 +1,7 @@
 
 
-di <phy_drv#>					- Initialise disk
-ds <phy_drv#>					- Show disk status
+di [<phy_drv#>]					- Initialise disk
+ds [<phy_drv#>]					- Show disk status
 dd <phy_drv#> [<sector>]		- Dump sector 
 dx <iterations>					- Destructively Test DISKIO Functions - !!! DESTROYS DISK FORMATTING !!!
 
@@ -49,7 +49,7 @@ ff <base_address> <src_name>	- Copy file to EEPROM / SRAM Volume
 rf <address> <length> </path>	- Copy EEPROM / SRAM Volume to FatFS file
 
 
-ri <address> </path> 				- Initialise SPI RAM
+ri <address> </path> 				- Initialise SPI SRAM
 rj <base_address> </device_name> </path> - Mount and open a volume 
 ry </path> 							- Unmount a volume 
 
@@ -65,6 +65,22 @@ rd <len>							- read and dump FRAM file from current FRAM file pointer
 ru <path>							- Unlink a FRAM (delete) a file [rm]
 rw <len> <val>						- write FRAM file
 rn <old_path> <new_path>			- Change FRAM file name
+
+
+*** FRAM commands
+di0
+fi0
+fs0
+fl
+
+ri
+ff 0x00000000 fram.dat
+rj 0x00000000 /sram /home
+rl /home
+
+ff 0x01000000 fram.dat
+rj 0x01000000 /eeprom /data
+rl /data
 
 
 
