@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <avr/io.h>
+#include <util/delay.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 
@@ -94,7 +95,7 @@ static void put_rc (FRESULT rc);
 static uint8_t test_diskio (
     uint8_t pdrv,      /* Physical drive number to be checked (all data on the drive will be lost) */
     uint16_t ncyc,      /* Number of test cycles */
-    uint32_t* buff,    /* Pointer to the working buffer */
+    uint8_t* pbuff,    /* Pointer to the working buffer */
     uint16_t sz_buff    /* Size of the working buffer in unit of byte */
 );
 
@@ -241,16 +242,21 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 			case 'd' :	/* dd <phy_drv#> [<sector>] - Dump sector */
 				if (!xatoi(&ptr, &p1)) break;
 				if (!xatoi(&ptr, &p2)) p2 = sect;
+				sect = p2;
+
 				res = disk_read((uint8_t)p1, (uint8_t *)Buff, p2, 1);
-				if (res) { xSerialPrintf_P(PSTR("D:%2d\r\n"), res); break; }
-				sect = p2 + 1;
+				if (res) {
+					xSerialPrintf_P(PSTR("D:%2d\r\n"), res);
+					break;
+				} else ++sect;
+
 				xSerialPrintf_P(PSTR("Sector:%lu\r\n"), p2);
 				for (bp=Buff, ofs = 0; ofs < 0x200; bp+=16, ofs+=16)
 					put_dump(bp, ofs, 16);
 				break;
 
-			case 'i' :	/* di <phy_drv#> - Initialise disk */
-				if (!xatoi(&ptr, &p1)) break;
+			case 'i' :	/* di [<phy_drv#>] - Initialise disk */
+				if (!xatoi(&ptr, &p1)) p1 = 0;
 
 				if(Buff == NULL) // if there is no Buff buffer allocated (pointer is NULL), then allocate buffer.
 					if( !(Buff = (uint8_t *) pvPortMalloc( sizeof(uint8_t) * CMD_BUFFER_SIZE )))
@@ -274,8 +280,8 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 				xSerialPrintf_P(PSTR("D:%2d\r\n"), disk_initialize((uint8_t)p1));
 				break;
 
-			case 's' :	/* ds <phy_drv#> - Show disk status */
-				if (!xatoi(&ptr, &p1)) break;
+			case 's' :	/* ds [<phy_drv#>] - Show disk status */
+				if (!xatoi(&ptr, &p1)) p1 = 0;
 				if (disk_ioctl((uint8_t)p1, GET_SECTOR_COUNT, &p2) == RES_OK)
 					{ xSerialPrintf_P(PSTR("Drive size: %lu sectors\r\n"), p2); }
 				if (disk_ioctl((uint8_t)p1, GET_BLOCK_SIZE, &p2) == RES_OK)
@@ -295,14 +301,14 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 				}
 				break;
 
-			case 'x' : /* Destructive Testing to prove the DISKIO functions. */
+			case 'x' : /* dx <iterations> - Destructive Testing to prove the DISKIO functions. */
 				if (!xatoi(&ptr, &p1)) break;
 			    /* Check function/compatibility of the physical drive #0 */
-			    res = test_diskio(0, p1, (uint32_t *)Buff, CMD_BUFFER_SIZE);
+			    res = test_diskio(0, p1, Buff, CMD_BUFFER_SIZE);
 			    if (res) {
-			    	xSerialPrintf_P(PSTR("Sorry the function/compatibility test failed.\nFatFs will not work on this disk driver. \nError %u\n"), res);
+			    	xSerialPrintf_P(PSTR("Sorry the function/compatibility test failed.\r\nFatFs will not work on this disk driver.\r\nErrors: %u\n"), res);
 			    } else {
-			    	xSerialPrintf_P(PSTR("Congratulations! The disk I/O layer works well.\n"));
+			    	xSerialPrintf_P(PSTR("Congratulations! The disk I/O layer works well.\r\n"));
 			    }
 				break;
 
@@ -391,10 +397,10 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 							 "Root DIR entries = %u\r\nSectors/FAT = %lu\r\nNumber of clusters = %lu\r\n"),
 						fs->fs_type, (uint32_t)fs->csize * 512, fs->n_fats,
 						fs->n_rootdir, fs->fsize, fs->n_fatent - 2	);
-				vTaskDelay( 8 / portTICK_PERIOD_MS ); // Whoa... too fast.
+				vTaskDelay( 16 / portTICK_PERIOD_MS ); // Whoa... too fast.
 				xSerialPrintf_P(PSTR("FAT start (lba) = %lu\r\nDIR start (lba,cluster) = %lu\r\nData start (lba) = %lu\r\n...\r\n"),
 										fs->fatbase, fs->dirbase, fs->database	);
-				vTaskDelay( 8 / portTICK_PERIOD_MS ); // Whoa... too fast.
+				vTaskDelay( 16 / portTICK_PERIOD_MS ); // Whoa... too fast.
 				AccSize = AccFiles = AccDirs = 0;
 				res = scan_files(ptr);
 				if (res) { put_rc(res); break; }
@@ -436,7 +442,7 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 #else
 					xSerialPrint_P(PSTR("\r\n"));
 #endif
-					vTaskDelay( 8 / portTICK_PERIOD_MS ); // Whoa... too fast.
+					vTaskDelay( 16 / portTICK_PERIOD_MS ); // Whoa... too fast.
 				}
 				xSerialPrintf_P(PSTR("%4u File(s),%10lu bytes total\r\n%4u Dir(s)"), s1, p1, s2);
 #if _FS_MINIMIZE < 1
@@ -740,6 +746,53 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 				    	xSerialPrintf_P(PSTR(" - Error %i: Failed to initialize EEFS_InitFS\n"), ReturnCode);
 				    }
 
+					break;
+
+				case 'x' :	/* rx <base_address> <number of bytes> */
+
+					if (!xatoi(&ptr, &p1)) break;
+
+					while (*ptr == ' ') ptr++;
+
+					if (!xatoi(&ptr, &p2)) break;
+
+					if (p2 >= CMD_BUFFER_SIZE) p2 = CMD_BUFFER_SIZE;
+
+					xSerialPrintf_P(PSTR("Testing 0x%08lX for %6d bytes\r\n"), (uint_farptr_t)p1, (uint32_t)p2);
+
+					if(Buff == NULL) // if there is no Buff buffer allocated (pointer is NULL)
+						{
+							xSerialPrint_P(PSTR(" - Command Buffer not allocated..! ( > ri )\r\n"));
+							break;
+						}
+
+
+					ReturnCode = eefs_avrspi_begin();
+					if (ReturnCode)	break; // problem with opening the EEPROM / SRAM
+
+					xSerialPrintf_P(PSTR("\r\nTesting EEPROM...\r\n"));
+
+					FarAddress = (uint_farptr_t)p1;
+
+					EEFS_LIB_LOCK;
+
+					ReturnCode = eefs_avrspi_write( (addr_farptr_t)FarAddress, Buff, (size_t)p2);
+					if (ReturnCode) break;   /* error or disk full */
+
+					for(uint16_t i = 0; i < p2; ++i)
+					{
+						uint8_t read_result;
+
+						ReturnCode = eefs_avrspi_read( &read_result, (addr_farptr_t)(FarAddress +i), (size_t)1);
+						if (ReturnCode) break;   /* error or disk full */
+
+//						xSerialPrintf_P(PSTR("Written 0x%02x Read 0x%02x\r\n"), Buff[i], read_result);
+
+						if( Buff[i] != read_result)
+							xSerialPrintf_P(PSTR("Error at 0x%08lX with 0x%02X\r\n"), (uint_farptr_t)(FarAddress +i), read_result);
+					}
+
+					EEFS_LIB_UNLOCK;
 					break;
 
 				case 'y' :	/* ry </path> - Unmount a volume */
@@ -1122,7 +1175,7 @@ void put_dump (const uint8_t *buff, uint32_t ofs, uint8_t cnt)
 		xSerialPutChar( &xSerialPort, (buff[i] >= ' ' && buff[i] <= '~') ? buff[i] : '.' );
 	}
 	xSerialPrint((uint8_t *)"\r\n");
-	vTaskDelay( 8 / portTICK_PERIOD_MS ); // Whoa... too fast.
+	vTaskDelay( 16 / portTICK_PERIOD_MS ); // Whoa... too fast.
 }
 
 static
@@ -1179,7 +1232,7 @@ FRESULT scan_files (
 				if (res != FR_OK) break;
 			} else {
 				xSerialPrintf_P(PSTR("%s/%s\r\n"), path, fn);
-				vTaskDelay( 8 / portTICK_PERIOD_MS ); // Whoa... too fast.
+				vTaskDelay( 16 / portTICK_PERIOD_MS ); // Whoa... too fast.
 				AccFiles++;
 				AccSize += Finfo.fsize;
 			}
@@ -1236,25 +1289,32 @@ static uint8_t
 test_diskio (
     uint8_t pdrv,      /* Physical drive number to be checked (all data on the drive will be lost) */
     uint16_t ncyc,     /* Number of test cycles */
-    uint32_t* buff,    /* Pointer to the working buffer */
+    uint8_t* pbuff,    /* Pointer to the working buffer */
     uint16_t sz_buff   /* Size of the working buffer in unit of byte */
 )
 {
     uint16_t n, cc, ns;
-    uint32_t sz_drv, lba, lba2, pns = 1;
-    uint16_t sz_sect, sz_eblk;
-    uint8_t *pbuff = (uint8_t*)buff;
+    uint32_t sz_drv, sz_eblk, lba, lba2, pns = 1;
+    uint16_t sz_sect;
+    uint8_t errors = 0;
     DSTATUS ds;
     DRESULT dr;
 
 
 
-    xSerialPrintf_P(PSTR("test_diskio(%u, %u, 0x%08X, 0x%08X)\n"), pdrv, ncyc, (uint16_t)buff, sz_buff);
+    xSerialPrintf_P(PSTR("test_diskio(%u, %u, 0x%08X, 0x%08X)\n"), pdrv, ncyc, (uint16_t)&pbuff, sz_buff);
 
     if (sz_buff < _MAX_SS + 4) {
     	xSerialPrint_P(PSTR("Insufficient work area to test.\n"));
-        return 1;
+        return ++errors;
     }
+
+ 	if(pbuff == NULL) // if there is no pbuff buffer allocated (pointer is NULL), then allocate buffer.
+		if( !(pbuff = (uint8_t *) pvPortMalloc( sizeof(uint8_t) * sz_buff )))
+		{
+			xSerialPrint_P(PSTR("pvPortMalloc for *pbuff fail..!\r\n"));
+        	return ++errors;
+		}
 
     for (cc = 1; cc <= ncyc; cc++) {
     	xSerialPrintf_P(PSTR("**** Test cycle %u of %u start ****\n"), cc, ncyc);
@@ -1262,27 +1322,36 @@ test_diskio (
         /* Initialization */
     	xSerialPrintf_P(PSTR(" disk_initalize(%u)"), pdrv);
         ds = disk_initialize(pdrv);
-        if (ds & STA_NOINIT) {
-        	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 2;
-        } else {
+
+        if (ds & STA_NODISK)
+        {
+        	xSerialPrint_P(PSTR(" - failed, no disk .\n"));
+            return ++errors;
+        }
+        else if (ds & STA_NOINIT)
+        {
+        	xSerialPrint_P(PSTR(" - failed initialisation.\n"));
+           return ++errors;
+        }
+        else
+        {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         }
 
         /* Get drive size */
         xSerialPrint_P(PSTR("**** Get drive size ****\n"));
-        xSerialPrintf_P(PSTR(" disk_ioctl(%u, GET_SECTOR_COUNT, 0x%08X)"), pdrv, (uint16_t)&sz_drv);
+        xSerialPrintf_P(PSTR(" disk_ioctl(%u, GET_SECTOR_COUNT, 0x%X)"), pdrv, (uint16_t)&sz_drv);
         sz_drv = 0;
         dr = disk_ioctl(pdrv, GET_SECTOR_COUNT, &sz_drv);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 3;
+            ++errors;
         }
         if (sz_drv < 128) {
         	xSerialPrint_P(PSTR("Failed: Insufficient drive size to test.\n"));
-            return 4;
+            return ++errors;
         }
         xSerialPrintf_P(PSTR(" Number of sectors on the drive %u is %lu.\n"), pdrv, sz_drv);
 
@@ -1296,7 +1365,7 @@ test_diskio (
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 5;
+        	++errors;
         }
         xSerialPrintf_P(PSTR(" Size of sector is %u bytes.\n"), sz_sect);
 #else
@@ -1312,9 +1381,10 @@ test_diskio (
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
+        	++errors;
         }
         if (dr == RES_OK || sz_eblk >= 2) {
-        	xSerialPrintf_P(PSTR(" Size of the erase block is %u sectors.\n"), sz_eblk);
+        	xSerialPrintf_P(PSTR(" Size of the erase block is %lu sectors.\n"), sz_eblk);
         } else {
         	xSerialPrint_P(PSTR(" Size of the erase block is unknown.\n"));
         }
@@ -1323,169 +1393,193 @@ test_diskio (
         xSerialPrint_P(PSTR("**** Single sector write test 1 ****\n"));
         lba = 0;
         for (n = 0, pn(pns); n < sz_sect; n++) pbuff[n] = (uint8_t)pn(0);
-        xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)pbuff, lba);
+        xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)&pbuff, lba);
         dr = disk_write(pdrv, pbuff, lba, 1);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 6;
+        	++errors;
         }
+
+    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+
         xSerialPrintf_P(PSTR(" disk_ioctl(%u, CTRL_SYNC, NULL)"), pdrv);
-        dr = disk_ioctl(pdrv, CTRL_SYNC, 0);
+        dr = disk_ioctl(pdrv, CTRL_SYNC, NULL);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 7;
+        	++errors;
         }
         memset(pbuff, 0, sz_sect);
-        xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)pbuff, lba);
+        xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)&pbuff, lba);
         dr = disk_read(pdrv, pbuff, lba, 1);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 8;
+        	++errors;
         }
         for (n = 0, pn(pns); n < sz_sect && pbuff[n] == (uint8_t)pn(0); n++) ;
         if (n == sz_sect) {
         	xSerialPrint_P(PSTR(" Data matched.\n"));
         } else {
         	xSerialPrint_P(PSTR("Failed: Read data differs from the data written.\n"));
-            return 10;
+        	++errors;
         }
         pns++;
+
+    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         /* Multiple sector write test */
         xSerialPrint_P(PSTR("**** Multiple sector write test ****\n"));
         lba = 1; ns = sz_buff / sz_sect;
         if (ns > 4) ns = 4;
         for (n = 0, pn(pns); n < (uint16_t)(sz_sect * ns); n++) pbuff[n] = (uint8_t)pn(0);
-        xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, %u)"), pdrv, (uint16_t)pbuff, lba, ns);
+        xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, %u)"), pdrv, (uint16_t)&pbuff, lba, ns);
         dr = disk_write(pdrv, pbuff, lba, ns);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 11;
+        	++errors;
         }
+
+    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+
         xSerialPrintf_P(PSTR(" disk_ioctl(%u, CTRL_SYNC, NULL)"), pdrv);
-        dr = disk_ioctl(pdrv, CTRL_SYNC, 0);
+        dr = disk_ioctl(pdrv, CTRL_SYNC, NULL);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 12;
+        	++errors;
         }
         memset(pbuff, 0, sz_sect * ns);
-        xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, %u)"), pdrv, (uint16_t)pbuff, lba, ns);
+        xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, %u)"), pdrv, (uint16_t)&pbuff, lba, ns);
         dr = disk_read(pdrv, pbuff, lba, ns);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 13;
+        	++errors;
         }
         for (n = 0, pn(pns); n < (uint16_t)(sz_sect * ns) && pbuff[n] == (uint8_t)pn(0); n++) ;
         if (n == (uint16_t)(sz_sect * ns)) {
         	xSerialPrint_P(PSTR(" Data matched.\n"));
         } else {
         	xSerialPrint_P(PSTR("Failed: Read data differs from the data written.\n"));
-            return 14;
+        	++errors;
         }
         pns++;
+
+    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         /* Single sector write test (misaligned memory address) */
         xSerialPrint_P(PSTR("**** Single sector write test 2 ****\n"));
         lba = 5;
         for (n = 0, pn(pns); n < sz_sect; n++) pbuff[n+3] = (uint8_t)pn(0);
-        xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(pbuff+3), lba);
+        xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(&pbuff+3), lba);
         dr = disk_write(pdrv, pbuff+3, lba, 1);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 15;
+        	++errors;
         }
+
+    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+
         xSerialPrintf_P(PSTR(" disk_ioctl(%u, CTRL_SYNC, NULL)"), pdrv);
-        dr = disk_ioctl(pdrv, CTRL_SYNC, 0);
+        dr = disk_ioctl(pdrv, CTRL_SYNC, NULL);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 16;
+        	++errors;
         }
         memset(pbuff+5, 0, sz_sect);
-        xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(pbuff+5), lba);
+        xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(&pbuff+5), lba);
         dr = disk_read(pdrv, pbuff+5, lba, 1);
         if (dr == RES_OK) {
         	xSerialPrint_P(PSTR(" - ok.\n"));
         } else {
         	xSerialPrint_P(PSTR(" - failed.\n"));
-            return 17;
+        	++errors;
         }
         for (n = 0, pn(pns); n < sz_sect && pbuff[n+5] == (uint8_t)pn(0); n++) ;
         if (n == sz_sect) {
         	xSerialPrint_P(PSTR(" Data matched.\n"));
         } else {
         	xSerialPrint_P(PSTR("Failed: Read data differs from the data written.\n"));
-            return 18;
+        	++errors;
         }
         pns++;
+
+    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         /* 4GB barrier test */
         xSerialPrint_P(PSTR("**** 4GB barrier test ****\n"));
         if (sz_drv >= 128 + 0x80000000 / (sz_sect / 2)) {
             lba = 6; lba2 = lba + 0x80000000 / (sz_sect / 2);
             for (n = 0, pn(pns); n < (uint16_t)(sz_sect * 2); n++) pbuff[n] = (uint8_t)pn(0);
-            xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)pbuff, lba);
+            xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)&pbuff, lba);
             dr = disk_write(pdrv, pbuff, lba, 1);
             if (dr == RES_OK) {
             	xSerialPrint_P(PSTR(" - ok.\n"));
             } else {
             	xSerialPrint_P(PSTR(" - failed.\n"));
-                return 19;
+            	++errors;
             }
-            xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(pbuff+sz_sect), lba2);
+
+        	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+
+            xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(&pbuff+sz_sect), lba2);
             dr = disk_write(pdrv, pbuff+sz_sect, lba2, 1);
             if (dr == RES_OK) {
             	xSerialPrint_P(PSTR(" - ok.\n"));
             } else {
             	xSerialPrint_P(PSTR(" - failed.\n"));
-                return 20;
+            	++errors;
             }
+
+        	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+
             xSerialPrintf_P(PSTR(" disk_ioctl(%u, CTRL_SYNC, NULL)"), pdrv);
-            dr = disk_ioctl(pdrv, CTRL_SYNC, 0);
+            dr = disk_ioctl(pdrv, CTRL_SYNC, NULL);
             if (dr == RES_OK) {
             	xSerialPrint_P(PSTR(" - ok.\n"));
             } else {
             	xSerialPrint_P(PSTR(" - failed.\n"));
-                return 21;
+            	++errors;
             }
             memset(pbuff, 0, sz_sect * 2);
-            xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)pbuff, lba);
+            xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)&pbuff, lba);
             dr = disk_read(pdrv, pbuff, lba, 1);
             if (dr == RES_OK) {
             	xSerialPrint_P(PSTR(" - ok.\n"));
             } else {
             	xSerialPrint_P(PSTR(" - failed.\n"));
-                return 22;
+            	++errors;
             }
-            xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(pbuff+sz_sect), lba2);
+
+        	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+
+            xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(&pbuff+sz_sect), lba2);
             dr = disk_read(pdrv, pbuff+sz_sect, lba2, 1);
             if (dr == RES_OK) {
             	xSerialPrint_P(PSTR(" - ok.\n"));
             } else {
             	xSerialPrint_P(PSTR(" - failed.\n"));
-                return 23;
+            	++errors;
             }
             for (n = 0, pn(pns); pbuff[n] == (uint8_t)pn(0) && n < (uint16_t)(sz_sect * 2); n++) ;
             if (n == (uint16_t)(sz_sect * 2)) {
             	xSerialPrint_P(PSTR(" Data matched.\n"));
             } else {
             	xSerialPrint_P(PSTR("Failed: Read data differs from the data written.\n"));
-                return 24;
+            	++errors;
             }
         } else {
         	xSerialPrint_P(PSTR(" Test skipped.\n"));
@@ -1495,19 +1589,73 @@ test_diskio (
         xSerialPrintf_P(PSTR("**** Test cycle %u of %u completed ****\n\n"), cc, ncyc);
     }
 
-    return 0;
+    return errors;
 }
 
 /*-----------------------------------------------------------*/
 
 
-void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
-{
 
-	DDRB  |= _BV(DDB7);
-	PORTB |= _BV(PORTB7);       // main (red PB7) LED on. Mega main LED on and die.
-	while(1);
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+									portCHAR *pcTaskName )
+{
+	/*---------------------------------------------------------------------------*\
+	Usage:
+	   called by task system when a stack overflow is noticed
+	Description:
+	   Stack overflow handler -- Shut down all interrupts, send serious complaint
+	    to command port.
+	Arguments:
+	   pxTask - pointer to task handle
+	   pcTaskName - pointer to task name
+	Results:
+	   <none>
+	Notes:
+	   This routine will never return.
+	   This routine is referenced in the task.c file of FreeRTOS as an extern.
+	\*---------------------------------------------------------------------------*/
+
+	uint8_t* pC;
+	uint16_t baud;
+
+	/* shut down all interrupts */
+	portDISABLE_INTERRUPTS();
+
+	/* take over the command line buffer to generate our error message */
+	pC = (uint8_t*) Line;
+
+	strcat_P( (char*) pC, PSTR("\r\n"));
+	strcat( (char*) pC, (char*) pcTaskName );
+	strcat_P( (char*) pC, PSTR("\r\n"));
+
+	pC = (uint8_t*) Line;
+
+	/* Force the UART control register to be the way we want, just in case */
+
+	UCSR0C = ( _BV( UCSZ01 ) | _BV( UCSZ00 ) );		// 8 data bits
+	UCSR0B = _BV( TXEN0 );							// only enable transmit
+	UCSR0A = 0;
+
+	/* Calculate the baud rate register value from the equation in the
+	* data sheet.  This calculation rounds to the nearest factor, which
+	* means the resulting rate may be either faster or slower than the
+	* desired rate (the old calculation was always faster).
+	*
+	* If the system clock is one of the Magic Frequencies, this
+	* computation will result in the exact baud rate
+	*/
+	baud = ( ( ( configCPU_CLOCK_HZ / ( ( 16UL * 115200 ) / 2UL ) ) + 1UL ) / 2UL ) - 1UL;
+	UBRR0 = baud;
+
+	/* Send out the message, without interrupts.  Hard wired to USART 0 */
+	while ( *pC )
+	{
+		while (!(UCSR0A & (1 << UDRE0)));
+		UDR0 = *pC;
+		pC++;
+	}
+
+	while(1){ PINB |= _BV(PINB7); _delay_ms(100); } // main (red PB7) LED flash and die.
 }
 
 /*-----------------------------------------------------------*/
