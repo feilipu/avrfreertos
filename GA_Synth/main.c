@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <avr/eeprom.h>
 #include <util/delay.h>
 
@@ -91,7 +92,6 @@ const uint32_t verdiNoteTable[NOTES * STOPS] PROGMEM =
 	#include "VerdiNoteLUT.inc"
 };
 
-
 // create square wave lookup table
 // PROGMEM stores the values in the program memory
 const int16_t squareWave[LUT_SIZE] PROGMEM =
@@ -124,6 +124,14 @@ const int16_t sineWave[LUT_SIZE] PROGMEM =
 	#include "SineLUT.inc"
 };
 
+// create exponential (1-e^-x) frequency lookup table
+// use this to create a simple attack and release for notes.
+// PROGMEM stores the values in the program memory
+const uint16_t expTable[] PROGMEM = {
+  // this file is a 2048 value exponential lookup table of unsigned 16bit integers
+  // you can replace it with your own table if you like.
+  #include "expTable.inc"
+};
 
 /*--------------Functions---------------------------*/
 
@@ -152,23 +160,23 @@ int main(void)
     xTaskCreate(
 		TaskWriteLCD
 		,  (const portCHAR *)"WriteLCD"
-		,  512		// measured 73 free stack bytes
-		,  (void *)0
+		,  400
+		,  NULL
 		,  3
-		,  (void *)0 ); // */
+		,  NULL ); // */
 
    xTaskCreate(
 		TaskMonitor
 		,  (const portCHAR *)"SerialMonitor"
-		,  512		// measured 124 free stack bytes
-		,  (void *)0
+		,  480
+		,  NULL
 		,  2
-		,  (void *)0 ); // */
+		,  NULL ); // */
 
    xTaskCreate(
 		TaskAnalogue
 		,  (const portCHAR *) "Analogue"
-		,  256  // This stack size can be checked & adjusted by reading Highwater
+		,  96
 		,  NULL
 		,  1
 		,  NULL ); // */
@@ -217,26 +225,24 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 		switch (*ptr++) {
 
 		case 'h' : // help
-			xSerialPrint_P( PSTR("s  - show minimum ever heap size\r\n") );
-			xSerialPrint_P( PSTR("h  - show this message\r\n") );
-			xSerialPrint_P( PSTR("b  - reboot ft800 device\r\n") );
-			xSerialPrint_P( PSTR("t  - set / show the time: t [<year yyyy> <month mm> <date dd> <hour hh> <minute mm> <second ss>]\r\n") );
-			xSerialPrint_P( PSTR("z  - set the time zone +-hours (before you first set the time): z [<timezone zz>] \r\n") );
+			xSerialPrint_P( PSTR(    "s  - show minimum ever heap size") );
+			xSerialPrint_P( PSTR("\r\nh  - show this message") );
+			xSerialPrint_P( PSTR("\r\nb  - reboot ft800 device") );
+			xSerialPrint_P( PSTR("\r\nt  - set / show the time: t [<year yyyy> <month mm> <date dd> <hour hh> <minute mm> <second ss>]") );
+			xSerialPrint_P( PSTR("\r\nz  - set the time zone +-hours (before you first set the time): z [<timezone zz>] \r\n") );
 			break;
 
 		case 's' : // reset
-			xSerialPrintf_P(PSTR("\r\nMinimum Free Heap Size: %u\r\n"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
-			xSerialPrintf_P(PSTR("Current Free Heap Size: %u\r\n"), xPortGetFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
+			xSerialPrintf_P(PSTR(    "Minimum Free Heap Size: %u"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
+			xSerialPrintf_P(PSTR("\r\nCurrent Free Heap Size: %u"), xPortGetFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
+			xSerialPrintf_P(PSTR("\r\nSerial Monitor: Stack HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
 			break;
 
 		case 'b' : // reboot
-
 			FT_API_Boot_Config();
-
-			xSerialPrintf_P(PSTR("reg_touch_rz = 0x%x"), FT_GPU_HAL_Rd16(phost, REG_TOUCH_RZ));
-			xSerialPrintf_P(PSTR("\r\nreg_touch_rzthresh = 0x%x"), FT_GPU_HAL_Rd32(phost, REG_TOUCH_RZTHRESH));
-			xSerialPrintf_P(PSTR("\r\nreg_touch_tag_xy = 0x%x"),FT_GPU_HAL_Rd32(phost, REG_TOUCH_TAG_XY));
-			xSerialPrintf_P(PSTR("\r\nreg_touch_tag = 0x%x\r\n"),FT_GPU_HAL_Rd32(phost, REG_TOUCH_TAG));
+			FT_API_Touch_Config();
+			FT_touchTrackInit();
+			FT_GUI();
 			break;
 
 
@@ -265,21 +271,20 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 				set_zone( ((int8_t)p1 * (int32_t)ONE_HOUR) );
 				eeprom_busy_wait();
 				eeprom_update_byte( (uint8_t *)&eeSavedTZ, (int8_t)p1 );
-				xSerialPrintf_P(PSTR("Input Time Zone %i\r\n"), (int8_t)p1 );
+				xSerialPrintf_P(PSTR("\r\nInput Time Zone %i"), (int8_t)p1 );
 			}
 			eeprom_busy_wait();
-			xSerialPrintf_P(PSTR("Saved Time Zone %i\r\n"), (int8_t)eeprom_read_byte((const uint8_t *)&eeSavedTZ) );
+			xSerialPrintf_P(PSTR("\r\nSaved Time Zone %i"), (int8_t)eeprom_read_byte((const uint8_t *)&eeSavedTZ) );
 
 			time(&timestamp);
 			ctime_r( (time_t *)&timestamp, (char *)LineBuffer );
-			xSerialPrintf_P(PSTR("Local Time: %s - %u\r\n"), LineBuffer, timestamp );
+			xSerialPrintf_P(PSTR("\r\nLocal Time: %s - %u\r\n"), LineBuffer, timestamp );
 			break;
 
 		default :
 			break;
 
 		}
-// 		xSerialPrintf_P(PSTR("\r\nSerial Monitor: Stack HighWater @ %u"), uxTaskGetStackHighWaterMark(NULL));
 //		xSerialPrintf_P(PSTR("\r\nMinimum Ever Heap Free: %u\r\n"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
     }
 
@@ -312,7 +317,7 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 
 //		xSerialPrintf_P(PSTR("\r\nWriteLCD: Stack HighWater @ %u"), uxTaskGetStackHighWaterMark(NULL));
 //		xSerialPrintf_P(PSTR("\r\nMinimum Ever Heap Free: %u\r\n"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
-		vTaskDelayUntil( &xLastWakeTime, 20 / portTICK_PERIOD_MS );
+		vTaskDelayUntil( &xLastWakeTime, 16 / portTICK_PERIOD_MS );
 	}
 }
 
@@ -330,14 +335,14 @@ static void TaskAnalogue(void *pvParameters) // Prepare the DAC
 			xSerialPrint_P(PSTR("pvPortMalloc for *delayDataPtr fail..!\r\n"));
 	}
 
-	xSerialPrintf_P(PSTR("\r\nDAC_Codec_init:"));
+//	xSerialPrintf_P(PSTR("\r\nDAC_Codec_init:"));
 	DAC_init();
-	xSerialPrintf_P(PSTR(" will soon"));
+//	xSerialPrintf_P(PSTR(" will soon"));
 
 	/* Initialise the sample interrupt timer. Exact multiples of 2000Hz are ok with 8 bit Timer0, otherwise use 16 bit Timer1 */
 	AudioCodec_Timer0_init(SAMPLE_RATE);	// xxx set up the sampling Timer0 to 48000Hz (or lower), runs at audio sampling rate in Hz.
 //	AudioCodec_Timer1_init(SAMPLE_RATE);	// xxx set up the sampling Timer0 to 44100Hz (or odd rates), runs at audio sampling rate in Hz.
-	xSerialPrintf_P(PSTR(" be"));
+//	xSerialPrintf_P(PSTR(" be"));
 
 //	AudioCodec_ADC_init();					// set up ADC sampling on the ADC0, ADC1, ADC2 using Danger Shield to control.
 											// or, Microphone on ADC7.
@@ -345,13 +350,13 @@ static void TaskAnalogue(void *pvParameters) // Prepare the DAC
 	AudioCodec_setHandler( synthesizer, &ch_A_out, &ch_B_out );		// Set the call back function to do the audio processing.
 																	//	Done this way so that we can change the audio handling depending on what we want to achieve.
 
-	xSerialPrintf_P(PSTR(" done."));
+//	xSerialPrintf_P(PSTR(" done."));
 
 //	xSerialPrintf_P(PSTR("\r\nFree Heap Size: %u"),xPortGetMinimumEverFreeHeapSize() ); // needs heap_1.c, heap_2.c or heap_4.c
 //	xSerialPrintf_P(PSTR("\r\nAudio HighWater: %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
 
 	vTaskSuspend(NULL);						// Well, we're pretty much done here.
-//	vTaskEndScheduler();					// Rely on Timer1 Interrupt for regular output.
+//	vTaskEndScheduler();					// Rely on Timer1 Interrupt for regular output.NULL
 
 	for(;;);
 }
@@ -368,9 +373,9 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 
 	DAC_value_t temp0; // this is a uint16_t that can be called as either byte.
 
-	int16_t temp1;
-	int16_t temp2;
-	int16_t temp3;
+	int16_t temp1 = 0;
+	int16_t temp2 = 0;
+	int16_t temp3 = 0;
 
 	uint16_t buffCount;
 
@@ -395,8 +400,8 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 
 	// Remember our DAC only has 12 bits, so we have 4 LSB spare the low end too.
 
-	// only play if there is a note down.
-	if(synth.note)
+	// only play if we're in the adsr envelope.
+	if(synth.adsr != off)
 	{
 		////////////// First do the LFO ///////////////
 
@@ -442,10 +447,8 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 			MultiSU16X16toH16Round(outLFO, temp2, synth.lfo.volume);
 			// our LFO wave is now in outLFO
 		}
-		else // if oscillator is off, then shift the output value towards mute.
-		{
-			outLFO >>= 1;
-		}
+		else // LFO is turned off.
+			outLFO = 0;
 
 		////////////// Now do the VCO2 ///////////////
 
@@ -501,11 +504,8 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 			// And now calculate the XMOD intensity to apply to the VCO1
 			MultiSU16X16toH16Round(outXMOD, temp2, synth.xmod);
 		}
-		else // if oscillator is off, then shift the output value towards mute.
-		{
-			outVCO2 >>= 1;
-		}
-
+		else // VCO2 is turned off.
+			outXMOD = outVCO2 = 0;
 
 		///////////// Now do the VCO1 ////////////////////
 
@@ -565,27 +565,90 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 			MultiSU16X16toH16Round(outVCO1, temp2, synth.vco1.volume);
 			// our VCO1 wave is now in outVCO1
 		}
-		else // if oscillator is off, then set the output value to mute.
-		{
-			outVCO1 >>= 1;
-		}
+		else // VCO1 is turned off;
+			outVCO1 = 0;
 	}
-	else // if there is no note being played, then shift the output value towards mute.
-	{
-		outVCO1 >>= 1;
-		outVCO2 >>= 1;
-		outLFO  >>= 1;
-		synth.vco1.phase = \
-		synth.vco2.phase = \
-		synth.lfo.phase  = 0x00;
-	}
+	else // we're in off state, and no notes are playing.
+		outVCO1 = outVCO2 = 0;
 
 
 	////////////// mix the two oscillators //////////////////
 
 	// irrespective of whether a note is playing or not.
 	// combine the outputs
-	temp1 = (outVCO1 >> 1) + (outVCO2 >>1);
+	temp2 = (outVCO1 >> 1) + (outVCO2 >>1);
+
+
+	///////////////// calculate the adsr /////////////////////
+
+	switch (synth.adsr)
+	{
+	case off: // wait for a note to be played
+		if ( synth.note == FT_FALSE )
+		{	// if there is no note being played, then reset the VCO increments.
+			synth.vco1.phase = \
+			synth.vco2.phase = \
+			synth.lfo.phase  = \
+			temp1 			 = 0x00;
+		}
+		else
+		{	// set the adsr to attack and start producing sounds
+			synth.adsr = attack;
+			synth.adsr_phase = 0x00;
+		}
+		break;
+
+	case attack:
+		currentPhase = pgm_read_word(synth.adsr_table_ptr + synth.adsr_phase);
+		MultiSU16X16toH16Round( temp1, temp2, currentPhase );
+
+		if ( ++synth.adsr_phase > 0x07ff ) // attack state is for 2047 samples.
+		{
+			synth.adsr = decay;
+			synth.adsr_phase = 0x0000;
+		}
+		break;
+
+	case decay:
+		temp1 = temp2;
+		if (synth.note == FT_FALSE)
+		{
+			synth.adsr = release;
+			synth.adsr_phase = 0x0000;
+		}
+		else
+		{
+			synth.adsr = sustain;
+			synth.adsr_phase = 0x0000;
+		}
+		break;
+
+	case sustain:
+		temp1 = temp2;
+		if ( synth.note == FT_FALSE )
+		{
+			synth.adsr = release;
+			synth.adsr_phase = 0x0000;
+		}
+		break;
+
+	case release:
+		currentPhase = pgm_read_word(synth.adsr_table_ptr + synth.adsr_phase);
+		MultiSU16X16toH16Round( temp1, temp2, UINT16_MAX - currentPhase );
+
+		if ( ++synth.adsr_phase > 0x07ff) // release state is for 2047 samples.
+		{
+			synth.adsr = off;
+			synth.adsr_phase = 0x0000;
+		}
+		else if ( synth.note != FT_FALSE )
+		{
+			synth.adsr = attack;
+			synth.adsr_phase = 0x0000;
+		}
+		break;
+	}
+
 
 	////////////////// do the IIR LPF ///////////////////////
 
@@ -633,7 +696,7 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 	MultiSU16X16toH16Round(temp2, temp1, synth.master);
 
 	// and output wave on both A & B channel, shifted to (+)ve values only because this is what the DAC needs.
-	*ch_A = *ch_B = temp2 + 0x8000;
+	*ch_A = *ch_B = temp2 + 0x7fff;
 }
 
 void FT_GUI()
@@ -701,7 +764,7 @@ void FT_GUI()
 	FT_API_Write_CoCmd(TAG(LFO_WAVE));
 	FT_GPU_CoCmd_Toggle_P(phost, 13,242,46,18, OPT_3D, synth.lfo.wave, PSTR("SIN" "\xFF" "TRI"));
 
-	/* and the final toggle to get to the KAOSS board */
+	/* and the final toggle to get to the alternate tuning range (concert vs verdi) */
 
 	FT_API_Write_CoCmd(TAG(KBD_TOGGLE));
 	FT_GPU_CoCmd_Toggle_P(phost, 405,130,60,26, OPT_3D, synth.kbd_toggle, PSTR("CONCRT" "\xFF" "VERDI"));
@@ -831,19 +894,20 @@ void FT_touchTrackInit(void)
 	synth.vco2.wave_table_ptr = triangleWave;
 	synth.lfo.wave_table_ptr = sineWave;
 	synth.note_table_ptr = concertNoteTable;
+	synth.adsr_table_ptr = expTable;	// adsr envelope exponential table
 
 	// initialise the IIR filter
-	setIIRFilterLPF( &filter );		// initialise the filter and coefficients.
-	
-	// use the default values.
-	synth.vcf_cutoff = filter.cutoff;   // normalised frequency. Half the maximum frequency = (SAMPLE_RATE>>1 / 2)
-	synth.vcf_peak = filter.peak;	    // normalised Q (resonance). 1/sqrt(2) = M_SQRT1_2 *
+	setIIRFilterLPF( &filter );			// initialise the filter and coefficients with the default values.
+
+	// these are the default values, write them to the synth, so they can be correctly represented on the dials.
+	synth.vcf_cutoff = filter.cutoff;	// normalised frequency. Half the maximum frequency = (SAMPLE_RATE>>1 / 2)
+	synth.vcf_peak = filter.peak;		// normalised Q (resonance). 1/sqrt(2) = M_SQRT1_2
 }
 
 uint8_t FT_touch(void)
 {
 	uint8_t readTag;
-	uint8_t oldReadTag;
+	uint8_t oldReadTag = 0;
 	touch_t TrackRegisterVal;
 	uint8_t touched;
 
@@ -864,7 +928,7 @@ uint8_t FT_touch(void)
 			if( synth.note )
 			{
 				touched = FT_TRUE;
-				synth.note = 0x00;	// turn off the note.
+				synth.note = FT_FALSE;	// turn off the note.
 			}
 			else
 			{
@@ -937,6 +1001,10 @@ uint8_t FT_touch(void)
 							// set the pointers to LUTs, which are incorrectly stored in the first RCL following programming.
 
 							synth.note_table_ptr = concertNoteTable;
+							synth.adsr_table_ptr = expTable;	// adsr envelope exponential table
+
+							synth.note = FT_FALSE;
+							synth.adsr = off;
 
 							if (synth.vco1.wave == WAVE_SAW)
 								synth.vco1.wave_table_ptr = sineWave;
@@ -959,7 +1027,7 @@ uint8_t FT_touch(void)
 						break;
 				}
 
-				vTaskDelay( 100 / portTICK_PERIOD_MS ); // debounce the toggles.
+				vTaskDelay( 125 / portTICK_PERIOD_MS ); // debounce the toggles.
 			}
 			else if (readTag > 0x80)// tag is greater than 0x80 and therefore is a dial.
 			{
@@ -1086,13 +1154,15 @@ uint8_t FT_touch(void)
 				}
 
 				//  setting the phase increment for VCO1 is frequency * LUT size / sample rate.
-				synth.vco1.phase_increment = (uint32_t)pgm_read_dword(synth.note_table_ptr + stop * NOTES + note) / (SAMPLE_RATE >> 1) ; //  << 1 is scale to 24.8 fixed point.
+				synth.vco1.phase_increment = (uint32_t)pgm_read_dword(synth.note_table_ptr + (stop * NOTES) + note) / (SAMPLE_RATE >> 1) ; //  << 1 is scale to 24.8 fixed point.
 
 				// set the VCO2 phase increment to be -1 octave to +1 octave from VCO1, with centre dial frequency identical.
 				if (synth.vco2.pitch & 0x8000) // upper half dial
-					synth.vco2.phase_increment = (synth.vco1.phase_increment * ((uint32_t)synth.vco2.pitch << 1)) >> 16 ;
+//					synth.vco2.phase_increment = (uint32_t)(((uint64_t)synth.vco1.phase_increment * ((uint32_t)synth.vco2.pitch << 1)) >> 16);
+					synth.vco2.phase_increment = ((synth.vco1.phase_increment >> 4) * synth.vco2.pitch ) >> 11;
 				else // lower half dial
-					synth.vco2.phase_increment = (synth.vco1.phase_increment >> 1) + (( (synth.vco1.phase_increment >> 1) * ((uint32_t)synth.vco2.pitch << 1) ) >> 16 );
+//					synth.vco2.phase_increment = (synth.vco1.phase_increment >> 1) + (uint32_t)(( (synth.vco1.phase_increment >> 1) * ((uint32_t)synth.vco2.pitch << 1) ) >> 16 );
+					synth.vco2.phase_increment = (synth.vco1.phase_increment >> 1) + (((synth.vco1.phase_increment >> 4) * synth.vco2.pitch) >> 12);
 
 				// set the LFO phase increment to be from 0 Hz to 32 Hz.
 				synth.lfo.phase_increment = ((uint32_t)synth.lfo.pitch * LUT_SIZE / ((uint32_t)SAMPLE_RATE << 4) );
@@ -1202,4 +1272,3 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 }
 
 /*-----------------------------------------------------------*/
-
