@@ -1,4 +1,4 @@
 h  - Print this message - help.
 rt - Reset Maximum and Minimum Temperatures
 
-t [<year yy> <month mm> <date dd> <day: Sun=1> <hour hh> <minute mm> <second ss>] - read or set RTC [time]
+t [<year [yy]yy> <month mm> <date dd> <day: Sun=1> <hour hh> <minute mm> <second ss>] - read or set RTC [time]
