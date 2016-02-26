@@ -102,6 +102,8 @@ static void TaskCharEcho(void *pvParameters) // Echo characters from one USART p
     uint8_t character;
 	seconds_timer secs_timer;
 
+# if 0
+
 	SIM900StateHandle libelium; // set up a SIM900 state structure
 
 	SIM900PowerOn( &libelium, USART1, SIM900_BUFFER_CMD, SIM900_BUFFER_PACKET); // turn on the SIM900, and allocate buffers, etc
@@ -141,6 +143,8 @@ static void TaskCharEcho(void *pvParameters) // Echo characters from one USART p
 		xSerialxPrintf_P(&xSerialPort, PSTR("Connected to Google IP address\r\n"));
 	}
 
+#endif
+
     stimer_set( &secs_timer, 4 ); // flush every 4 seconds
     while(1)
     {
@@ -154,7 +158,7 @@ static void TaskCharEcho(void *pvParameters) // Echo characters from one USART p
 		{
 			stimer_reset( &secs_timer );
     		xSerialPutChar( &xSerial1Port, character);
-//    		xSerialPutChar( &xSerialPort, character); // echo characters typed.
+    		xSerialPutChar( &xSerialPort, character); // echo characters typed.
 		}
 
 		if(stimer_expired(&secs_timer))
@@ -168,11 +172,13 @@ static void TaskCharEcho(void *pvParameters) // Echo characters from one USART p
 
 /*-----------------------------------------------------------*/
 
+
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    signed portCHAR *pcTaskName )
+                                    portCHAR *pcTaskName )
 {
+
 	DDRB  |= _BV(DDB7);
-	PORTB |= _BV(PORTB7);       // main (red PB7) LED on. Goldilocks LED on and die.
+	PORTB |= _BV(PORTB7);       // main (red PB7) LED on. Mega main LED on and die.
 	while(1);
 }
 

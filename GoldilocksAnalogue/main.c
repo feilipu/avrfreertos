@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h>
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -47,6 +48,7 @@
 
 /* Gadget Shield and its sliders */
 #include "GadgetShield.h"
+#include "g711.h"
 
 /*-----------------------------------------------------------*/
 /* Create a handle for the serial port. */
@@ -66,6 +68,9 @@ void audioCodec_dsp( uint16_t * ch_A, uint16_t * ch_B) __attribute__ ((hot, flat
 uint16_t ch_A_out; // storage for the values to be written to MCP4822
 uint16_t ch_B_out;
 
+filter_t rx_filter;
+filter_t tx_filter;
+
 /*-----------------------------------------------------------*/
 
 /* Main program loop */
@@ -74,7 +79,7 @@ int main(void) __attribute__((OS_main));
 int main(void)
 {
 	// turn on the serial port for debugging or for other USART reasons.
-	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+	xSerialPort = xSerialPortInitMinimal( USART0, 38400, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
 	//	avrSerialPrint... doesn't need the scheduler running, so we can see freeRTOS initiation issues
 	avrSerialPrint_P(PSTR("\r\n\nHello World!\r\n")); // Ok, so we're alive...
@@ -131,9 +136,8 @@ static void TaskBlinkRedLED(void *pvParameters) // Main Red LED Flash
 	API function. */
 	xLastWakeTime = xTaskGetTickCount();
 
-	tm CurrTimeDate; 			// set up an array for the RTC info.
-
 #if defined (portRTC_DEFINED)
+	tm CurrTimeDate; 			// set up an array for the RTC info.
 
 	// initialise I2C master interface, need to do this once only.
 	// If there are two I2C processes, then do it during the system initiation.
@@ -166,7 +170,9 @@ static void TaskBlinkRedLED(void *pvParameters) // Main Red LED Flash
 //	   	vTaskDelay( 0 );
 		vTaskDelayUntil( &xLastWakeTime, ( 1024 / portTICK_PERIOD_MS ) );
 
-//		xSerialPrintf_P(PSTR("RedLED HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
+		xSerialPrintf_P(PSTR("\r\nFree Heap Size: %u"),xPortGetMinimumEverFreeHeapSize() ); // needs heap_1.c, heap_2.c or heap_4.c
+
+		xSerialPrintf_P(PSTR("RedLED HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
     }
 }
 
@@ -184,33 +190,40 @@ static void TaskAnalogue(void *pvParameters) // Prepare the DAC
 
 #if defined(MIC)
 	/* Create the ring-buffers used by audio delay loop. */
-	if( (delayDataPtr = (uint8_t *)pvPortMalloc( sizeof(uint8_t) * 2 * DELAY )))
-		ringBuffer_InitBuffer( &delayBuffer, delayDataPtr, 2 * DELAY);
+	if( (delayDataPtr = (uint8_t *)pvPortMalloc( sizeof(uint16_t) * DELAY )))
+		ringBuffer_InitBuffer( &delayBuffer, delayDataPtr, sizeof(uint16_t) * DELAY);
 #endif
 
 	xSerialPrintf_P(PSTR("\r\nDAC_Codec_init:"));
 	DAC_init();
-	xSerialPrintf_P(PSTR(" will soon"));
 
+	xSerialPrintf_P(PSTR(" will"));
 	/* Initialise the sample interrupt timer. Exact multiples of 2000Hz are ok with 8 bit Timer0, otherwise use 16 bit Timer1 */
-	AudioCodec_Timer0_init(SAMPLE_RATE);	// set up the sampling Timer0 to 48000Hz (or lower), runs at audio sampling rate in Hz.
-//	AudioCodec_Timer1_init(SAMPLE_RATE);	// set up the sampling Timer0 to 44100Hz (or odd rates), runs at audio sampling rate in Hz.
-	xSerialPrintf_P(PSTR(" be"));
+//	AudioCodec_Timer0_init(SAMPLE_RATE);	// xxx set up the sampling Timer0 to 48000Hz (or lower), runs at audio sampling rate in Hz.
+	AudioCodec_Timer1_init(SAMPLE_RATE);	// xxx set up the sampling Timer0 to 44100Hz (or odd rates), runs at audio sampling rate in Hz.
 
+	xSerialPrintf_P(PSTR(" soon"));
+
+	rx_filter.cutoff = \
+	tx_filter.cutoff = 0xc000;				// set both filters to 3/8 of sample frequency.
+
+	setIIRFilterLPF( &rx_filter );			// initialise received sample filter
+	setIIRFilterLPF( &tx_filter );			// initialise transmit sample filter
+
+	xSerialPrintf_P(PSTR(" be"));
 	AudioCodec_ADC_init();					// set up ADC sampling on the ADC0, ADC1, ADC2 using Danger Shield to control.
 											// or, Microphone on ADC7.
 
-	AudioCodec_setHandler(audioCodec_dsp, &ch_A_out, &ch_B_out); // Set the function to do the audio processing.
+	AudioCodec_setHandler(audioCodec_dsp, &ch_A_out, &ch_B_out); // Set the call back function to do the audio processing.
 																 //	Done this way so that we can change the audio handling depending on what we want to achieve.
-
 	xSerialPrintf_P(PSTR(" done."));
 
 //	xSerialPrintf_P(PSTR("\r\nFree Heap Size: %u"),xPortGetMinimumEverFreeHeapSize() ); // needs heap_1.c, heap_2.c or heap_4.c
 //	xSerialPrintf_P(PSTR("\r\nAudio HighWater: %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
 
 //	spiSelect (Analogue);
-	vTaskSuspend(NULL);						// Well, we're pretty much done here.
-//	vTaskEndScheduler();					// Rely on Timer1 Interrupt for regular output.
+//	vTaskSuspend(NULL);						// Well, we're pretty much done here.
+	vTaskEndScheduler();					// Rely on Timer1 Interrupt for regular output.
 
 	for(;;)
 	{
@@ -232,8 +245,8 @@ static void TaskAnalogue(void *pvParameters) // Prepare the DAC
 		}
 //		spiDeselect (Analogue);
 
-//		xSerialPrintf_P(PSTR("\r\nAudio HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
-//		vTaskDelay( 10 );
+		xSerialPrintf_P(PSTR("\r\nAudio HighWater @ %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
+		vTaskDelay( 1000 );
 	}
 }
 
@@ -257,8 +270,8 @@ void audioCodec_dsp( uint16_t * ch_A,  uint16_t * ch_B)
 {
 	static uint16_t i = 0;
 
-	*ch_A = (uint16_t)((  (int16_t)( pgm_read_word(&sinewave[i])) ) + 0x8000); // put sinusoid out on A channel, shifted to (+)ve values only.
-	*ch_B = (uint16_t)(( -(int16_t)( pgm_read_word(&sinewave[i])) ) + 0x8000); // put inverted sinusoid out on B channel, shifted to (+)ve values only.
+	*ch_A = (uint16_t)((  (int16_t)( pgm_read_word(&sinewave[i])) ) + 0x7fff); // put sinusoid out on A channel, shifted to (+)ve values only.
+	*ch_B = (uint16_t)(( -(int16_t)( pgm_read_word(&sinewave[i])) ) + 0x7fff); // put inverted sinusoid out on B channel, shifted to (+)ve values only.
 
 	i += 0x01;		// increment through the array of sinewave values. 0x01 is 43Hz @ 44.1kHz
 	i &= 0x03ff;	// make sure that i stays less than 1024 (0x03ff), within the array of sinewave values
@@ -279,15 +292,6 @@ void audioCodec_dsp( uint16_t * ch_A,  uint16_t * ch_B)
 }
 
 #elif defined (MUSIC)
-
-// create sinewave lookup table
-// PROGMEM stores the values in the program memory
-const int16_t sinewave[] PROGMEM =
-{
-	// this file is a 1024 value sinewave lookup table of signed 16bit integers
-	// you can replace it with your own waveform if you like
-#include "sinetable.inc"
-};
 
 #define SCALE (2)				// implement an averaging filter
 
@@ -405,8 +409,8 @@ void audioCodec_dsp( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled os
 	// multiply our sine wave by the mod0 value
 	MultiSU16X16toH16(temp1, temp2, mod0_value << 3);
 	// our sine wave is now in temp1
-	*ch_A =  temp1 + 0x8000; // put sinusoid out on A channel, shifted to (+)ve values only.
-	*ch_B = -temp1 + 0x8000; // put inverted version out on B channel, shifted to (+)ve values only.
+	*ch_A =  temp1 + 0x7fff; // put sinusoid out on A channel, shifted to (+)ve values only.
+	*ch_B = -temp1 + 0x7fff; // put inverted version out on B channel, shifted to (+)ve values only.
 
 	// adc sampling routine
 	// sampling the potentiometers (no sound here) - only needed if the pots are used to modify sound
@@ -427,50 +431,80 @@ void audioCodec_dsp( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled os
 
 void audioCodec_dsp( uint16_t * ch_A,  uint16_t * ch_B)
 {
-	if( ringBuffer_GetCount(&delayBuffer) - DELAY > 0 )
-	{
-		mod7_value.u8[1] = ringBuffer_Pop(&delayBuffer);
-		mod7_value.u8[0] = ringBuffer_Pop(&delayBuffer);
+	int16_t xn;
+	uint8_t cn;
 
-		*ch_A = *ch_B = mod7_value.u16; // put signal out on A & B channel.
+	if( ringBuffer_GetCount(&delayBuffer) >= DELAY )
+	{
+		cn = ringBuffer_Pop(&delayBuffer);
 	}
 	else
 	{
-		*ch_A = *ch_B = 0x7FFF; // put 0 on A & B channel.
+		cn = 0x80 ^ 0x55; // put A-Law nulled signal on the output.
 	}
 
-	AudioCodec_ADC(&mod7_value.u16);
+	alaw_expand1(&cn, &xn);	// expand the A-Law compression
 
-	ringBuffer_Poke(&delayBuffer, mod7_value.u8[1]);
-	ringBuffer_Poke(&delayBuffer, mod7_value.u8[0]);
+	IIRFilter( &rx_filter, &xn);	// filter received sample train
+
+	*ch_A = *ch_B = (uint16_t)(xn + 0x7fff); // put signal out on A & B channel.
+
+
+	AudioCodec_ADC( &mod7_value.u16 );	// sample is 10bits left justified.
+
+	xn = mod7_value.u16 - 0x7fe0;	// centre the sample to 0 by subtracting 1/2 10bit range.
+
+	IIRFilter( &tx_filter, &xn);	// filter sample train
+
+	alaw_compress1(&xn, &cn);	// compress using A-Law
+
+	if( ringBuffer_GetCount(&delayBuffer) <= DELAY )
+	{
+		ringBuffer_Poke(&delayBuffer, cn);
+	}
 }
 
 #elif defined (WALKIE_TALKIE)
 
 void audioCodec_dsp( uint16_t * ch_A,  uint16_t * ch_B)
 {
+	int16_t xn;
+	uint8_t cn;
 	/*----- Audio Rx -----*/
 
-	if ( xSerialGetChar( &xSerialPort, &mod7_value.u8[1] ) ) // receive the most significant 8 bits of the sample.
+	/* Get the next character from the ring buffer. */
+
+	if( ringBuffer_IsEmpty( (ringBuffer_t*) &(xSerialPort.xRxedChars) ) )
 	{
-		mod7_value.u8[0] = 0x00; // pad the least significant 8 bits with null.
+		cn = 0x80 ^ 0x55; // put A-Law nulled signal on the output.
+	}
+	else if (ringBuffer_GetCount( &(xSerialPort.xRxedChars) ) > (portSERIAL_BUFFER_RX>>1) ) // if the buffer is more than half full.
+	{
+		cn = ringBuffer_Pop( (ringBuffer_t*) &(xSerialPort.xRxedChars) ); // pop two samples to catch up, discard first one.
+		cn = ringBuffer_Pop( (ringBuffer_t*) &(xSerialPort.xRxedChars) );
 	}
 	else
 	{
-		mod7_value.u16 = 0x7FFF; // put nulled signal on the output
+		cn = ringBuffer_Pop( (ringBuffer_t*) &(xSerialPort.xRxedChars) ); // pop a sample
 	}
 
-	*ch_A = *ch_B = mod7_value.u16; // put signal out on A & B channel.
+	alaw_expand1(&cn, &xn);	// expand the A-Law compression
+
+	*ch_A = *ch_B = (uint16_t)(xn + 0x7fff); // move the signal to positive values, and put signal out on A & B channel.
 
 	/*----- Audio Tx -----*/
 
-	AudioCodec_ADC( &mod7_value.u16 );
+	AudioCodec_ADC( &mod7_value.u16 );	// sample is 10bits left justified.
 
-	xSerialPutChar( &xSerialPort, mod7_value.u8[1]); // just transmit the most significant 8 bits of the sample.
+	xn = mod7_value.u16 - 0x7fe0;	// centre the sample to 0 by subtracting 1/2 10bit range.
+
+	IIRFilter( &tx_filter, &xn);	// filter transmitted sample train
+
+	alaw_compress1(&xn, &cn);	// compress using A-Law
+
+	xSerialPutChar( &xSerialPort, cn);	// transmit the sample
 }
 #endif
-
-
 
 
 
@@ -485,17 +519,3 @@ const uint16_t logtable[] PROGMEM = {
 };
 #endif
 
-
-/*--------------------------------------------------*/
-
-
-void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
-{
-
-	DDRB  |= _BV(DDB7);
-	PORTB |= _BV(PORTB7);       // main (red PB7) LED on. Mega main LED on and die.
-	while(1);
-}
-
-/*-----------------------------------------------------------*/

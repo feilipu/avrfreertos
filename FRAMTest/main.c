@@ -9,9 +9,10 @@
 #include <string.h>
 
 #include <avr/io.h>
-#include <util/delay.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+
+#include <util/delay.h>
 
 /* Scheduler include files. */
 #include "FreeRTOS.h"
@@ -41,8 +42,10 @@
 /* FatF interface include file. ffconf.h holds configuration options, and is auto included. */
 #include "ff.h"
 
+#if defined (portHD44780_LCD)
 /* HD44780 interface include file. */
 #include "hd44780.h"
+#endif
 
 /* FRAM interface include file. */
 
@@ -55,7 +58,7 @@
 #if defined(portEXT_RAM) && !defined(portEXT_RAMFS)
 #define CMD_BUFFER_SIZE 8192	// size of working buffer (on heap) with extended RAM EtherMega
 #else
-#define CMD_BUFFER_SIZE 2048	// size of working buffer (on heap) for standard EtherMega & Goldilocks
+#define CMD_BUFFER_SIZE 1024	// size of working buffer (on heap) for standard EtherMega & Goldilocks
 #endif
 
 #define LINE_SIZE 128			// size of command line (on heap)
@@ -64,7 +67,7 @@
 static uint8_t * Buff = NULL;	/* Put working buffer on heap later (with pvPortMalloc). */
 
 /* Console input buffer */
-static uint8_t * Line = NULL;	// put line buffer on heap (with pvPortMalloc).
+uint8_t * LineBuffer = NULL;	// put line buffer on heap (with pvPortMalloc).
 
 /* Create a handle for the serial port. */
 extern xComPortHandle xSerialPort;
@@ -76,7 +79,7 @@ static uint16_t AccFiles, AccDirs;
 static FILINFO Finfo;
 
 static FATFS Fatfs[_VOLUMES];		/* File system object for each logical drive */
-static FIL File[_FS_LOCK];			/* File object. there are _FS_LOCK file objects available */
+static FIL File[_FS_LOCK];			/* File object. there are _FS_LOCK file objects available,  >= 2. */
 
 
 /*-----------------------------------------------------------*/
@@ -106,20 +109,8 @@ int main(void) __attribute__((OS_main));
 int main(void)
 {
 
-#if defined (portEXT_RAM_8_BANK)
-
-	extRAMSelfTestResults testResults;
-
-	extRAMInitHeap( pdTRUE );
-
-	// FIRST a test on the external RAM, before we do anything else.
-	// This test is destructive.
-	testResults = extRAMSelfTest();
-
-#endif
-
     // turn on the serial port for debugging or for other USART reasons.
-	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX ); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+	xSerialPort = xSerialPortInitMinimal( USART0, 38400, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX ); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
 	avrSerialPrint_P(PSTR("\r\nHello World!\r\n")); // Ok, so we're alive... (using polling serial access, pre-scheduler)
 
@@ -129,26 +120,6 @@ int main(void)
 	lcd_Locate (1, 0);
 #endif
 
-#if defined (portEXT_RAM_8_BANK)
-
-//	avrSerialPrintf_P(PSTR("XMCRA: %x \r\n"), (uint8_t)XMCRA );
-//	avrSerialPrintf_P(PSTR("PIND:  %x \r\n"), (uint8_t)PIND );
-//	avrSerialPrintf_P(PSTR("PINL:  %x \r\n"), (uint8_t)PINL );
-
-//	avrSerialPrintf_P(PSTR("Heap start addr:        %x\r\n"),  (int16_t) __heap_start);
-//	avrSerialPrintf_P(PSTR("Heap end   addr:        %x\r\n"),  (int16_t) __heap_end);
-//	avrSerialPrintf_P(PSTR("malloc Heap start addr: %x\r\n"),  (int16_t) __malloc_heap_start);
-//	avrSerialPrintf_P(PSTR("malloc Heap end   addr: %x\r\n"),  (int16_t) __malloc_heap_end);
-//	avrSerialPrintf_P(PSTR("brkval addr:            %x\r\n"),  (int16_t) __brkval);
-
-	if (testResults.succeeded == pdTRUE) avrSerialPrint_P(PSTR("\r\nExtended RAM PASSED!\r\n\n"));
-	else{
-		avrSerialPrint_P(PSTR("\r\nExtended RAM FAILED!\r\n\n"));
-		avrSerialPrintf_P(PSTR("Failed Addr:  %x \r\n\n"), testResults.failedAddress );
-		avrSerialPrintf_P(PSTR("Failed Bank:  %x \r\n\n"), testResults.failedBank );
-	}
-
-#endif
 
     xTaskCreate(
 		TaskBlinkRedLED
@@ -210,9 +181,9 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 
 	// create the working buffers on the heap (so they can be moved later).
 
-	if(Line == NULL) // if there is no Line buffer allocated (pointer is NULL), then allocate buffer.
-		if( !(Line = (uint8_t *) pvPortMalloc( sizeof(uint8_t) * LINE_SIZE )))
-			xSerialPrint_P(PSTR("pvPortMalloc for *Line fail..!\r\n"));
+	if(LineBuffer == NULL) // if there is no LineBuffer buffer allocated (pointer is NULL), then allocate buffer.
+		if( !(LineBuffer = (uint8_t *) pvPortMalloc( sizeof(uint8_t) * LINE_SIZE )))
+			xSerialPrint_P(PSTR("pvPortMalloc for *LineBuffer fail..!\r\n"));
 
 
 #if defined (portRTC_DEFINED)
@@ -232,8 +203,8 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
     	time((time_t *)&p1);
     	xSerialPrintf_P(PSTR("\r\n%s >"), ctime( (time_t *)&p1));
 
-		ptr = Line;
-		get_line(ptr, (sizeof(uint8_t)* LINE_SIZE)); //sizeof (Line);
+		ptr = LineBuffer;
+		get_line(ptr, (sizeof(uint8_t)* LINE_SIZE)); //sizeof (LineBuffer);
 
 		switch (*ptr++) {
 
@@ -265,18 +236,6 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 						break;
 					}
 
-#if _USE_LFN
-				if(Finfo.lfname == NULL) // if there is no Long File Name buffer allocated (pointer is NULL), then allocate buffer.
-				{
-					if( !(Finfo.lfname = (TCHAR *) pvPortMalloc( sizeof(TCHAR) * (_MAX_LFN + 1) )))
-					{
-						xSerialPrint_P(PSTR("pvPortMalloc for Finfo.lfname fail..!\r\n"));
-						break;
-					}
-					Finfo.lfsize = _MAX_LFN + 1;
-				}
-#endif
-
 				xSerialPrintf_P(PSTR("D:%2d\r\n"), disk_initialize((uint8_t)p1));
 				break;
 
@@ -304,7 +263,7 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 			case 'x' : /* dx <iterations> - Destructive Testing to prove the DISKIO functions. */
 				if (!xatoi(&ptr, &p1)) break;
 			    /* Check function/compatibility of the physical drive #0 */
-			    res = test_diskio(0, p1, Buff, CMD_BUFFER_SIZE);
+			    res = test_diskio(0, p1, (uint32_t *)Buff, CMD_BUFFER_SIZE);
 			    if (res) {
 			    	xSerialPrintf_P(PSTR("Sorry the function/compatibility test failed.\r\nFatFs will not work on this disk driver.\r\nErrors: %u\n"), res);
 			    } else {
@@ -335,8 +294,8 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 				}
 				for (;;) {
 					xSerialPrintf_P(PSTR("%04X %02X-"), (uint16_t)p1, Buff[p1]);
-					get_line(Line, (sizeof(uint8_t)* LINE_SIZE) );
-					ptr = Line;
+					get_line(LineBuffer, (sizeof(uint8_t)* LINE_SIZE) );
+					ptr = LineBuffer;
 					if (*ptr == '.') break;
 					if (*ptr < ' ') { p1++; continue; }
 					if (xatoi(&ptr, &p2))
@@ -384,6 +343,18 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 						break;
 					}
 
+#if _USE_LFN
+				if(Finfo.lfname == NULL) // if there is no Long File Name buffer allocated (pointer is NULL), then allocate buffer.
+				{
+					if( !(Finfo.lfname = (TCHAR *) pvPortMalloc( sizeof(TCHAR) * (_MAX_LFN + 1) )))
+					{
+						xSerialPrint_P(PSTR("pvPortMalloc for Finfo.lfname fail..!\r\n"));
+						break;
+					}
+					Finfo.lfsize = _MAX_LFN + 1;
+				}
+#endif
+
 				put_rc(f_mount(&Fatfs[p1], (const TCHAR*)&p1, 1));
 
 				break;
@@ -397,10 +368,10 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 							 "Root DIR entries = %u\r\nSectors/FAT = %lu\r\nNumber of clusters = %lu\r\n"),
 						fs->fs_type, (uint32_t)fs->csize * 512, fs->n_fats,
 						fs->n_rootdir, fs->fsize, fs->n_fatent - 2	);
-				vTaskDelay( 16 / portTICK_PERIOD_MS ); // Whoa... too fast.
+				vTaskDelay( 32 / portTICK_PERIOD_MS ); // Whoa... too fast.
 				xSerialPrintf_P(PSTR("FAT start (lba) = %lu\r\nDIR start (lba,cluster) = %lu\r\nData start (lba) = %lu\r\n...\r\n"),
 										fs->fatbase, fs->dirbase, fs->database	);
-				vTaskDelay( 16 / portTICK_PERIOD_MS ); // Whoa... too fast.
+				vTaskDelay( 32 / portTICK_PERIOD_MS ); // Whoa... too fast.
 				AccSize = AccFiles = AccDirs = 0;
 				res = scan_files(ptr);
 				if (res) { put_rc(res); break; }
@@ -442,7 +413,8 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 #else
 					xSerialPrint_P(PSTR("\r\n"));
 #endif
-					vTaskDelay( 16 / portTICK_PERIOD_MS ); // Whoa... too fast.
+
+					vTaskDelay( 32 / portTICK_PERIOD_MS ); // Whoa... too fast.
 				}
 				xSerialPrintf_P(PSTR("%4u File(s),%10lu bytes total\r\n%4u Dir(s)"), s1, p1, s2);
 #if _FS_MINIMIZE < 1
@@ -629,7 +601,7 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 				Timer = xTaskGetTickCount();
 				p1 = 0;
 				for (;;) {
-					res = f_read(&File[0], Buff, (sizeof(uint8_t) * CMD_BUFFER_SIZE), &s1);
+					res = f_read(&File[0], Buff, (sizeof(uint8_t)* CMD_BUFFER_SIZE), &s1);
 					if (res || s1 == 0) break;   /* error or eof */
 					res = f_write(&File[1], Buff, s1, &s2);
 					p1 += s2;
@@ -657,11 +629,11 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 				break;
 #if _FS_RPATH >= 2
 			case 'q' :	/* fq - Show current dir path */
-				res = f_getcwd(Line, (sizeof(uint8_t)* CMD_BUFFER_SIZE));
+				res = f_getcwd(LineBuffer, (sizeof(uint8_t)* CMD_BUFFER_SIZE));
 				if (res)
 					put_rc(res);
 				else
-					xSerialPrintf_P(PSTR("%s\r\n"), Line);
+					xSerialPrintf_P(PSTR("%s\r\n"), LineBuffer);
 				break;
 #endif
 #endif
@@ -1120,13 +1092,14 @@ static void TaskBlinkRedLED(void *pvParameters) // Main Red LED Flash
 #if defined (portRTC_DEFINED) && defined (portHD44780_LCD)
 	tm CurrTimeDate; 			// set up an array for the RTC info.
 #endif
+
 	DDRB |= _BV(DDB7); // Set LED to output
 
     for(;;)
     {
 
-//   	PORTB |=  _BV(PORTB7);       // main (red IO_B7) LED on. EtherMega LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
+    	PORTB |=  _BV(PORTB7);       // main (red IO_B7) LED on. EtherMega LED on
+		vTaskDelayUntil( &xLastWakeTime, ( 64 / portTICK_PERIOD_MS ) );
 
 #if defined (portHD44780_LCD)
 
@@ -1144,8 +1117,8 @@ static void TaskBlinkRedLED(void *pvParameters) // Main Red LED Flash
 
 #endif
 
-//		PORTB &= ~_BV(PORTB7);       // main (red IO_B7) LED off. EtherMega LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 490 / portTICK_PERIOD_MS ) );
+		PORTB &= ~_BV(PORTB7);       // main (red IO_B7) LED off. EtherMega LED off
+		vTaskDelayUntil( &xLastWakeTime, ( 448 / portTICK_PERIOD_MS ) );
 
 //		xSerialPrintf_P(PSTR("RedLED HighWater @ %u\r\r\n"), uxTaskGetStackHighWaterMark(NULL));
     }
@@ -1402,7 +1375,7 @@ test_diskio (
         	++errors;
         }
 
-    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+    	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         xSerialPrintf_P(PSTR(" disk_ioctl(%u, CTRL_SYNC, NULL)"), pdrv);
         dr = disk_ioctl(pdrv, CTRL_SYNC, NULL);
@@ -1430,7 +1403,7 @@ test_diskio (
         }
         pns++;
 
-    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+    	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         /* Multiple sector write test */
         xSerialPrint_P(PSTR("**** Multiple sector write test ****\n"));
@@ -1446,7 +1419,7 @@ test_diskio (
         	++errors;
         }
 
-    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+    	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         xSerialPrintf_P(PSTR(" disk_ioctl(%u, CTRL_SYNC, NULL)"), pdrv);
         dr = disk_ioctl(pdrv, CTRL_SYNC, NULL);
@@ -1474,7 +1447,7 @@ test_diskio (
         }
         pns++;
 
-    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+    	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         /* Single sector write test (misaligned memory address) */
         xSerialPrint_P(PSTR("**** Single sector write test 2 ****\n"));
@@ -1489,7 +1462,7 @@ test_diskio (
         	++errors;
         }
 
-    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+    	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         xSerialPrintf_P(PSTR(" disk_ioctl(%u, CTRL_SYNC, NULL)"), pdrv);
         dr = disk_ioctl(pdrv, CTRL_SYNC, NULL);
@@ -1517,7 +1490,7 @@ test_diskio (
         }
         pns++;
 
-    	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+    	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
         /* 4GB barrier test */
         xSerialPrint_P(PSTR("**** 4GB barrier test ****\n"));
@@ -1533,7 +1506,7 @@ test_diskio (
             	++errors;
             }
 
-        	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+        	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
             xSerialPrintf_P(PSTR(" disk_write(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(&pbuff+sz_sect), lba2);
             dr = disk_write(pdrv, pbuff+sz_sect, lba2, 1);
@@ -1544,7 +1517,7 @@ test_diskio (
             	++errors;
             }
 
-        	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+        	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
             xSerialPrintf_P(PSTR(" disk_ioctl(%u, CTRL_SYNC, NULL)"), pdrv);
             dr = disk_ioctl(pdrv, CTRL_SYNC, NULL);
@@ -1564,7 +1537,7 @@ test_diskio (
             	++errors;
             }
 
-        	vTaskDelay( 100 / portTICK_PERIOD_MS ); // Whoa... too fast.
+        	vTaskDelay( 128 / portTICK_PERIOD_MS ); // Whoa... too fast.
 
             xSerialPrintf_P(PSTR(" disk_read(%u, 0x%X, %lu, 1)"), pdrv, (uint16_t)(&pbuff+sz_sect), lba2);
             dr = disk_read(pdrv, pbuff+sz_sect, lba2, 1);
@@ -1592,8 +1565,8 @@ test_diskio (
     return errors;
 }
 
-/*-----------------------------------------------------------*/
 
+/*-----------------------------------------------------------*/
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
@@ -1622,13 +1595,13 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 	portDISABLE_INTERRUPTS();
 
 	/* take over the command line buffer to generate our error message */
-	pC = (uint8_t*) Line;
+	pC = (uint8_t*) LineBuffer;
 
 	strcat_P( (char*) pC, PSTR("\r\n"));
 	strcat( (char*) pC, (char*) pcTaskName );
 	strcat_P( (char*) pC, PSTR("\r\n"));
 
-	pC = (uint8_t*) Line;
+	pC = (uint8_t*) LineBuffer;
 
 	/* Force the UART control register to be the way we want, just in case */
 
@@ -1644,7 +1617,7 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 	* If the system clock is one of the Magic Frequencies, this
 	* computation will result in the exact baud rate
 	*/
-	baud = ( ( ( configCPU_CLOCK_HZ / ( ( 16UL * 115200 ) / 2UL ) ) + 1UL ) / 2UL ) - 1UL;
+	baud = ( ( ( configCPU_CLOCK_HZ / ( ( 16UL * 38400 ) / 2UL ) ) + 1UL ) / 2UL ) - 1UL;
 	UBRR0 = baud;
 
 	/* Send out the message, without interrupts.  Hard wired to USART 0 */
@@ -1657,5 +1630,4 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 
 	while(1){ PINB |= _BV(PINB7); _delay_ms(100); } // main (red PB7) LED flash and die.
 }
-
 /*-----------------------------------------------------------*/

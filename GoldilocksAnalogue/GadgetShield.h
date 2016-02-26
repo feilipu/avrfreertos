@@ -7,25 +7,19 @@
 
 #include "spi.h"
 
-#include "mult16x16.h"
-#include "mult16x8.h"
-#include "mult32x16.h"
-
 /*--------------------------------------------------*/
 /*------------Often Configured Parameters-----------*/
 /*--------------------------------------------------*/
 
-#define SAMPLE_RATE		3500 // set up the sampling Timer1 to 48000Hz, 44100Hz (or lower), runs at audio sampling rate in Hz.
-
-#define DELAY			4000
+#define DELAY			6000
 #define DECIMATE		1
 
 // TODO Define the audio function that is desired by uncommenting one of below...
-//#define SINE
+#define SINE
 //#define MUSIC
 //#define VCO
 //#define MIC
-#define WALKIE_TALKIE
+//#define WALKIE_TALKIE
 
 
 #if defined(SINE)
@@ -110,7 +104,7 @@ void AudioCodec_ADC_init(void)
 {
 	// setup ADCs
 #if ADCS == 0
-	DIDR0  = _BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D)|_BV(ADC7D); // turn off digital inputs for pins ADC0, ADC1, ADC2, ADC7
+	DIDR0  = _BV(ADC7D)|_BV(ADC6D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D); // turn off digital inputs for pins ADC0, ADC1, ADC2, ADC6, ADC7
 
 #elif (ADCS == 1) || (ADCS == 2) || (ADCS == 3)
 
@@ -118,13 +112,13 @@ void AudioCodec_ADC_init(void)
 	ADMUX  = _BV(REFS1)|_BV(REFS0)|_BV(ADLAR)|_BV(MUX2)|_BV(MUX1)|_BV(MUX0); // 2.56V reference with external capacitor at AREF pin - left justify - start with MIC input ADC7
 	ADCSRA = _BV(ADEN)|_BV(ADSC)|_BV(ADATE)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // ADC enable, auto trigger, ck/128 = 192kHz
 	ADCSRB =  0x00;			// free running mode
-	DIDR0  = _BV(ADC7D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D);	// turn off digital input for pin ADC7 Mic input.
+	DIDR0  = _BV(ADC7D)|_BV(ADC6D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D);	// turn off digital input for pin ADC6 Line and ADC7 Mic input (and ADC2, ADC1, & ADC0)
 
 #else
 	ADMUX  = _BV(REFS0); // start with ADC0 - AVCC with external capacitor at AREF pin
 	ADCSRA = _BV(ADEN)|_BV(ADSC)|_BV(ADATE)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // ADC enable, auto trigger, ck/128
 	ADCSRB = 0x00; // free running mode
-	DIDR0  = _BV(ADC7D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D); // turn off digital inputs for pins ADC0, ADC1, ADC2
+	DIDR0  = _BV(ADC7D)|_BV(ADC6D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D); // turn off digital inputs for pins ADC0, ADC1, ADC2, ADC6, ADC7
 #endif
 
 #endif

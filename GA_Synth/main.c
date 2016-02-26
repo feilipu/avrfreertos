@@ -78,14 +78,14 @@ uint8_t * LineBuffer = (void *)0;	// put line buffer for monitor on heap later w
 // PROGMEM stores the values in the program memory
 // notes are calculated based on a LUT_SIZE of 4096, and are scaled by 127 (<<7).
 //
-const uint32_t concertNoteTable[NOTES * STOPS] PROGMEM =
+uint32_t const concertNoteTable[NOTES * STOPS] PROGMEM =
 {
 	// This is based on Concert Tuning with A = 440Hz, with Equal Temperament tuning.
 	// this file is STOPS * NOTES sized note lookup table of unsigned 32bit integers
 	#include "ConcertNoteLUT.inc"
 };
 
-const uint32_t verdiNoteTable[NOTES * STOPS] PROGMEM =
+uint32_t const verdiNoteTable[NOTES * STOPS] PROGMEM =
 {
 	// this is based on Scientific (Verdi) Tuning with A = 4330Hz, with Just Intonation tuning.
 	// this file is STOPS * NOTES sized note lookup table of unsigned 32bit integers
@@ -94,7 +94,7 @@ const uint32_t verdiNoteTable[NOTES * STOPS] PROGMEM =
 
 // create square wave lookup table
 // PROGMEM stores the values in the program memory
-const int16_t squareWave[LUT_SIZE] PROGMEM =
+int16_t const squareWave[LUT_SIZE] PROGMEM =
 {
 	// this file is a 4096 value square wave lookup table of signed 16bit integers
 	#include "SquareLUT.inc"
@@ -102,7 +102,7 @@ const int16_t squareWave[LUT_SIZE] PROGMEM =
 
 // create saw tooth wave lookup table
 // PROGMEM stores the values in the program memory
-const int16_t sawWave[LUT_SIZE] PROGMEM =
+int16_t const sawWave[LUT_SIZE] PROGMEM =
 {
 	// this file is a 4096 value saw wave lookup table of signed 16bit integers
 	#include "SawLUT.inc"
@@ -110,7 +110,7 @@ const int16_t sawWave[LUT_SIZE] PROGMEM =
 
 // create triangle wave lookup table
 // PROGMEM stores the values in the program memory
-const int16_t triangleWave[LUT_SIZE] PROGMEM =
+int16_t const triangleWave[LUT_SIZE] PROGMEM =
 {
 	// this file is a 4096 value triangle wave lookup table of signed 16bit integers
 	#include "TriangleLUT.inc"
@@ -118,7 +118,7 @@ const int16_t triangleWave[LUT_SIZE] PROGMEM =
 
 // create sine wave lookup table
 // PROGMEM stores the values in the program memory
-const int16_t sineWave[LUT_SIZE] PROGMEM =
+int16_t const sineWave[LUT_SIZE] PROGMEM =
 {
 	// this file is a 4096 value sine wave lookup table of signed 16bit integers
 	#include "SineLUT.inc"
@@ -127,7 +127,7 @@ const int16_t sineWave[LUT_SIZE] PROGMEM =
 // create exponential (1-e^-x) frequency lookup table
 // use this to create a simple attack and release for notes.
 // PROGMEM stores the values in the program memory
-const uint16_t expTable[] PROGMEM = {
+uint16_t const expTable[] PROGMEM = {
   // this file is a 2048 value exponential lookup table of unsigned 16bit integers
   // you can replace it with your own table if you like.
   #include "expTable.inc"
@@ -142,7 +142,7 @@ int main(void)
 {
 
     // turn on the serial port for setting or querying the time .
-	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+	xSerialPort = xSerialPortInitMinimal( USART0, 38400, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
     // Semaphores are useful to stop a thread proceeding, where it should be stopped because it is using a resource.
     if( xADCSemaphore == (void *)0 ) 					// Check to see if the ADC semaphore has not been created.
@@ -274,7 +274,7 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 				xSerialPrintf_P(PSTR("\r\nInput Time Zone %i"), (int8_t)p1 );
 			}
 			eeprom_busy_wait();
-			xSerialPrintf_P(PSTR("\r\nSaved Time Zone %i"), (int8_t)eeprom_read_byte((const uint8_t *)&eeSavedTZ) );
+			xSerialPrintf_P(PSTR("\r\nSaved Time Zone %i"), (int8_t)eeprom_read_byte((uint8_t const *)&eeSavedTZ) );
 
 			time(&timestamp);
 			ctime_r( (time_t *)&timestamp, (char *)LineBuffer );
@@ -311,13 +311,17 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 
     while(1)
     {
+    	FT_touch();
 
-    	if (FT_touch())
-    		FT_GUI();
+    	// hack the pots
+    	synth.delay_time = 0xffff - (mod0Value << (6 - DECIMATE));
+    	synth.master = 0xffff - (mod1Value << (6 - DECIMATE));
+
+    	FT_GUI();
 
 //		xSerialPrintf_P(PSTR("\r\nWriteLCD: Stack HighWater @ %u"), uxTaskGetStackHighWaterMark(NULL));
 //		xSerialPrintf_P(PSTR("\r\nMinimum Ever Heap Free: %u\r\n"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
-		vTaskDelayUntil( &xLastWakeTime, 16 / portTICK_PERIOD_MS );
+		vTaskDelayUntil( &xLastWakeTime, 128 / portTICK_PERIOD_MS );
 	}
 }
 
@@ -341,11 +345,10 @@ static void TaskAnalogue(void *pvParameters) // Prepare the DAC
 
 	/* Initialise the sample interrupt timer. Exact multiples of 2000Hz are ok with 8 bit Timer0, otherwise use 16 bit Timer1 */
 	AudioCodec_Timer0_init(SAMPLE_RATE);	// xxx set up the sampling Timer0 to 48000Hz (or lower), runs at audio sampling rate in Hz.
-//	AudioCodec_Timer1_init(SAMPLE_RATE);	// xxx set up the sampling Timer0 to 44100Hz (or odd rates), runs at audio sampling rate in Hz.
+//	AudioCodec_Timer1_init(SAMPLE_RATE);	// xxx set up the sampling Timer1 to 44100Hz (or odd rates), runs at audio sampling rate in Hz.
 //	xSerialPrintf_P(PSTR(" be"));
 
-//	AudioCodec_ADC_init();					// set up ADC sampling on the ADC0, ADC1, ADC2 using Danger Shield to control.
-											// or, Microphone on ADC7.
+	AudioCodec_ADC_init();					// set up ADC sampling on the ADC0, ADC1 using MIDI Shield to control potentiometers.
 
 	AudioCodec_setHandler( synthesizer, &ch_A_out, &ch_B_out );		// Set the call back function to do the audio processing.
 																	//	Done this way so that we can change the audio handling depending on what we want to achieve.
@@ -371,7 +374,7 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 	uint16_t currentPhase;
 	uint8_t frac;
 
-	DAC_value_t temp0; // this is a uint16_t that can be called as either byte.
+	DAC_value_t temp0; // this is a int16_t that can be called as either byte.
 
 	int16_t temp1 = 0;
 	int16_t temp2 = 0;
@@ -667,17 +670,17 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 	}
 	else // or else wait until we have samples available.
 	{
-		temp0.u16 = 0x0000;
+		temp0.i16 = 0;
 	}
 
 	if (synth.delay_time) // If the delay time is set to be non zero,
 	{
 		// do the space delay function, irrespective of whether a note is playing or not,
 		// and combine the output sample with the delayed sample.
-		temp1 += temp0.u16;
+		temp1 += temp0.i16;
 
 		// multiply our sample by the feedback value
-		MultiSU16X16toH16Round(temp0.u16, temp1, synth.delay_feedback);
+		MultiSU16X16toH16Round(temp0.i16, temp1, synth.delay_feedback);
 	}
 	else
 		ringBuffer_Flush(&delayBuffer);	// otherwise flush the buffer if the delay is set to zero.
@@ -697,6 +700,8 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 
 	// and output wave on both A & B channel, shifted to (+)ve values only because this is what the DAC needs.
 	*ch_A = *ch_B = temp2 + 0x7fff;
+
+	AudioCodec_ADC(&mod0Value, &mod1Value);
 }
 
 void FT_GUI()
@@ -1027,7 +1032,7 @@ uint8_t FT_touch(void)
 						break;
 				}
 
-				vTaskDelay( 125 / portTICK_PERIOD_MS ); // debounce the toggles.
+				vTaskDelay( 128 / portTICK_PERIOD_MS ); // debounce the toggles.
 			}
 			else if (readTag > 0x80)// tag is greater than 0x80 and therefore is a dial.
 			{
@@ -1206,69 +1211,15 @@ void get_line (uint8_t *buff, uint8_t len)
 	xSerialPrint_P(PSTR("\r\n"));
 }
 
+
+/*-----------------------------------------------------------*/
+/* Interrupts */
 /*-----------------------------------------------------------*/
 
 
-void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
-{
-	/*---------------------------------------------------------------------------*\
-	Usage:
-	   called by task system when a stack overflow is noticed
-	Description:
-	   Stack overflow handler -- Shut down all interrupts, send serious complaint
-	    to command port.
-	Arguments:
-	   pxTask - pointer to task handle
-	   pcTaskName - pointer to task name
-	Results:
-	   <none>
-	Notes:
-	   This routine will never return.
-	   This routine is referenced in the task.c file of FreeRTOS as an extern.
-	\*---------------------------------------------------------------------------*/
 
-	uint8_t* pC;
-	uint16_t baud;
-
-	/* shut down all interrupts */
-	portDISABLE_INTERRUPTS();
-
-	/* take over the command line buffer to generate our error message */
-	pC = (uint8_t*) LineBuffer;
-
-	strcat_P( (char*) pC, PSTR("\r\n"));
-	strcat( (char*) pC, (char*) pcTaskName );
-	strcat_P( (char*) pC, PSTR("\r\n"));
-
-	pC = (uint8_t*) LineBuffer;
-
-	/* Force the UART control register to be the way we want, just in case */
-
-	UCSR0C = ( _BV( UCSZ01 ) | _BV( UCSZ00 ) );		// 8 data bits
-	UCSR0B = _BV( TXEN0 );							// only enable transmit
-	UCSR0A = 0;
-
-	/* Calculate the baud rate register value from the equation in the
-	* data sheet.  This calculation rounds to the nearest factor, which
-	* means the resulting rate may be either faster or slower than the
-	* desired rate (the old calculation was always faster).
-	*
-	* If the system clock is one of the Magic Frequencies, this
-	* computation will result in the exact baud rate
-	*/
-	baud = ( ( ( configCPU_CLOCK_HZ / ( ( 16UL * 115200 ) / 2UL ) ) + 1UL ) / 2UL ) - 1UL;
-	UBRR0 = baud;
-
-	/* Send out the message, without interrupts.  Hard wired to USART 0 */
-	while ( *pC )
-	{
-		while (!(UCSR0A & (1 << UDRE0)));
-		UDR0 = *pC;
-		pC++;
-	}
-
-	while(1){ PINB |= _BV(PINB7); _delay_ms(100); } // main (red PB7) LED flash and die.
-}
 
 /*-----------------------------------------------------------*/
+
+
+

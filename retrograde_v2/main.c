@@ -19,6 +19,7 @@
 #include "queue.h"
 #include "semphr.h"
 
+
 /* Pololu derived include files. */
 #include "digitalAnalog.h"
 
@@ -83,7 +84,7 @@ int main(void)
 {
 
     // turn on the serial port for setting or querying the time .
-	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
+	xSerialPort = xSerialPortInitMinimal( USART0, 38400, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
     // Memory shortages mean that we have to minimise the number of
     // threads, hence there are no longer multiple threads using a resource.
@@ -167,15 +168,15 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 		case 'h' : // help
 			xSerialPrint_P( PSTR("rt - reset maximum & minimum temperatures\r\n") );
 			xSerialPrint_P( PSTR("t  - show the time\r\n") );
-			xSerialPrint_P( PSTR("t  - set the time\r\nt [<year yy> <month mm> <date dd> <day: Sun=0> <hour hh> <minute mm> <second ss>]\r\n") );
+			xSerialPrint_P( PSTR("t  - set the time\r\nt [<year [yy]yy> <month mm> <date dd> <day: Sun=0> <hour hh> <minute mm> <second ss>]\r\n") );
 			break;
 
 #ifdef portRTC_DEFINED
 		case 't' :	/* t [<year yy> <month mm> <date dd> <day: Sun=0> <hour hh> <minute mm> <second ss>] */
 
 			if (xatoi(&ptr, &p1)) {
-				SetTimeDate.tm_year = (uint8_t)p1 + 100; 			// convert to (Gregorian - 1900)
-				xatoi(&ptr, &p1); SetTimeDate.tm_mon = (uint8_t)p1;
+				SetTimeDate.tm_year = (uint8_t)p1 -Y2K;
+				xatoi(&ptr, &p1); SetTimeDate.tm_mon = (uint8_t)p1 -1;
 				xatoi(&ptr, &p1); SetTimeDate.tm_mday = (uint8_t)p1;
 				xatoi(&ptr, &p1); SetTimeDate.tm_wday = (uint8_t)p1;
 				xatoi(&ptr, &p1); SetTimeDate.tm_hour = (uint8_t)p1;
@@ -184,14 +185,14 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 					break;
 				SetTimeDate.tm_sec = (uint8_t)p1;
 
-				xSerialPrintf_P(PSTR("Set: %u/%u/%u %2u:%02u:%02u\r\n"), SetTimeDate.tm_year, SetTimeDate.tm_mon, SetTimeDate.tm_mday, SetTimeDate.tm_hour, SetTimeDate.tm_min, SetTimeDate.tm_sec);
+				xSerialPrintf_P(PSTR("Set: %4u/%2u/%2u %2u:%02u:%02u\r\n"), SetTimeDate.tm_year +Y2K, SetTimeDate.tm_mon +1, SetTimeDate.tm_mday, SetTimeDate.tm_hour, SetTimeDate.tm_min, SetTimeDate.tm_sec);
 				if (setDateTimeDS1307( &SetTimeDate ) == pdTRUE)
 					xSerialPrint_P( PSTR("Setting successful\r\n") );
 
 			} else {
 
 				if (getDateTimeDS1307( &xCurrentTempTime.DateTime) == pdTRUE)
-					xSerialPrintf_P(PSTR("Current: %u/%u/%u %2u:%02u:%02u\r\n"), xCurrentTempTime.DateTime.tm_year + 1900, xCurrentTempTime.DateTime.tm_mon, xCurrentTempTime.DateTime.tm_mday, xCurrentTempTime.DateTime.tm_hour, xCurrentTempTime.DateTime.tm_min, xCurrentTempTime.DateTime.tm_sec);
+					xSerialPrintf_P(PSTR("Current: %4u/%2u/%2u %2u:%02u:%02u\r\n"), xCurrentTempTime.DateTime.tm_year +Y2K, xCurrentTempTime.DateTime.tm_mon +1, xCurrentTempTime.DateTime.tm_mday, xCurrentTempTime.DateTime.tm_hour, xCurrentTempTime.DateTime.tm_min, xCurrentTempTime.DateTime.tm_sec);
 			}
 			break;
 #endif
@@ -305,7 +306,7 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 
 			// display Day Date/Month/Year
 			lcd_Locate(0, 10);              // go to the eleventh character of the first LCD line
-			lcd_Printf_P( PSTR("%2u/%2u/%4u"), xCurrentTempTime.DateTime.tm_mday, xCurrentTempTime.DateTime.tm_mon, (xCurrentTempTime.DateTime.tm_year + 1900) );
+			lcd_Printf_P( PSTR("%2u/%2u/%4u"), xCurrentTempTime.DateTime.tm_mday, xCurrentTempTime.DateTime.tm_mon +1, xCurrentTempTime.DateTime.tm_year +Y2K );
 
 			// display the current temperature
 			lcd_Locate(1, 1);			// LCD cursor to third character of the second LCD line
@@ -321,14 +322,14 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 			lcd_Printf_P(PSTR("Max%5.1f"),xMaximumTempTime.Temperature);			// print the maximum temperature value
 
 			lcd_Locate(2, 9);          // go to the ninth character of the third LCD line
-			lcd_Printf_P(PSTR("%2u:%02u %2u/%2u"),xMaximumTempTime.DateTime.tm_hour, xMaximumTempTime.DateTime.tm_min, xMaximumTempTime.DateTime.tm_mday, xMaximumTempTime.DateTime.tm_mon );
+			lcd_Printf_P(PSTR("%2u:%02u %2u/%2u"),xMaximumTempTime.DateTime.tm_hour, xMaximumTempTime.DateTime.tm_min, xMaximumTempTime.DateTime.tm_mday, xMaximumTempTime.DateTime.tm_mon +1 );
 
 			// display the m temperature, time and date
 			lcd_Locate(3, 0);          // go to the first character of the forth LCD line
 			lcd_Printf_P(PSTR("Min%5.1f"),xMinimumTempTime.Temperature);			// print the minimum temperature value
 
 			lcd_Locate(3, 9);          // go to the ninth character of the fourth LCD line
-			lcd_Printf_P(PSTR("%2u:%02u %2u/%2u"),xMinimumTempTime.DateTime.tm_hour, xMinimumTempTime.DateTime.tm_min, xMinimumTempTime.DateTime.tm_mday, xMinimumTempTime.DateTime.tm_mon );
+			lcd_Printf_P(PSTR("%2u:%02u %2u/%2u"),xMinimumTempTime.DateTime.tm_hour, xMinimumTempTime.DateTime.tm_min, xMinimumTempTime.DateTime.tm_mday, xMinimumTempTime.DateTime.tm_mon +1 );
 
 			if(xCurrentTempTime.DateTime.tm_sec == 0)
 			// resume the xTaskWriteRTCRetrograde() task, now that we need to write the analogue hands.
@@ -507,72 +508,4 @@ void get_line (uint8_t *buff, uint8_t len)
 }
 
 
-/*-----------------------------------------------------------*/
-
-
-void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
-{
-	/*---------------------------------------------------------------------------*\
-	Usage:
-	   called by task system when a stack overflow is noticed
-	Description:
-	   Stack overflow handler -- Shut down all interrupts, send serious complaint
-	    to command port.
-	Arguments:
-	   pxTask - pointer to task handle
-	   pcTaskName - pointer to task name
-	Results:
-	   <none>
-	Notes:
-	   This routine will never return.
-	   This routine is referenced in the task.c file of FreeRTOS as an extern.
-	\*---------------------------------------------------------------------------*/
-
-	uint8_t* pC;
-	uint16_t baud;
-
-	/* shut down all interrupts */
-	portDISABLE_INTERRUPTS();
-
-	/* take over the command line buffer to generate our error message */
-	pC = (uint8_t*) LineBuffer;
-
-	strcat( (char*) pC, "\r\n" );
-	strcat( (char*) pC, (char*) pcTaskName );
-	strcat( (char*) pC, "\r\n" );
-
-	pC = (uint8_t*) LineBuffer;
-
-	/* Force the UART control register to be the way we want, just in case */
-
-	UCSR0C = ( _BV( UCSZ01 ) | _BV( UCSZ00 ) );		// 8 data bits
-	UCSR0B = _BV( TXEN0 );							// only enable transmit
-	UCSR0A = 0;
-
-	/* Calculate the baud rate register value from the equation in the
-	* data sheet.  This calculation rounds to the nearest factor, which
-	* means the resulting rate may be either faster or slower than the
-	* desired rate (the old calculation was always faster).
-	*
-	* If the system clock is one of the Magic Frequencies, this
-	* computation will result in the exact baud rate
-	*/
-	baud = ( ( ( configCPU_CLOCK_HZ / ( ( 16UL * 115200 ) / 2UL ) ) + 1UL ) / 2UL ) - 1UL;
-	UBRR0 = baud;
-
-	/* Send out the message, without interrupts.  Hard wired to USART 0 */
-	while ( *pC )
-	{
-		while (!(UCSR0A & (1 << UDRE0)));
-		UDR0 = *pC;
-		pC++;
-	}
-
-	DDRB  |= _BV(DDB5);
-	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.
-	while(1);
-}
-
-/*-----------------------------------------------------------*/
 

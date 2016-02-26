@@ -253,7 +253,7 @@ ft_void_t	FT_APP_GPU_TextVGA()
 	ft_uint16_t Text_Array[160];
 	ft_int32_t String_size,hoffset = 32,voffset = 32,i;
 
-	srandom(time(NULL)); // set the seed based on the current system time.
+	srandom(time( (void *)0 )); // set the seed based on the current system time.
 
 	for(i=0;i<160;i++)
 	{
@@ -310,7 +310,7 @@ ft_void_t	FT_APP_GPU_Bargraph()
 	hoffset = 0;
 	voffset = 0;
 
-	srandom(time(NULL)); // set the seed based on the current system time.
+	srandom(time( (void *)0 )); // set the seed based on the current system time.
 
 	for(uint16_t i=0; i<GRAPH_STRING; i++)
 	{
@@ -1159,7 +1159,7 @@ ft_void_t FT_APP_CoPro_AppendCmds()
 /* API to demonstrate the usage of inflate command - compression done via zlib */
 ft_void_t FT_APP_CoPro_Inflate()
 {
-	const FT_API_Bitmap_header_t *pBitmapHdr = NULL;
+	const FT_API_Bitmap_header_t *pBitmapHdr = (void *)0;
 	ft_int16_t xoffset,yoffset;
 	/***************************************************************************/
 	/* Below code demonstrates the usage of inflate function                   */

@@ -18,6 +18,8 @@ extern "C" {
 
 /*--------------Definitions-------------------*/
 
+#define Y2K				2000
+
 #define LED_PORT		PORTB
 #define LED_PORT_DIR	DDRB
 #define LED_PIN			PINB5

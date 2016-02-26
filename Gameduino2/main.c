@@ -49,7 +49,7 @@ SemaphoreHandle_t xADCSemaphore;
 //  EEPROM to hold the current Time Zone.
 int8_t EEMEM eeSavedTZ;				// the time zone (in hours) saved through reboots.
 
-uint8_t * LineBuffer = NULL;		// put line buffer on heap (with pvPortMalloc).
+uint8_t * LineBuffer = (void *)0;	// put line buffer on heap (with pvPortMalloc).
 
 /*--------------Functions-------------------*/
 static void TaskWriteLCD(void *pvParameters); // Write to LCD
@@ -73,10 +73,10 @@ int main(void)
 	xSerialPort = xSerialPortInitMinimal( USART0, 115200, portSERIAL_BUFFER_TX, portSERIAL_BUFFER_RX); //  serial port: WantedBaud, TxQueueLength, RxQueueLength (8n1)
 
     // Semaphores are useful to stop a thread proceeding, where it should be stopped because it is using a resource.
-    if( xADCSemaphore == NULL ) 					// Check to see if the ADC semaphore has not been created.
+    if( xADCSemaphore == (void *)0 ) 					// Check to see if the ADC semaphore has not been created.
     {
     	xADCSemaphore = xSemaphoreCreateBinary();	// binary semaphore for ADC - Don't sample temperature when hands are moving (voltage droop).
-		if( ( xADCSemaphore ) != NULL )
+		if( ( xADCSemaphore ) != (void *)0 )
 			xSemaphoreGive( ( xADCSemaphore ) );	// make the ADC available
     }
 
@@ -89,17 +89,17 @@ int main(void)
 		TaskWriteLCD
 		,  (const portCHAR *)"WriteLCD"
 		,  512		// measured 73 free stack bytes
-		,  NULL
+		,  (void *)0
 		,  3
-		,  NULL ); // */
+		,  (void *)0 ); // */
 
    xTaskCreate(
 		TaskMonitor
 		,  (const portCHAR *)"SerialMonitor"
 		,  512		// measured 124 free stack bytes
-		,  NULL
+		,  (void *)0
 		,  2
-		,  NULL ); // */
+		,  (void *)0 ); // */
 
 	avrSerialPrintf_P(PSTR("\r\nFree Heap Size: %u\r\n"), xPortGetFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
 
@@ -124,7 +124,7 @@ static void TaskMonitor(void *pvParameters) // Monitor for Serial Interface
 	tm calendar;
 
 	// create the buffer on the heap (so they can be moved later).
-	if(LineBuffer == NULL) // if there is no Line buffer allocated (pointer is NULL), then allocate buffer.
+	if(LineBuffer == (void *)0) // if there is no Line buffer allocated (pointer is NULL), then allocate buffer.
 		if( !(LineBuffer = (uint8_t *) pvPortMalloc( sizeof(uint8_t) * LINE_SIZE )))
 			xSerialPrint_P(PSTR("pvPortMalloc for *LineBuffer fail..!\r\n"));
 

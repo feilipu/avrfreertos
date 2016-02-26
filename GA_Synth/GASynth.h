@@ -12,16 +12,15 @@
 /*--------------------------------------------------*/
 
 
-#define LINE_SIZE 		80		// size of command line (on heap)
-
-#ifndef SAMPLE_RATE
-#define SAMPLE_RATE		16000	// set up the sampling Timer1 to 48000Hz, 44100Hz (or lower), runs at audio sampling rate in Hz.
-#endif							// 384 = 3 x 2^7 divisors 2k, 3k, 4k, 6k, 8k, 12k, 16k, 24k, 48k
+#define LINE_SIZE 		40		// size of command line (on heap)
 
 #define LUT_SIZE		4096	// size of the wave LUT used.
 								// This size allows for 12 bit accuracy (before interpolation, which we're using anyway).
 
-#define DELAY_BUFFER	6144	// set the size of delay buffer in samples (6144 samples).
+#define DELAY_BUFFER	0x1A2A	// set the size of delay buffer in samples (up from 6144 samples).
+#define DECIMATE		2		// improve the accuracy of the potentiometer sampling, by decimation.
+
+//#define configTOTAL_HEAP_SIZE	( (size_t )  15699  )		// set this in freeRTOSBoardDefs.h
 
 /*--------------Definitions-------------------*/
 // Define Touch Tags
@@ -94,8 +93,16 @@ typedef union {
 	track_return_t touch;
 } touch_t;
 
+typedef enum {
+	off = 0,
+	attack = 1,
+	decay = 2,
+	sustain = 3,
+	release = 4
+} note_state;
+
 typedef struct {
-	const int16_t * wave_table_ptr;	// Pointer to the PROGMEM LUT in use, as determined by the wave toggle.
+	int16_t const * wave_table_ptr;	// Pointer to the PROGMEM LUT in use, as determined by the wave toggle.
 	uint32_t phase;					// The lower 8bits are the subsample fraction and
 									// The upper 24 bits contain the sample number to read from the LUT.
 	uint32_t phase_increment;		// The lower 8bits are the subsample increment fraction and
@@ -111,13 +118,18 @@ typedef struct {
 
 typedef struct {
 	uint8_t note;					// The note is being played, or not.
-	const uint32_t * note_table_ptr;// Pointer to the PROGMEM LUT describing the notes to be played.
+	uint32_t const * note_table_ptr;// Pointer to the PROGMEM LUT describing the notes to be played.
 	uint8_t settings_loaded;		// The settings have been recovered from EEPROM, or not.
 	uint16_t kbd_toggle;			// Play the Concert Equal Temperament Tuning, or the Verdi / Just Intonation tuning.
+	uint8_t potentiometer_code;		// Coding for the assignment of the potentiometers, based on button codes.
 	vco_t vco1;
 	vco_t vco2;
 	vco_t lfo;
 	uint16_t xmod;					// XMOD intensity, VCO2 modulating VCO1.
+	note_state adsr;				// The note is being played, or not.
+	uint16_t adsr_phase;			// attack and release increment value,
+									// stepping through the attack, decay, sustain, and release table.
+	uint16_t const * adsr_table_ptr;// Pointer to the PROGMEM LUT describing the adsr function to be played.
 	uint16_t vcf_cutoff;
 	uint16_t vcf_peak;
 	uint16_t delay_time;
@@ -137,6 +149,9 @@ static void FT_touchTrackInit(void);// set up the system touch tracking and note
 static uint8_t FT_touch(void);		// run the system touch management.
 static void FT_GUI(void);      		// build the system GUI.
 
+static void AudioCodec_ADC_init(void); // initialise the ADC for sampling the potentiometers
+static void AudioCodec_ADC(uint16_t * _mod0value, uint16_t * _mod1value) __attribute__((flatten));
+
 void synthesizer( uint16_t * ch_A, uint16_t * ch_B) __attribute__ ((hot, flatten));
 	// the DSP function to be implemented, and called from the sample interrupt.
 	// needs to at least provide *ch_A and *ch_B
@@ -146,13 +161,10 @@ void synthesizer( uint16_t * ch_A, uint16_t * ch_B) __attribute__ ((hot, flatten
 static void get_line (uint8_t *buff, uint8_t len);
 
 
-// Define the audio (microphone) input function that is desired by uncommenting below... xxx
-//#define MIC
-
-#if defined(MIC)
-
-#define ADCS    1		// number of ADCs in use. 1 Microphone on ADC7.
-
+#ifndef DECIMATE
+  #define DECIMATE 				2		// number of samples for decimation accuracy.  4^DECIMATE samples are taken before reporting ADC value.
+#elif (DECIMATE < 1 ) || ((DECIMATE >= 3))
+  #error DECIMATE value not properly defined
 #endif
 
 
@@ -160,52 +172,66 @@ static void get_line (uint8_t *buff, uint8_t len);
 /*--------------------Globals-----------------------*/
 /*--------------------------------------------------*/
 
-#if ADCS == 0
-  // do nothing
 
-#elif ADCS == 1
-  DAC_value_t micValue;
-#endif
+uint8_t _i = (uint8_t) _BV(2 * DECIMATE) * 2;	// 4 ^ DECIMATE for two ADCS
+
+uint16_t mod0Value;			// current value of the 0 potentiometer
+uint16_t mod1Value;			// current value of the 1 potentiometer
 
 /*--------------------------------------------------*/
-/*---------------Public Functions-------------------*/
+/*---------------Private Functions-------------------*/
 /*--------------------------------------------------*/
 
-
-
-	// setup ADC
-void AudioCodec_ADC_init(void)
+static void AudioCodec_ADC_init(void)
 {
-#if ADCS == 0
-	DIDR0  = _BV(ADC7D|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D)); // turn off digital inputs for pins ADC0, ADC1, ADC2, ADC7
-
-#elif (ADCS == 1)
-	ADMUX  = _BV(REFS1)|_BV(REFS0)|_BV(ADLAR)|_BV(MUX2)|_BV(MUX1)|_BV(MUX0); // 2.56V reference with external capacitor at AREF pin - left justify - start with MIC input ADC7
-	ADCSRA = _BV(ADEN)|_BV(ADSC)|_BV(ADATE)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // ADC enable, auto trigger, ck/128 = 192kHz
-	ADCSRB =  0x00;			// free running mode
-	DIDR0  = _BV(ADC7D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D);	// turn off digital input for pin ADC7 Mic input.
-#endif
+	// setup ADCs
+	ADMUX  = _BV(REFS0); // start with ADC0 - AVCC with external capacitor at AREF pin
+	ADCSRA = _BV(ADEN)|_BV(ADSC)|_BV(ADATE)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // ADC enable, auto trigger, ck/128 of F_CPU
+	ADCSRB = 0x00; // free running mode
+	DIDR0  = _BV(ADC7D)|_BV(ADC6D)|_BV(ADC1D)|_BV(ADC0D); // turn off digital inputs for pins ADC0, ADC1, ADC6, ADC7
 }
 
-// adc sampling routine
-#if ADCS == 0
-static void AudioCodec_ADC(void) __attribute__((unused, flatten));
-static void AudioCodec_ADC()
+static void AudioCodec_ADC(uint16_t * _mod0Value, uint16_t * _mod1Value)
 {
-    ; // do nothing
+    if (ADCSRA & _BV(ADIF))				// check if sample ready
+    {
+      if (_i >= _BV(2 * DECIMATE))			// sample ADC0
+      {
+    	uint16_t static _mod0Temp;
+
+        _mod0Temp += ADCW; 					// fetch ADCL first to freeze sample, is done by the compiler
+
+        if (_i == _BV(2 * DECIMATE))		// decimate and return the ADC0 result.
+        {
+        	_mod0Temp >>= DECIMATE;			// Decimate the summed samples (to get better accuracy), see AVR8003.doc
+            *_mod0Value = _mod0Temp;		// move temp value to return
+			_mod0Temp = 0x0000;				// reset temp value
+			ADMUX = 0x41;					// switch to ADC1 - AVCC with external capacitor at AREF pin
+        }
+        ADCSRA = 0xf7;						// reset the interrupt flag
+      }
+
+      else if (_i < (_BV(2 * DECIMATE)) )	// sample ADC1
+      {
+    	uint16_t static _mod1Temp;
+
+    	_mod1Temp += ADCW;					// fetch ADCL first to freeze sample, is done by the compiler
+
+		if (_i == 0)						// decimate and return the ADC1 result.
+		{
+			_mod1Temp >>= DECIMATE;			// Decimate the summed samples (to get better accuracy), see AVR8003.doc
+			*_mod1Value = _mod1Temp;		// move temp value to return
+			_mod1Temp = 0x0000;				// reset temp value
+			ADMUX = 0x40;					// switch to ADC0 - AVCC with external capacitor at AREF pin
+
+			_i = _BV(2 * DECIMATE) * 2;		// reset loop counter
+		}
+        ADCSRA = 0xf7;						// reset the interrupt flag
+      }
+
+      --_i; // decrement the sample counter
+   }
 }
 
-#elif ADCS == 1
-static void AudioCodec_ADC(uint16_t* _micValue) __attribute__((flatten));
-static void AudioCodec_ADC(uint16_t* _micValue)
-{
-	if (ADCSRA & _BV(ADIF))				// check if sample ready
-	{
-    	*_micValue = ADCW;					// fetch ADCL first to freeze sample, then ADCH. It is done by the compiler.
-    	ADCSRA |= _BV(ADIF);				// reset the interrupt flag
-	}
-}
-
-#endif
 
 #endif // GASynth_h end include guard
