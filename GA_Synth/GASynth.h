@@ -7,6 +7,9 @@
 
 #include <avr/io.h>
 
+/* debouncer include file, */
+#include "buttonDebounce.h"
+
 /*--------------------------------------------------*/
 /*------------Often Configured Parameters-----------*/
 /*--------------------------------------------------*/
@@ -17,8 +20,16 @@
 #define LUT_SIZE		4096	// size of the wave LUT used.
 								// This size allows for 12 bit accuracy (before interpolation, which we're using anyway).
 
-#define DELAY_BUFFER	0x1A2A	// set the size of delay buffer in samples (up from 6144 samples).
+#define DELAY_BUFFER	0x1A2A	// set the size of delay buffer in samples (6698 samples).
 #define DECIMATE		2		// improve the accuracy of the potentiometer sampling, by decimation.
+
+#ifndef DECIMATE
+  #define DECIMATE 				2		// number of samples for decimation accuracy.  4^DECIMATE samples are taken before reporting ADC value.
+#elif (DECIMATE < 1 ) || ((DECIMATE >= 3))
+  #error DECIMATE value not properly defined
+#endif
+
+
 
 //#define configTOTAL_HEAP_SIZE	( (size_t )  15699  )		// set this in freeRTOSBoardDefs.h
 
@@ -78,6 +89,16 @@
 #define STOP_C8			0xe000
 
 #define NOTES			12
+
+#define VCO1_BUTTON		(_BV(PIND5))
+#define VCO2_BUTTON		(_BV(PIND6))
+#define LFO_BUTTON		(_BV(PIND7))
+#define VCF_BUTTON		(_BV(PIND6)|_BV(PIND5))
+#define DELAY_BUTTON	(_BV(PIND7)|_BV(PIND6))
+#define CANCEL_BUTTON	(_BV(PIND7)|_BV(PIND6)|_BV(PIND5))
+
+#define BUTTON_MASK		(_BV(PIND7)|_BV(PIND6)|_BV(PIND5))
+
 
 /*--------------Type Definitions-------------------*/
 
@@ -139,10 +160,11 @@ typedef struct {
 
 
 /*--------------Functions-------------------*/
+
+int main(void) __attribute__((OS_main));
+
 static void TaskWriteLCD(void *pvParameters); // Write to Gameduino 2 LCD
-
 static void TaskMonitor(void *pvParameters);  // Serial monitor for GA Synth
-
 static void TaskAnalogue(void *pvParameters); // Set up and manage the Analogue outputs
 
 static void FT_touchTrackInit(void);// set up the system touch tracking and note establishment.
@@ -150,22 +172,18 @@ static uint8_t FT_touch(void);		// run the system touch management.
 static void FT_GUI(void);      		// build the system GUI.
 
 static void AudioCodec_ADC_init(void); // initialise the ADC for sampling the potentiometers
-static void AudioCodec_ADC(uint16_t * _mod0value, uint16_t * _mod1value) __attribute__((flatten));
+static void AudioCodec_ADC(uint16_t * _mod0value, uint16_t * _mod1value) __attribute__((hot, flatten));
+
+static void shieldDButtonInit(debouncer * portDebounce, uint8_t buttons, uint8_t pulledUpButtons ); // initialise the Shield Buttons
+static uint8_t shieldPhysicalIO(uint8_t button) __attribute__((hot, flatten));
 
 void synthesizer( uint16_t * ch_A, uint16_t * ch_B) __attribute__ ((hot, flatten));
-	// the DSP function to be implemented, and called from the sample interrupt.
+	// the DSP function for the Synthesiser, and called from the reconstruction sampling interrupt.
 	// needs to at least provide *ch_A and *ch_B
-	// within Timer0 or Timer1 interrupt routine - time critical I/O. Keep it short and punchy!
+	// within Timer0/1 interrupt routine - time critical I/O. Keep it short and punchy!
 
 // get a line from the console
 static void get_line (uint8_t *buff, uint8_t len);
-
-
-#ifndef DECIMATE
-  #define DECIMATE 				2		// number of samples for decimation accuracy.  4^DECIMATE samples are taken before reporting ADC value.
-#elif (DECIMATE < 1 ) || ((DECIMATE >= 3))
-  #error DECIMATE value not properly defined
-#endif
 
 
 /*--------------------------------------------------*/
@@ -173,10 +191,13 @@ static void get_line (uint8_t *buff, uint8_t len);
 /*--------------------------------------------------*/
 
 
-uint8_t _i = (uint8_t) _BV(2 * DECIMATE) * 2;	// 4 ^ DECIMATE for two ADCS
+uint8_t _i = (uint8_t)(_BV(2 * DECIMATE) * 2);	// 4 ^ DECIMATE for two ADCS
 
 uint16_t mod0Value;			// current value of the 0 potentiometer
 uint16_t mod1Value;			// current value of the 1 potentiometer
+
+/* Debouncing filter for the three buttons on the Sparkfun MIDI Shield which are altered to be on PORTD7, 6, and 5 */
+debouncer portd;
 
 /*--------------------------------------------------*/
 /*---------------Private Functions-------------------*/
@@ -184,11 +205,12 @@ uint16_t mod1Value;			// current value of the 1 potentiometer
 
 static void AudioCodec_ADC_init(void)
 {
+	DIDR0 = _BV(ADC7D)|_BV(ADC6D)|_BV(ADC5D)|_BV(ADC4D)|_BV(ADC3D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D); // turn off digital inputs
+	DIDR1 = _BV(AIN1D)|_BV(AIN0D);
 	// setup ADCs
 	ADMUX  = _BV(REFS0); // start with ADC0 - AVCC with external capacitor at AREF pin
 	ADCSRA = _BV(ADEN)|_BV(ADSC)|_BV(ADATE)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // ADC enable, auto trigger, ck/128 of F_CPU
 	ADCSRB = 0x00; // free running mode
-	DIDR0  = _BV(ADC7D)|_BV(ADC6D)|_BV(ADC1D)|_BV(ADC0D); // turn off digital inputs for pins ADC0, ADC1, ADC6, ADC7
 }
 
 static void AudioCodec_ADC(uint16_t * _mod0Value, uint16_t * _mod1Value)
@@ -233,5 +255,28 @@ static void AudioCodec_ADC(uint16_t * _mod0Value, uint16_t * _mod1Value)
    }
 }
 
+
+//      port - The address of a Debouncer instantiation.
+//      buttons - Specifies which portpins are attached to buttons.
+//      pulledUpButtons - Specifies whether pullups or pulldowns are being used on
+//          the port pins. This is the BUTTON_PIN_* 's that are being
+//          pulled up. Otherwise, the debouncer assumes that the other
+//          buttons are being pulled down. A 0 bit means pulldown.
+//          A 1 bit means pullup. For example, 00010001 means that
+//          button 0 and button 4 are both being pulled up. All other
+//          buttons have pulldowns if they represent buttons.
+// Returns:
+//      None
+//
+static void shieldDButtonInit(debouncer * portDebounce, uint8_t buttons, uint8_t pulledUpButtons )
+{
+	// The MIDIShield buttons connected to PD5, PD6, and PD7.
+	// This is moved from the original button position of PD4, PD3, and PD2, to avoid the ATmega1284p USART1 pins.
+	DDRD  &= ~(buttons);			// DDRx set PD5, PD6, and PD7 as input.
+	PORTD |= pulledUpButtons;	// PORTx set pull up on PD5, PD6, and PD7.
+
+	// initialise the debouncer with D7, D6 and D5 pins pulled up.
+	buttonDebounceInit( portDebounce, pulledUpButtons );
+}
 
 #endif // GASynth_h end include guard

@@ -60,7 +60,7 @@
 //==================================================
 
 #ifndef SAMPLE_RATE
-#define SAMPLE_RATE		16000	// set up the sampling Timer1 to 48000Hz, 44100Hz (or lower), runs at audio sampling rate in samples per Second.
+#define SAMPLE_RATE		12000	// set up the sampling Timer1 to 48000Hz, 44100Hz (or lower), runs at audio sampling rate in samples per Second.
 #endif							// 384 = 3 x 2^7 divisors 2k, 3k, 4k, 6k, 8k, 12k, 16k, 24k, 48k
 
 // IIR filter coefficient scaling

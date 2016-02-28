@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <math.h>
 
@@ -26,6 +27,9 @@
 /* serial interface include file. */
 #include "serial.h"
 
+/* debouncer include file, */
+#include "buttonDebounce.h"
+
 /* SPI interface include file. */
 #include "spi.h"
 
@@ -38,10 +42,11 @@
 /* Gameduino 2 include file. */
 #include "FT_Platform.h"
 
-#include "GASynth.h"
-
 /* Goldilocks Analogue and other DAC functions include file. */
 #include "DAC.h"
+
+/* local inclusions */
+#include "GASynth.h"
 
 /*--------------Global Variables--------------------*/
 
@@ -136,8 +141,6 @@ uint16_t const expTable[] PROGMEM = {
 /*--------------Functions---------------------------*/
 
 /* Main program loop */
-int main(void) __attribute__((OS_main));
-
 int main(void)
 {
 
@@ -303,21 +306,28 @@ static void TaskWriteLCD(void *pvParameters) // Write to LCD
 	API function. */
 	xLastWakeTime = xTaskGetTickCount();
 
+	// set up ADC sampling on the ADC0, ADC1 using MIDI Shield to control potentiometers.
+	AudioCodec_ADC_init();
+
+	// On Port D initialise the three buttons PD7, PD6, and PD5 on the MIDI Shield, pulled up.
+	shieldDButtonInit( &portd, BUTTON_MASK, BUTTON_MASK );
+
 	FT_API_Boot_Config();
 	FT_API_Touch_Config();
 
 	FT_touchTrackInit();
 	FT_GUI();
 
-    while(1)
+    for(;;)
     {
-    	FT_touch();
+    	uint8_t touched;
+    	uint8_t physicalIO;
 
-    	// hack the pots
-    	synth.delay_time = 0xffff - (mod0Value << (6 - DECIMATE));
-    	synth.master = 0xffff - (mod1Value << (6 - DECIMATE));
+    	touched = FT_touch();
+		physicalIO = shieldPhysicalIO(buttonCurrent( &portd, BUTTON_MASK ));
 
-    	FT_GUI();
+    	if( touched || physicalIO )
+    		FT_GUI();
 
 //		xSerialPrintf_P(PSTR("\r\nWriteLCD: Stack HighWater @ %u"), uxTaskGetStackHighWaterMark(NULL));
 //		xSerialPrintf_P(PSTR("\r\nMinimum Ever Heap Free: %u\r\n"), xPortGetMinimumEverFreeHeapSize() ); // needs heap_1, heap_2 or heap_4 for this function to succeed.
@@ -348,8 +358,6 @@ static void TaskAnalogue(void *pvParameters) // Prepare the DAC
 //	AudioCodec_Timer1_init(SAMPLE_RATE);	// xxx set up the sampling Timer1 to 44100Hz (or odd rates), runs at audio sampling rate in Hz.
 //	xSerialPrintf_P(PSTR(" be"));
 
-	AudioCodec_ADC_init();					// set up ADC sampling on the ADC0, ADC1 using MIDI Shield to control potentiometers.
-
 	AudioCodec_setHandler( synthesizer, &ch_A_out, &ch_B_out );		// Set the call back function to do the audio processing.
 																	//	Done this way so that we can change the audio handling depending on what we want to achieve.
 
@@ -359,7 +367,7 @@ static void TaskAnalogue(void *pvParameters) // Prepare the DAC
 //	xSerialPrintf_P(PSTR("\r\nAudio HighWater: %u\r\n"), uxTaskGetStackHighWaterMark(NULL));
 
 	vTaskSuspend(NULL);						// Well, we're pretty much done here.
-//	vTaskEndScheduler();					// Rely on Timer1 Interrupt for regular output.NULL
+//	vTaskEndScheduler();					// Rely on Timer0/1 Interrupt for regular output.
 
 	for(;;);
 }
@@ -701,7 +709,11 @@ void synthesizer( uint16_t * ch_A,  uint16_t * ch_B) // Voltage controlled oscil
 	// and output wave on both A & B channel, shifted to (+)ve values only because this is what the DAC needs.
 	*ch_A = *ch_B = temp2 + 0x7fff;
 
+	// sample the MIDI Shield potentiometers to provide a physical control interface.
 	AudioCodec_ADC(&mod0Value, &mod1Value);
+
+	// check to see if any MIDI Shield buttons have been pushed, and fill the debounce structure, for a physical control interface.
+	buttonProcess( &portd, (PIND & BUTTON_MASK) );
 }
 
 void FT_GUI()
@@ -911,8 +923,8 @@ void FT_touchTrackInit(void)
 
 uint8_t FT_touch(void)
 {
+	uint8_t static oldReadTag = 0;
 	uint8_t readTag;
-	uint8_t oldReadTag = 0;
 	touch_t TrackRegisterVal;
 	uint8_t touched;
 
@@ -922,9 +934,9 @@ uint8_t FT_touch(void)
 
 	readTag = FT_GPU_HAL_Rd8(phost, REG_TOUCH_TAG);
 
-	if (readTag && readTag == oldReadTag)
+	if (readTag && (readTag == oldReadTag) )
 	{
-		touched = FT_FALSE;
+		touched = FT_FALSE;		// No new touch. So still the old touch and don't update GUI.
 	}
 	else
 	{
@@ -1173,11 +1185,71 @@ uint8_t FT_touch(void)
 				synth.lfo.phase_increment = ((uint32_t)synth.lfo.pitch * LUT_SIZE / ((uint32_t)SAMPLE_RATE << 4) );
 			}
 		}
-
 		oldReadTag = readTag;
 	}
-
 	return touched;
+}
+
+
+static uint8_t shieldPhysicalIO(uint8_t button)
+{
+	uint8_t static buttonState;
+
+	if (button != 0)
+		buttonState = button;
+
+	if (buttonState != 0)
+	{
+		switch (buttonState)
+		{
+			case (VCO1_BUTTON):
+				synth.vco1.pitch = (UINT16_MAX - (mod0Value << (6 - DECIMATE))) & 0xe000;
+				synth.vco1.volume = UINT16_MAX - (mod1Value << (6 - DECIMATE));
+				break;
+
+			case (VCO2_BUTTON):
+				synth.vco2.pitch = UINT16_MAX - (mod0Value << (6 - DECIMATE));
+				synth.vco2.volume = UINT16_MAX - (mod1Value << (6 - DECIMATE));
+
+				// set the VCO2 phase increment to be -1 octave to +1 octave from VCO1, with centre dial frequency identical.
+				if (synth.vco2.pitch & 0x8000) // upper half dial
+					synth.vco2.phase_increment = ((synth.vco1.phase_increment >> 4) * synth.vco2.pitch ) >> 11;
+				else // lower half dial
+					synth.vco2.phase_increment = (synth.vco1.phase_increment >> 1) + (((synth.vco1.phase_increment >> 4) * synth.vco2.pitch) >> 12);
+
+				break;
+
+			case (LFO_BUTTON):
+				synth.lfo.pitch = UINT16_MAX - (mod0Value << (6 - DECIMATE));
+				synth.lfo.volume = UINT16_MAX - (mod1Value << (6 - DECIMATE));
+
+				// set the LFO phase increment to be from 0 Hz to 32 Hz.
+				synth.lfo.phase_increment = ((uint32_t)synth.lfo.pitch * LUT_SIZE / ((uint32_t)SAMPLE_RATE << 4) );
+				break;
+
+			case (VCF_BUTTON):
+				filter.cutoff = synth.vcf_cutoff = UINT16_MAX - (mod0Value << (6 - DECIMATE));
+				filter.peak = synth.vcf_peak = UINT16_MAX - (mod1Value << (6 - DECIMATE));
+				// set the VCF
+				setIIRFilterLPF( &filter );
+				break;
+
+			case (DELAY_BUTTON):
+				synth.delay_time = UINT16_MAX - (mod0Value << (6 - DECIMATE));
+				synth.delay_feedback = UINT16_MAX - (mod1Value << (6 - DECIMATE));
+				break;
+
+			case (CANCEL_BUTTON): // all buttons pressed
+				buttonState = 0;	// reset buttonState to 0 (none pressed, physical IO turned off).
+				break;
+
+			default:
+				break;
+		}
+
+		return FT_TRUE;
+	}
+	return FT_FALSE;
 }
 
 
