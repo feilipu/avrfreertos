@@ -7,6 +7,8 @@ The [Goldilocks Analogue story of adding a dual channel DAC to a 1284p classic A
 The [Goldilocks Analogue - Kickstarter Campaign](https://www.kickstarter.com/projects/feilipu/goldilocks-analogue-classic-arduino-audio-superpow/) was successfully funded. 
 It was also a Hackaday Prize 2015 Quarter Finalist.
 
+![Goldilocks Analogue](https://a.fsdn.com/con/app/proj/avrfreertos/screenshots/Title%20Image.JPG "Goldilocks Analogue")
+
 The first [Goldilocks 1284p story is here](http://feilipu.me/2013/03/08/goldilocks-1284p-arduino-uno-clone/).
 Ths idea was launched as a [Pozible campaign in 2013](http://www.pozible.com/goldilocks/).
 It was successfully funded and the [Goldilocks](http://freetronics.com/goldilocks/) was developed and supported by Freetronics. 
