@@ -165,6 +165,9 @@
 
 #include "eefs_avrspi.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Macro Definitions
@@ -428,6 +431,10 @@ uint8_t                         EEFS_LibGetMaxOpenFiles(void);
 
 /* Prints the filenames of all open files for debugging */
 void                            EEFS_LibPrintOpenFiles(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

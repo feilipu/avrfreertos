@@ -5,13 +5,12 @@
 #ifndef __MD5_H
 #define __MD5_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  @brief	MD5 context.

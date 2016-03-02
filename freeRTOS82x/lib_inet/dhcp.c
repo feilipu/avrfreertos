@@ -14,10 +14,9 @@
 
 #include "serial.h"
 
-#include "socket.h"
 #include "inet.h"
 
-#if   defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
+#if defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
 
 un_l2cval get_sn_mask;						/**< Subnet mask received from the DHCP server */
 uint8_t get_gw_ip[4];						/**< Gateway ip address received from the DHCP server */
@@ -40,7 +39,7 @@ static uint32_t DHCP_XID;
 static SOCKET DHCPC_SOCK;					/**< Socket for the DHCP client */
 static RIP_MSG *pRIPMSG;					/**< Pointer for the DHCP message */
 
-#if   (_WIZCHIP_ >= 5200)
+#if (_WIZCHIP_ >= 5200)
 // TX MEM SIZE- SOCKET 0:8KB, SOCKET 1:2KB, SOCKET2-7:1KB
 // RX MEM SIZE- SOCKET 0:8KB, SOCKET 1:2KB, SOCKET2-7:1KB
 extern uint8_t txsize[_WIZCHIP_MAX_SOC_NUM_];

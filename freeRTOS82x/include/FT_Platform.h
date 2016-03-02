@@ -5,10 +5,6 @@
 File:   FT_Platform.h
 */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,18 +20,14 @@ extern "C" {
 
 #include "spi.h"
 #include "time.h"  // included to get a random seed for srandom(time(NULL)); and random();
+#include "lib_util.h"
 
 #include "../lib_ft800/FT_DataTypes.h"
 #include "../lib_ft800/FT_X11_RGB.h"
 #include "../lib_ft800/FT_Gpu.h"
 #include "../lib_ft800/FT_Gpu_Hal.h"
-#include "../lib_ft800/FT_Hal_Utils.h"
 #include "../lib_ft800/FT_CoPro_Cmds.h"
 #include "../lib_ft800/FT_API.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*_FT_PLATFORM_H_*/
 /* Nothing beyond this*/

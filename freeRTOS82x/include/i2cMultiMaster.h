@@ -9,15 +9,15 @@
 #ifndef I2CMULTIMASTER_H
 #define I2CMULTIMASTER_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Scheduler include files. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /****************************************************************************
   I2C Status/Control register definitions

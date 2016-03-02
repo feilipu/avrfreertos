@@ -55,7 +55,7 @@
 
 #include "spi.h"
 
-#include "socket.h"
+#include "w5100.h"
 
 #ifdef __DEF_WIZCHIP_DBG__
 /* serial interface include file. */
@@ -607,7 +607,7 @@ void setGAR(
 	uint8_t * addr	/**< a pointer to a 4 -byte array responsible to set the Gateway IP address. */
 	)
 {
-    WIZCHIP_write_buf(GAR, addr, 4);
+    WIZCHIP_write_buf(GAR0, addr, 4);
 }
 
 /**
@@ -616,7 +616,7 @@ void setGAR(
 */
 void getGAR(uint8_t * addr)
 {
-    WIZCHIP_read_buf(GAR, addr, 4);
+    WIZCHIP_read_buf(GAR0, addr, 4);
 }
 
 
@@ -642,7 +642,7 @@ void setSUBR(
 	)
 {
 	// apply off-chip subnet mask address - solve Errata 2 & 3 v1.6
-    WIZCHIP_write_buf(SUBR, SUBN_VAR.cVal, 4);
+    WIZCHIP_write_buf(SUBR0, SUBN_VAR.cVal, 4);
 }
 
 
@@ -654,7 +654,7 @@ void clearSUBR(
 	)
 {
 	// clear on-chip subnet mask address - solve Errata 2 & 3 v1.6
-    WIZCHIP_write_buf(SUBR, 0x00, 4);
+    WIZCHIP_write_buf(SUBR0, 0x00, 4);
 }
 
 
@@ -673,7 +673,7 @@ void setSHAR(
 	uint8_t * addr	/**< a pointer to a 6 -byte array responsible to set the MAC address. */
 	)
 {
-	  WIZCHIP_write_buf(SHAR, addr, 6);
+	  WIZCHIP_write_buf(SHAR0, addr, 6);
 }
 
 
@@ -684,7 +684,7 @@ void setSIPR(
 	uint8_t * addr	/**< a pointer to a 4 -byte array responsible to set the Source IP address. */
 	)
 {
-    WIZCHIP_write_buf(SIPR, addr, 4);
+    WIZCHIP_write_buf(SIPR0, addr, 4);
 }
 
 
@@ -745,12 +745,12 @@ void setIMR(uint8_t mask)
 */
 void getSHAR(uint8_t * addr)
 {
-    WIZCHIP_read_buf(SHAR, addr, 6);
+    WIZCHIP_read_buf(SHAR0, addr, 6);
 }
 
 void getSIPR(uint8_t * addr)
 {
-    WIZCHIP_read_buf(SIPR, addr, 4);
+    WIZCHIP_read_buf(SIPR0, addr, 4);
 }
 
 

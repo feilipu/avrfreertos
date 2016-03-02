@@ -8,13 +8,22 @@
 #ifndef	_SOCKET_H_
 #define	_SOCKET_H_
 
+#include "wizchip_conf.h"
+
+#if   (_WIZCHIP_ == 5100)
+#include "w5100.h"
+
+#elif (_WIZCHIP_ == 5200)
+#include "w5200.h"
+
+#elif (_WIZCHIP_ == 5500)
+#include "w5500.h"
+
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef uint8_t SOCKET;	// IINCHIP W5x00 Socket in use. < _WIZCHIP_MAX_SOC_NUM_ if not using uIP.
-
-#include "wizchip_conf.h"
 
 uint8_t  socket(SOCKET s, uint8_t protocol, uint16_t port, uint8_t flag); // Opens a socket(TCP, UDP, IPRAW, or MACRAW mode)
 void     close(SOCKET s); // Close socket
@@ -41,7 +50,6 @@ uint8_t* inet_ntoa(uint32_t addr);			/* Convert 32bit Address into Dotted Decima
 
 
 //#define NO_USE_SOCKUTIL_FUNC 				/* Don't compile the additional Utility functions */
-
 #ifndef NO_USE_SOCKUTIL_FUNC
 
 uint8_t* inet_ntoa_pad(uint32_t addr);
@@ -66,7 +74,7 @@ uint8_t D2C(uint8_t c); 					/* Convert HEX(0-F) to a character */
 uint8_t C2D(uint8_t c); 					/* Convert a character to HEX */
 uint16_t ATOI(uint8_t* str,uint16_t base); 			/* Convert a string to integer number */
 uint16_t ValidATOI(uint8_t* str, uint16_t base, uint16_t* ret); 		/* Verify character string and Convert it to (hexa-)decimal. */
-void replacetochar(uint8_t * str, uint8_t oldchar, uint8_t newchar); /* Replace old character with new character in the string */
+void	replacetochar(uint8_t * str, uint8_t oldchar, uint8_t newchar); /* Replace old character with new character in the string */
 
 #endif
 

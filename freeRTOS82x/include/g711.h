@@ -32,6 +32,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Function prototypes */
 void  alaw_compress ARGS((uint32_t lseg, int16_t *linbuf, uint8_t *logbuf));
 void  alaw_expand ARGS((uint32_t lseg, uint8_t *logbuf, int16_t *linbuf));
@@ -40,6 +44,10 @@ void  ulaw_expand ARGS((uint32_t lseg, uint8_t *logbuf, int16_t *linbuf));
 
 void  alaw_compress1 ARGS((int16_t *linval, uint8_t *logval));
 void  alaw_expand1 ARGS((uint8_t *logval, int16_t *linval));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 /* .......................... End of G711.H ........................... */

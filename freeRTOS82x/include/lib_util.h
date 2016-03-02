@@ -26,16 +26,31 @@ uint16_t crc16( const uint8_t *data, uint16_t number_of_bytes_in_data, uint16_t 
  *
  *---------------------------------------*/
 
+#define sq(v)		({ __typeof__ (v) _v = (v); _v * _v; })
+#define SQ(v)		sq(v)
+
+#define ABS(x)		abs(x)
+
+#define max(a,b)  	({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a > _b ? _a : _b; })
+#define MAX(a,b)  	max(a,b)
+
+#define min(a,b)  	({ __typeof__ (a) _a = (a); __typeof__ (b) _b = (b); _a < _b ? _a : _b; })
+#define MIN(a,b)  	min(a,b)
+
+
 uint32_t _swaplong( const uint32_t l) __attribute__ ((hot, flatten));
 
 #define swaplong	_swaplong
 #define swap32		_swaplong
+#define swapl		_swaplong
 
 uint16_t _swapshort( const uint16_t i) __attribute__ ((hot, flatten));
 
 #define swapshort	_swapshort
-#define swapint		_swapshort
+#define swapuint	_swapshort
 #define swap16		_swapshort
+#define swaps		_swapshort
+
 
 /**
 	@internal
@@ -49,7 +64,6 @@ uint16_t _swapshort( const uint16_t i) __attribute__ ((hot, flatten));
 	@param[in]	count number of bytes to copy
 */
 void _swapcpy( void *dst, const void *src, uint_fast8_t count) __attribute__ ((hot, flatten));
-
 
 #ifdef __cplusplus
 }

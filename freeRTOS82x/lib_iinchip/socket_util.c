@@ -19,54 +19,14 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include "lib_util.h"  // swapl swaps
+
 #include "serial.h"
 
-
 #include "socket.h"
-#include "wizchip_conf.h"
 
-#if   defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
+#if defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
 
-/////////////////////////////////////////////////////////////////////////
-
-uint16_t swaps(uint16_t i) __attribute__ ((hot, flatten));
-uint32_t swapl(uint32_t l) __attribute__ ((hot, flatten));
-
-/////////////////////////////////////////////////////////////////////////
-
-uint16_t swaps(uint16_t i)
-{
-	union {
-		uint16_t x;
-		struct {
-			uint8_t a;
-			uint8_t b;
-		} s;
-	} in, out;
-	in.x = i;
-	out.s.a = in.s.b;
-	out.s.b = in.s.a;
-	return out.x;
-}
-
-uint32_t swapl(uint32_t l)
-{
-	union {
-		uint32_t x;
-		struct {
-			uint8_t a;
-			uint8_t b;
-			uint8_t c;
-			uint8_t d;
-		} s;
-	} in, out;
-	in.x = l;
-	out.s.a = in.s.d;
-	out.s.b = in.s.c;
-	out.s.c = in.s.b;
-	out.s.d = in.s.a;
-	return out.x;
-}
 
 #ifndef NO_USE_SOCKUTIL_FUNC
 /** This function converts HEX(0-F) to a character */

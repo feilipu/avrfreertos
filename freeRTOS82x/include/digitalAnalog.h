@@ -3,13 +3,13 @@
 #ifndef digitalAnalog_h
 #define digitalAnalog_h
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
 #include <avr/io.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Analogue
 

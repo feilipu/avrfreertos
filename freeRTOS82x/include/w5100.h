@@ -5,13 +5,11 @@
 #ifndef	_W5100_H_
 #define	_W5100_H_
 
+#include "wizchip_conf.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "inet.h"
-
-#include "wizchip_conf.h"
 
 #if   (_WIZCHIP_ == 5100)		// Definition in freeRTOSBoardDefs.h
 

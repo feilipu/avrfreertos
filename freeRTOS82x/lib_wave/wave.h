@@ -7,11 +7,6 @@
 
 #ifndef WAVE_H_
 #define WAVE_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /*
  * Includes
  */
@@ -20,6 +15,10 @@ extern "C" {
 #include <avr/io.h>
 
 #include "ff.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* The mmioFOURCC macro converts four characters into a four-character code.
  * This macro does not check whether the four-character code it returns is valid.

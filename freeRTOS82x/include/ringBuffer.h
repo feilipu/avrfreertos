@@ -81,13 +81,12 @@
 #ifndef __RING_BUFFER_H__
 #define __RING_BUFFER_H__
 
+#include "FreeRTOS.h"
 
 /* Enable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-	extern "C" {
+extern "C" {
 #endif
-
-#include "FreeRTOS.h"
 
 /** Indicates that the function returns a value which should not be ignored by the user code. When
  *  applied, any ignored return value from calling the function will produce a compiler warning.
@@ -372,7 +371,7 @@ ringBuffer_Peek(ringBuffer_t* const buffer)
 
 /* Disable C linkage for C++ Compilers: */
 #if defined(__cplusplus)
-	}
+}
 #endif
 
 #endif

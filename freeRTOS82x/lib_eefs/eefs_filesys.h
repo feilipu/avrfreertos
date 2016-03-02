@@ -51,6 +51,11 @@
 #include "common_types.h"
 #include "eefs_fileapi.h"
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Macro Definitions
  */
@@ -150,6 +155,10 @@ EEFS_DirectoryEntry_t          *EEFS_ReadDir(EEFS_DirectoryDescriptor_t *Directo
 
 /* Close file system for reading the file directory. */
 int8_t                          EEFS_CloseDir(EEFS_DirectoryDescriptor_t *DirectoryDescriptor) __attribute((flatten));
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

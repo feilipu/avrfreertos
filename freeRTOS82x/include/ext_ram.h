@@ -8,17 +8,16 @@
 #ifndef EXT_RAM_H_
 #define EXT_RAM_H_
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 
 // AVR include files.
 #include <avr/io.h>
 
 #include "FreeRTOS.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // initialise the heap states (this is done by the linker line)
 // For freeRTOS heap.1 & heap.2 memory management the task heap is preallocated, and ignores __heap_start.

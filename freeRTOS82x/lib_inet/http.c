@@ -16,10 +16,9 @@
 
 #include "serial.h"
 
-#include "socket.h"
 #include "inet.h"
 
-#if   defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
+#if defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
 
 HTTP_REQUEST *pHTTPRequest;	// < Pointer to HTTP request buffer
 uint8_t *pHTTPResponse;		// < Pointer to HTTP response buffer

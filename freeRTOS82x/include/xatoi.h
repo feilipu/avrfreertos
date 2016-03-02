@@ -9,6 +9,10 @@
 #include <avr/pgmspace.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*-----------------------------------------------------------------------------*/
 uint8_t xatoi( uint8_t **str, int32_t *ret );
 
@@ -26,5 +30,9 @@ uint8_t xatoi( uint8_t **str, int32_t *ret );
   ret
     Pointer to return value
 */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* XITOA */

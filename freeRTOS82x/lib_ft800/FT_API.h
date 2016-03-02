@@ -1,6 +1,10 @@
 #ifndef _FT_API_H_
 #define _FT_API_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* FT API structure definitions */
 typedef struct FT_API_Bitmap_header
 {
@@ -35,6 +39,10 @@ ft_void_t	FT_API_fadein(ft_void_t);
 ft_int16_t	FT_API_qsin(ft_uint16_t a);
 ft_int16_t	FT_API_qcos(ft_uint16_t a);
 ft_uint16_t FT_API_qatan(int16_t y, int16_t x);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _FT_API_H_ */
 

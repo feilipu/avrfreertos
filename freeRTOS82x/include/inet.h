@@ -6,9 +6,7 @@
 #ifndef _INET_H_
 #define _INET_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "socket.h"
 
 /* DEBUG DEFINES */
 
@@ -32,6 +30,11 @@ extern "C" {
 
 #define TZ_MELBOURNE		(int32_t)39600		// Set the time zone. 10 * ONE_HOUR or 11 * ONE_HOUR for daylight saving time.
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /////////////////////////// EXTERNAL DATA ///////////////////////////
 
 extern uint8_t src_mac_addr[];						// Local MAC address, defined in main program, always needed.
@@ -52,9 +55,6 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 #define FILE_BUFFER_SIZE 		512		// size of file working buffer (on heap) for standard EtherMega 8kByte RAM or Arduino Uno
 #endif
 
-
-/* MACRAW Definitions */
-#define MACRAW_SOCKET			0		// THIS IS VERY SPECIAL. Only Socket 0 can do MAC RAW mode.
 
 /* ping Definitions. */
 #define PING_OPT_LEN			56		// length of a ping packet optional data (+8 bytes for full packet construct).
@@ -239,18 +239,6 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 #define NULL		((void *) 0)
 #endif
 
-////////////////////////// SYSTEM TYPEDEF //////////////////////////
-
-typedef union _un_l2cval {
-	uint8_t		cVal[4];
-	uint16_t	iVal[2];
-	uint32_t	lVal;
-}un_l2cval;
-
-typedef union _un_i2cval {
-	uint8_t		cVal[2];
-	uint16_t	iVal;
-}un_i2cval;
 
 
 /////////////////////////// ARP TYPEDEF ///////////////////////////
@@ -432,11 +420,6 @@ typedef struct _HTTP_REQUEST
 	uint8_t	TYPE;						/**< request type(PTYPE_HTML...).   */
 	uint8_t	URI[MAX_URI_SIZE];			/**< request file name.             */
 } HTTP_REQUEST;
-
-
-////////////////////////////////INCLUDES ////////////////////////////////////
-
-#include "socket.h"
 
 
 /////////////////////////// PING FUNCTIONS ///////////////////////////

@@ -8,12 +8,12 @@
 #ifndef RTC_H_
 #define RTC_H_
 
+#include "FreeRTOS.h"
+#include "time.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "FreeRTOS.h"
-#include "time.h"
 
 #ifdef portRTC_DEFINED
 

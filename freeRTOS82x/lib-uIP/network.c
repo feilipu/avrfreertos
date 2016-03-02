@@ -39,16 +39,14 @@
 #include "uIP/uip-arp.h"
 #include "uIP/network.h"
 
-#if   defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
+#if defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
 
 void network_init(void)
 {
-	extern uip_eth_addr  my_eth_addr; // the Ethernet address assigned in the application
-
 	/*-----------------------------------------------------------*/
 	/* Network related stuff */
 
-#if   (_WIZCHIP_ == 5100)
+#if (_WIZCHIP_ == 5100)
 	WIZCHIP_init(); 										// reset W5200 - First call to make
 	WIZCHIP_sysinit(0x55, 0x55);
 #else
@@ -62,7 +60,8 @@ void network_init(void)
     WIZCHIP_sysinit ((uint8_t *)txsize, (uint8_t *)rxsize);	// set the Tx and Rx buffers
 #endif
 
-#if   (_WIZCHIP_ != 5500) // xxx the Wiz550io has its MAC address loaded by the onboard MCU.
+#if (_WIZCHIP_ != 5500) // xxx the Wiz550io has its MAC address loaded by the onboard MCU.
+	extern uip_eth_addr  my_eth_addr; // the Ethernet address assigned in the application
 	setSHAR(my_eth_addr.addr);
 #endif
 
@@ -109,4 +108,4 @@ void network_set_MAC(uint8_t* macaddr)
 	setSHAR( macaddr ); // set local MAC address
 }
 
-#endif // #if   defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
+#endif // #if defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h

@@ -50,20 +50,10 @@
 #ifndef  _WIZCHIP_CONF_H_
 #define  _WIZCHIP_CONF_H_
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
-/* Scheduler include files. */
+/* Scheduler include files to get board configuration definitions. */
 #include "FreeRTOS.h"
-
-/* Board (AVR) specific configuration options. */
-#include "FreeRTOSBoardDefs.h"
-
-#include "spi.h"
 
 #define	_ENDIAN_LITTLE_		0	/**<  This must be defined if system is little-endian - like AVR ATmega */
 #define	_ENDIAN_BIG			1
@@ -95,7 +85,6 @@ extern "C" {
 #define _WIZCHIP_IO_MODE_SPI_          0x0200 /**< SPI interface mode */
 //#define _WIZCHIP_IO_MODE_IIC_          0x0400
 //#define _WIZCHIP_IO_MODE_SDIO_         0x0800
-// Add to
 //
 
 #define _WIZCHIP_IO_MODE_BUS_DIR_      (_WIZCHIP_IO_MODE_BUS_ + 1) /**< BUS interface mode for direct  */
@@ -116,7 +105,6 @@ extern "C" {
 // #define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_BUS_DIR_
 // #define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_BUS_INDIR_
    #define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_SPI_
-   #include "w5100.h"
 
 #elif (_WIZCHIP_ == 5200)
    #define _WIZCHIP_ID_                "W5200\0"
@@ -127,7 +115,6 @@ extern "C" {
  */
 // #define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_BUS_INDIR_
    #define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_SPI_
-   #include "w5200.h"
 
 #elif (_WIZCHIP_ == 5500)
   #define _WIZCHIP_ID_                 "W5500\0"
@@ -147,12 +134,10 @@ extern "C" {
  */
    #define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_SPI_VDM_
    //#define _WIZCHIP_IO_MODE_           _WIZCHIP_IO_MODE_SPI_FDM_
-   #include "w5500.h"
 
 #else
-//   #warning "Unknown defined _WIZCHIP_. You should define one of 5100, 5200, and 5500 !!!" // xxx
+	#warning "Unknown defined _WIZCHIP_. You should define one of 5100, 5200, and 5500 !!!" // xxx
 	#define _WIZCHIP_ID_                 "NIL\0"
-	#define _WIZCHIP_IO_MODE_
 
 #endif
 
@@ -175,10 +160,32 @@ extern "C" {
 #endif
 
 #if _WIZCHIP_ == 5100
-   #define _WIZCHIP_MAX_SOC_NUM_	4   ///< The count of independent socket of @b WIZCHIP Maximum number of sockets
+   #define _WIZCHIP_MAX_SOC_NUM_	4   // < The count of independent sockets of @b WIZCHIP Maximum number of sockets
 #else
-   #define _WIZCHIP_MAX_SOC_NUM_	8   ///< The count of independent socket of @b WIZCHIP Maximum number of sockets
+   #define _WIZCHIP_MAX_SOC_NUM_	8   // < The count of independent sockets of @b WIZCHIP Maximum number of sockets
 #endif
+
+/* MACRAW Definitions */
+#define MACRAW_SOCKET				0	// < THIS IS VERY SPECIAL. Only Socket 0 can do MAC RAW mode.
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+////////////////////////// SYSTEM TYPEDEF //////////////////////////
+
+typedef uint8_t SOCKET;	// IINCHIP W5x00 Socket in use. < _WIZCHIP_MAX_SOC_NUM_ if not using uIP.
+
+typedef union _un_l2cval {
+	uint8_t		cVal[4];
+	uint16_t	iVal[2];
+	uint32_t	lVal;
+}un_l2cval;
+
+typedef union _un_i2cval {
+	uint8_t		cVal[2];
+	uint16_t	iVal;
+}un_i2cval;
 
 
 /********************************************************

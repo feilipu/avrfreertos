@@ -5,11 +5,11 @@
 #ifndef _DISKIO_DEFINED
 #define _DISKIO_DEFINED
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdint.h>
 
 #define SD_SPI_DIVIDER 	SPI_CLOCK_DIV2 // xxx single point to control SPI speed when using SD cards
 

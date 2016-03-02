@@ -14,10 +14,6 @@
 #ifndef _AVR_RAMFS_H_
 #define _AVR_RAMFS_H_ 1
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stddef.h>				// size_t
 #include <stdint.h>  			// has to be added to use uint8_t
 #include <avr/io.h>
@@ -26,6 +22,10 @@ extern "C" {
 #include "ext_ram.h"
 
 #include "ff.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
     This header file declares the interface to some simple library

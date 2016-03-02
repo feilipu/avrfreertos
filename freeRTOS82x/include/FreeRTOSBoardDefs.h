@@ -15,13 +15,12 @@
 #ifndef freeRTOSBoardDefs_h
 #define freeRTOSBoardDefs_h
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <avr/io.h>
 #include <avr/wdt.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /*
  * XXX Ping PD7 to check timing on interrupts.
  * PD7 will be set high when the interrupt is entered, and set low when exited.

@@ -19,10 +19,6 @@
 #ifndef _FATFS
 #define _FATFS	32020	/* Revision ID */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <string.h>
 
@@ -46,7 +42,9 @@ extern "C" {
 #error Wrong configuration file (ffconf.h).
 #endif
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Definitions of volume management */
 
@@ -64,7 +62,6 @@ extern PARTITION VolToPart[];	/* Volume - Partition resolution table */
 #define LD2PT(vol) 0			    /* Find first valid partition or in SFD */
 
 #endif
-
 
 
 /* Type of path name strings on FatFs API */

@@ -11,12 +11,12 @@
 #ifndef _SPI_H_INCLUDED
 #define _SPI_H_INCLUDED
 
+// AVR include files.
+#include <avr/io.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// AVR include files.
-#include <avr/io.h>
 
 #define SPI_TIMEOUT 1000		// Timeout to get access to SPI bus in mS
 

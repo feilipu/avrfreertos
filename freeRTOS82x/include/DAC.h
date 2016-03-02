@@ -15,6 +15,10 @@
 #include "mult16x8.h"
 #include "mult32x16.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*--------------------------------------------------*/
 /*------------------Definitions---------------------*/
 /*--------------------------------------------------*/
@@ -829,5 +833,9 @@ ISR(TIMER0_COMPA_vect)
 }
 
 #endif //#if defined(portANALOGUE) || defined(portANALOGSHIELD)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // DAC_h end include guard

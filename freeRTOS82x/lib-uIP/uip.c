@@ -79,6 +79,8 @@
 #include <string.h>
 #include <avr/pgmspace.h>
 
+#include "lib_util.h"
+
 #include "uIP/uip-conf.h"
 #include "uIP/uipopt.h"
 #include "uIP/uip.h"
@@ -1988,8 +1990,7 @@ void
 uip_send(const void *data, int16_t len)
 {
 	int16_t copylen;
-#define MIN(a,b) ((a) < (b)? (a): (b))
-  copylen = MIN(len, UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN -
+	copylen = MIN(len, UIP_BUFSIZE - UIP_LLH_LEN - UIP_TCPIP_HLEN -
 		(int16_t)((uint8_t *)uip_sappdata - (uint8_t *)&uip_buf[UIP_LLH_LEN + UIP_TCPIP_HLEN]));
   if(copylen > 0) {
     uip_slen = copylen;

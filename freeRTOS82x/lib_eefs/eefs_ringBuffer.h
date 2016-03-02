@@ -83,12 +83,6 @@
 #ifndef __EEFS_RING_BUFFER_H__
 #define __EEFS_RING_BUFFER_H__
 
-
-/* Enable C linkage for C++ Compilers: */
-#if defined(__cplusplus)
-	extern "C" {
-#endif
-
 #include <inttypes.h>
 
 #include "FreeRTOS.h"
@@ -96,6 +90,10 @@
 
 #include "eefs_avrspi.h" // includes definition of 32 bit pointer substitute addr_farptr_t
 
+/* Enable C linkage for C++ Compilers: */
+#if defined(__cplusplus)
+	extern "C" {
+#endif
 
 /************************** Type Defines: ***************************/
 /** \brief Ring Buffer Management Structure.

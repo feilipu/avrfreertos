@@ -8,12 +8,11 @@
 #ifndef EEFS_AVSPI_H_
 #define EEFS_AVRSPI_H_
 
+#include <inttypes.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-#include <inttypes.h>
 
 /**********************************************************************/
 

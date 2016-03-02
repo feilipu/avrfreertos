@@ -24,6 +24,8 @@
 
 #include "spi.h"
 
+#include "w5500.h"
+
 #ifdef __DEF_WIZCHIP_DBG__
 /* serial interface include file. */
 #include "serial.h"

@@ -11,10 +11,6 @@
 #ifndef LIB_SERIAL_H
 #define LIB_SERIAL_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <avr/pgmspace.h>
 
 #include "FreeRTOS.h"
@@ -22,6 +18,10 @@ extern "C" {
 #include "portable.h"
 
 #include "ringBuffer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum
 {

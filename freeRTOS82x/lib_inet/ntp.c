@@ -18,13 +18,12 @@
 
 #include "serial.h"
 
-#include "socket.h"
-#include "inet.h"
-
 #include "time.h"
 #include "rtc.h"
 
-#if   defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
+#include "inet.h"
+
+#if defined(_WIZCHIP_)		// Definition in freeRTOSBoardDefs.h
 
 //----------------------------------------------------------------------------
 

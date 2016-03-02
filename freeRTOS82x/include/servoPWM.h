@@ -18,12 +18,11 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
+#include "FreeRTOS.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "FreeRTOS.h"
 
 #if defined( portUSE_TIMER0_PWM )         /* Hardware constants for PWM Timer0. */
 
