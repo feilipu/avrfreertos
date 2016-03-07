@@ -26,7 +26,7 @@ Then do some further reading on the [freeRTOS Quick Start Guide](http://www.free
 If this repository is too complicated to get started, a [minimum AVR freeRTOS configured using the Watchdog Timer and Heap 3](https://github.com/feilipu/miniAVRfreeRTOS) is also also available.
 This option is without libraries, and is configured to get started with simple applications.
 
-Also for the Arduino platform there is a [freeRTOS Library](https://github.com/feilipu/Arduino_FreeRTOS_Library)
+Also, for the Arduino platform, there is an [Arduino freeRTOS Library](https://github.com/feilipu/Arduino_FreeRTOS_Library)
 available in the Arduino IDE Library manager, or by directly downloading the ZIP file and importing it into your Arduino IDE.
 
 # Features
@@ -49,7 +49,7 @@ available in the Arduino IDE Library manager, or by directly downloading the ZIP
 - uIP support for BlackWidow WiFi (TESTING ONLY)
 - [Library for 2560 XRAM](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_ext_ram) using Rugged Circuits QuadRAM (512kB) & MegaRAM (128kB)
 - [XRAMFS (16x Arduino Clients sharing 512kByte Supervisor SDRAM) Supervisor](https://github.com/feilipu/avrfreertos/tree/master/ramfs_supervisor) and [Client](https://github.com/feilipu/avrfreertos/tree/master/ramfs_load_gen) for [ArduSat](http://feilipu.me/?s=ArduSat).
-- [Abstract Serial to support multiple USART (1284p, 2560)](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_io) with [fast ring buffers](https://github.com/feilipu/avrfreertos/blob/master/freeRTOS82x/include/ringBuffer.h
+- [Abstract Serial to support multiple USART (1284p, 2560)](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_io) with [fast ring buffers](https://github.com/feilipu/avrfreertos/blob/master/freeRTOS82x/include/ringBuffer.h)
 - [XBee API Mode](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_xbee) support.
 - [FTDI FT800 EVE](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_ft800) support for the Gameduino2 (1284p, 328p) & 4D Systems ADAM
 - [HD44780 for Freetronics LCD (and other) Shields](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_hd44780) (based on ChaN)
@@ -69,7 +69,7 @@ Standard C90 system_time is also available as an approximate RTC off other timer
 
 # Further Reading
 
-The canonical source for information is the [FreeRTOS Web Site](http://www.freertos.org/).
+The canonical source for information is the [freeRTOS Web Site](http://www.freertos.org/).
 Within this site, the [Getting Started](http://www.freertos.org/FreeRTOS-quick-start-guide.html) page is very useful.
 It is worth having a view from another user, and [manicbug](https://maniacbug.wordpress.com/2012/01/31/freertos/) has some interesting examples.
 This AVRfreeRTOS Repository has plenty of examples, ranging from [Blink](https://github.com/feilipu/avrfreertos/blob/master/MegaBlink/main.c) through to a [Synthesiser](https://github.com/feilipu/avrfreertos/tree/master/GA_Synth) for the Goldilocks Analogue.
