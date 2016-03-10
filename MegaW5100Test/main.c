@@ -381,15 +381,15 @@ static void TaskDHCP(void *pvParameters) // DHCP Client
 
 #if 0
     	PORTB |=  _BV(PORTB7);       // main (red IO_B7) LED on. EtherMega LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 64 / portTICK_PERIOD_MS ) );
 		PORTB &= ~_BV(PORTB7);       // main (red IO_B7) LED off. EtherMega LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 64 / portTICK_PERIOD_MS ) );
 		PORTB |=  _BV(PORTB7);       // main (red IO_B7) LED on. EtherMega LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 64 / portTICK_PERIOD_MS ) );
 		PORTB &= ~_BV(PORTB7);       // main (red IO_B7) LED off. EtherMega LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 64 / portTICK_PERIOD_MS ) );
     	PORTB |=  _BV(PORTB7);       // main (red IO_B7) LED on. EtherMega LED on
-		vTaskDelayUntil( &xLastWakeTime, ( 50 / portTICK_PERIOD_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 64 / portTICK_PERIOD_MS ) );
 		PORTB &= ~_BV(PORTB7);       // main (red IO_B7) LED off. EtherMega LED off
 #endif
 
@@ -1482,8 +1482,7 @@ test_diskio (
 /*-----------------------------------------------------------*/
 
 
-void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask, portCHAR *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:

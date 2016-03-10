@@ -34,14 +34,16 @@
 #include "serial.h" // serial port for diagnostics
 #endif
 
-#define EVB_PAGES_SERVED	"$PAGES_SERVED$" // 14 characters (to erase) including \0
-#define EVB_RTC				"$REAL_TIME$"	//  11 characters (to erase) including \0
+#define EVB_PAGES_SERVED	"$PAGES_SERVED$"// 14 characters (to erase) including \0
+#define EVB_RTC				"$REAL_TIME$"	// 11 characters (to erase) including \0
+
+#define WEBSERVER_SOCKET_TIMEOUT 1500		// Timeout in milliseconds. Wait for up to 1.5 seconds.
 
 
 extern HTTP_REQUEST *pHTTPRequest;			// < Pointer to HTTP request  - declared in http.c
 extern uint8_t *pHTTPResponse;				// < Pointer to HTTP response - declared in http.c
 
-extern uint32_t pagesServed EEMEM;					// non-volatile storage for total pages served.
+extern uint32_t pagesServed EEMEM;			// non-volatile storage for total pages served.
 
 static uint16_t replace_sys_env_value(uint8_t* base, uint16_t len);	// Replace HTML's variables to system configuration value
 
@@ -56,7 +58,7 @@ void process_HTTP(
 {
 	uint8_t * name;
 	uint16_t bytes_read;
-	uint16_t wait_send;
+	TickType_t wait_send;
 	FIL source_file;	/* File object for the source file */
 
 	parse_HTTP_request(pHTTPRequest, buffer);			// After analysing request, convert into pHTTPRequest
@@ -77,7 +79,7 @@ void process_HTTP(
 			else xSerialPrint_P(PSTR("\r\nFILENAME TOO LONG"));
 #endif
 
-			find_HTTP_URI_type(&pHTTPRequest->TYPE, name);	//Check file type (HTML, TEXT, GIF, JPEG, ZIP are included)
+			find_HTTP_URI_type(&pHTTPRequest->TYPE, name);	//Check file type (HTML, TEXT, ICO, GIF, JPEG, ZIP are included)
 
 			// OK now we start to respond to the info we've decoded.
 
@@ -107,19 +109,19 @@ void process_HTTP(
 
 				send(s, (const uint8_t*)pHTTPResponse, strlen((char*)pHTTPResponse ));
 
-				wait_send = 0;
+				wait_send = xTaskGetTickCount();
 
 				while(getSn_TX_FSR(s)!= WIZCHIP_getTxMAX(s))
 
 				{
-					if(wait_send++ > 37500) // wait up to 1.5 Sec
+					if( (xTaskGetTickCount() - wait_send) > (WEBSERVER_SOCKET_TIMEOUT / portTICK_PERIOD_MS) ) // wait up to 1.5 Sec
 					{
 #ifdef WEB_DEBUG
 						xSerialPrint_P(PSTR("HTTP Response head send fail\r\n"));
 #endif
 						break;
 					}
-					_delay_us(40);
+					vTaskDelay( 0 ); // yield until next tick.
 				}
 
 				for (;;)
@@ -136,19 +138,19 @@ void process_HTTP(
 					if (send(s, (const uint8_t*)pHTTPResponse, bytes_read) != bytes_read)
 						break;  // TCP/IP send error
 
-					wait_send = 0;
+					wait_send = xTaskGetTickCount();
 
 					while(getSn_TX_FSR(s)!= WIZCHIP_getTxMAX(s))
 
 					{
-						if(wait_send++ > 37500) // wait up to 1.5 Sec
+						if( (xTaskGetTickCount() - wait_send) > (WEBSERVER_SOCKET_TIMEOUT / portTICK_PERIOD_MS) ) // wait up to 1.5 Sec
 						{
 #ifdef WEB_DEBUG
 							xSerialPrint_P(PSTR("HTTP Response body send fail\r\n"));
 #endif
 							break;
 						}
-						_delay_us(40);
+						vTaskDelay( 0 ); // yield until next tick.
 					}
 				}
 				f_close(&source_file);
