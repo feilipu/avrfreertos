@@ -45,7 +45,7 @@ extern "C" {
 // System Tick  - Scheduler timer
 // Prefer to use the Watchdog timer, but also Timer 0, 1, or 3 are ok.
 
-#define portUSE_WDTO			WDTO_30MS							// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
+#define portUSE_WDTO			WDTO_15MS							// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
 
 /* Watchdog period options: 	WDTO_15MS
 								WDTO_30MS
@@ -127,7 +127,7 @@ extern "C" {
 	// System Tick  - Scheduler timer
 	// Prefer to use the Watchdog timer, but also Timer 0, 1, or 3 are ok.
 
-	#define portUSE_WDTO			WDTO_30MS						// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
+	#define portUSE_WDTO			WDTO_15MS						// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
 
 	/* Watchdog period options: 	WDTO_15MS
 									WDTO_30MS
@@ -159,13 +159,14 @@ extern "C" {
 #endif
 
 
-	#define configTOTAL_HEAP_SIZE	( (size_t )  15699  )			// used for heap_1.c and heap2.c, and heap_4.c only (measured for GA Synth)
-//	#define configTOTAL_HEAP_SIZE	( (size_t )  12699  )			// used for heap_1.c and heap2.c, and heap_4.c only
+//	#define configTOTAL_HEAP_SIZE	( (size_t )  15699  )			// used for heap_1.c and heap2.c, and heap_4.c only (measured for GA Synth)
+	#define configTOTAL_HEAP_SIZE	( (size_t )  12699  )			// used for heap_1.c and heap2.c, and heap_4.c only
+
 /**
  * Select WIZCHIP.
  * You should select one, \b 5100, \b 5200 ,\b 5500 or etc. \n\n
  */
-	#define _WIZCHIP_						5200   // 5100, 5200, 5500
+	#define _WIZCHIP_						5500   // 5100, 5200, 5500
 
 //	#define portHD44780_LCD					// define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
 	#define portSD_CARD						// define the use of the SD Card for Goldilocks 1284p
@@ -189,7 +190,7 @@ extern "C" {
 // System Tick timer
 // Prefer to use the Watchdog timer, but also Timer 0 or 3 are ok.
 
-#define portUSE_WDTO			WDTO_30MS							// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
+#define portUSE_WDTO			WDTO_15MS							// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
 
 /* Watchdog period options: 	WDTO_15MS
 								WDTO_30MS
@@ -244,7 +245,7 @@ extern "C" {
 // System Tick  - Scheduler timer
 //	Prefer to use the Watchdog timer, but also Timer 0 or 1 are ok.
 
-#define portUSE_WDTO			WDTO_30MS							// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
+#define portUSE_WDTO			WDTO_15MS							// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
 
 /* Watchdog period options: 	WDTO_15MS
 								WDTO_30MS
