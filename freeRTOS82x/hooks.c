@@ -82,6 +82,8 @@
 
 #if( configUSE_IDLE_HOOK == 1 )
 
+void vApplicationIdleHook( void ) __attribute (( weak ));
+
 void vApplicationIdleHook( void )
 {
 
@@ -222,7 +224,7 @@ void vApplicationMallocFailedHook( void )
 #if( configCHECK_FOR_STACK_OVERFLOW == 1 )
 
 // Define this for simple stack overflow function.
-void vApplicationStackOverflowHook( TaskHandle_t xTask, portCHAR *pcTaskName ) __attribute__((weak));
+void vApplicationStackOverflowHook( TaskHandle_t xTask  __attribute__((unused)), portCHAR *pcTaskName  __attribute__((unused)) ) __attribute__((weak));
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask, portCHAR *pcTaskName )
 {
