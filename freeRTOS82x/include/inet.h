@@ -134,6 +134,7 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 #define		PTYPE_PDF		7		/**< PDF file.   */
 #define		PTYPE_ZIP		8		/**< ZIP file.   */
 #define 	PTYPE_CGI		9		/**< CGI         */
+#define		PTYPE_ICO		10		/**< ICO file.   */
 
 /* HTTP response */
 #define		STATUS_OK			200
@@ -166,6 +167,9 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 
 /* Response head for GIF */
 #define RES_GIFHEAD_OK PSTR("HTTP/1.1 200 OK\r\nContent-Type: image/gif\r\nContent-Length: ")
+
+/* Response head for ICO */
+#define RES_ICOHEAD_OK PSTR("HTTP/1.1 200 OK\r\nContent-Type: image/x-icon\r\nContent-Length: ")
 
 /* Response head for JPEG */
 #define RES_JPEGHEAD_OK	PSTR("HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\nContent-Length: ")

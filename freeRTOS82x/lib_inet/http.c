@@ -129,6 +129,10 @@ void make_HTTP_response_header(
 			head = RES_GIFHEAD_OK;
 			break;
 
+		case PTYPE_ICO :
+			head = RES_ICOHEAD_OK;
+			break;
+
 		case PTYPE_TEXT :
 			head = RES_TEXTHEAD_OK;
 			break;
@@ -177,18 +181,19 @@ void find_HTTP_URI_type(
 	)
 {
 	/* Decide type according to extension*/
-	if 		(strstr_P((const char *)buf, PSTR(".html")) || strstr_P((const char *)buf, PSTR(".htm")))	*type = PTYPE_HTML;
-	else if (strstr_P((const char *)buf, PSTR(".HTML")) || strstr_P((const char *)buf, PSTR(".HTM")))	*type = PTYPE_HTML;
+	if 		(strstr_P((const char *)buf, PSTR(".html")) || strstr_P((const char *)buf, PSTR(".HTML")))	*type = PTYPE_HTML;
+	else if (strstr_P((const char *)buf, PSTR(".htm" )) || strstr_P((const char *)buf, PSTR(".HTM")))	*type = PTYPE_HTML;
+	else if (strstr_P((const char *)buf, PSTR(".text")) || strstr_P((const char *)buf, PSTR(".TEXT")))	*type = PTYPE_TEXT;
+	else if (strstr_P((const char *)buf, PSTR(".txt" )) || strstr_P((const char *)buf, PSTR(".TXT")))	*type = PTYPE_TEXT;
+	else if (strstr_P((const char *)buf, PSTR(".jpeg")) || strstr_P((const char *)buf, PSTR(".JPEG")))	*type = PTYPE_JPEG;
+	else if (strstr_P((const char *)buf, PSTR(".jpg" )) || strstr_P((const char *)buf, PSTR(".JPG")))	*type = PTYPE_JPEG;
+	else if (strstr_P((const char *)buf, PSTR(".ico" )) || strstr_P((const char *)buf, PSTR(".ICO")))	*type = PTYPE_ICO;
 	else if (strstr_P((const char *)buf, PSTR(".gif" )) || strstr_P((const char *)buf, PSTR(".GIF")))	*type = PTYPE_GIF;
-	else if (strstr_P((const char *)buf, PSTR(".text")) || strstr_P((const char *)buf, PSTR(".txt")))	*type = PTYPE_TEXT;
-	else if (strstr_P((const char *)buf, PSTR(".TEXT")) || strstr_P((const char *)buf, PSTR(".TXT")))	*type = PTYPE_TEXT;
-	else if (strstr_P((const char *)buf, PSTR(".jpeg")) || strstr_P((const char *)buf, PSTR(".jpg")))	*type = PTYPE_JPEG;
-	else if (strstr_P((const char *)buf, PSTR(".JPEG")) || strstr_P((const char *)buf, PSTR(".JPG")))	*type = PTYPE_JPEG;
-	else if (strstr_P((const char *)buf, PSTR(".swf" )) || strstr_P((const char *)buf, PSTR(".SWF")))	*type = PTYPE_FLASH;
-	else if (strstr_P((const char *)buf, PSTR(".mpeg")) || strstr_P((const char *)buf, PSTR(".mpg")))	*type = PTYPE_MPEG;
-	else if (strstr_P((const char *)buf, PSTR(".MPEG")) || strstr_P((const char *)buf, PSTR(".MPG")))	*type = PTYPE_MPEG;
+	else if (strstr_P((const char *)buf, PSTR(".mpeg")) || strstr_P((const char *)buf, PSTR(".MPEG")))	*type = PTYPE_MPEG;
+	else if (strstr_P((const char *)buf, PSTR(".mpg" )) || strstr_P((const char *)buf, PSTR(".MPG")))	*type = PTYPE_MPEG;
 	else if (strstr_P((const char *)buf, PSTR(".pdf" )) || strstr_P((const char *)buf, PSTR(".PDF")))	*type = PTYPE_PDF;
 	else if (strstr_P((const char *)buf, PSTR(".zip" )) || strstr_P((const char *)buf, PSTR(".ZIP")))	*type = PTYPE_ZIP;
+	else if (strstr_P((const char *)buf, PSTR(".swf" )) || strstr_P((const char *)buf, PSTR(".SWF")))	*type = PTYPE_FLASH;
 	else if (strstr_P((const char *)buf, PSTR(".cgi" )) || strstr_P((const char *)buf, PSTR(".CGI")))	*type = PTYPE_CGI;
 	else 																								*type = PTYPE_ERR;
 }
