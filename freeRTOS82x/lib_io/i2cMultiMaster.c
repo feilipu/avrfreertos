@@ -49,7 +49,7 @@ void I2C_Slave_Initialise( uint8_t I2C_ownAddress )
 	// Use this semaphore  (take, give) when calling I2C functions, and it can ensure single access.
     if( xI2CSemaphore == NULL ) 					// Check to see if the semaphore has not been created.
     {
-		xI2CSemaphore = xSemaphoreCreateBinary();	// binary semaphore for I2C bus
+		xI2CSemaphore = xSemaphoreCreateMutex();	// mutex semaphore for I2C bus
 		if( ( xI2CSemaphore ) != NULL )
 			xSemaphoreGive( ( xI2CSemaphore ) );	// make the I2C available
     }
@@ -76,7 +76,7 @@ void I2C_Master_Initialise( uint8_t I2C_ownAddress )
 	// Use this semaphore  (take, give) when calling I2C functions, and it can ensure single access.
     if( xI2CSemaphore == NULL ) 					// Check to see if the semaphore has not been created.
     {
-		xI2CSemaphore = xSemaphoreCreateBinary();	// binary semaphore for I2C bus
+		xI2CSemaphore = xSemaphoreCreateMutex();	// mutex semaphore for I2C bus
 		if( ( xI2CSemaphore ) != NULL )
 			xSemaphoreGive( ( xI2CSemaphore ) );	// make the I2C bus available
     }

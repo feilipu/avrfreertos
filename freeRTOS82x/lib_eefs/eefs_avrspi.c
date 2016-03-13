@@ -50,7 +50,7 @@ int8_t eefs_avrspi_begin(void)
 
     if( xEEFSSemaphore == NULL ) 					/* Check to see if the semaphore has not been created. */
     {
-    	xEEFSSemaphore = xSemaphoreCreateBinary();	/* Then create the EEFS Chip binary semaphore */
+    	xEEFSSemaphore = xSemaphoreCreateMutex();	/* Then create the EEFS Chip mutex semaphore */
 		if( ( xEEFSSemaphore ) != NULL )
 		{
 			xSemaphoreGive( xEEFSSemaphore );		/* make it available */

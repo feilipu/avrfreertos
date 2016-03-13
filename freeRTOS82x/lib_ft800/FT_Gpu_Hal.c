@@ -39,7 +39,7 @@ ft_bool_t  FT_GPU_HAL_Open(FT_GPU_HAL_Context_t *host)
     // Semaphores are useful to stop a thread proceeding, where it should be stopped because it is waiting for an interrupt.
     if( host->xINT0Semaphore == NULL ) 					// Check to see if the INT0 semaphore has not been created.
     {
-    	host->xINT0Semaphore = xSemaphoreCreateBinary();	// binary semaphore for INTO. The ISR(INT0) will "give" the semaphore as needed.
+    	host->xINT0Semaphore = xSemaphoreCreateMutex();	// mutex semaphore for INTO. The ISR(INT0) will "give" the semaphore as needed.
     }
 #endif
 

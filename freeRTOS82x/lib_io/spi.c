@@ -112,7 +112,7 @@ void spiBegin(SPI_SLAVE_SELECT SS_pin)
 
     if( xSPISemaphore == NULL ) 					/* Check to see if the semaphore has not been created. */
     {
-    	xSPISemaphore = xSemaphoreCreateBinary(); 	/* Then create the SPI bus binary semaphore */
+    	xSPISemaphore = xSemaphoreCreateMutex(); 	/* Then create the SPI bus mutex semaphore */
 		if( ( xSPISemaphore ) != NULL )
 			xSemaphoreGive( ( xSPISemaphore ) );	/* make the SPI bus available */
     }
