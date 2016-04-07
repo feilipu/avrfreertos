@@ -70,6 +70,7 @@
 
 #include <stdlib.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 #include <avr/wdt.h>
 
 #include "FreeRTOS.h"
@@ -629,6 +630,8 @@ void vPortYieldFromTick( void ) __attribute__ ( ( hot, flatten, naked ) );
 void vPortYieldFromTick( void )
 {
 	portSAVE_CONTEXT();
+
+	sleep_reset();		//	 reset the sleep_mode() faster than sleep_disable();
 
 #if defined(DEBUG_PING)
 	// start mark - check for start of interrupt - for debugging only

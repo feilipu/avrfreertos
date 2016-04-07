@@ -46,7 +46,7 @@
  */
 #include "list.h"
 
-#define NULL 0
+#define ZERO 0
 
 struct list {
   struct list *next;
@@ -64,7 +64,7 @@ struct list {
 void
 list_init(list_t list)
 {
-  *list = NULL;
+  *list = ZERO;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -118,11 +118,11 @@ list_tail(list_t list)
 {
   struct list *l;
 
-  if(*list == NULL) {
-    return NULL;
+  if(*list == ZERO) {
+    return ZERO;
   }
 
-  for(l = *list; l->next != NULL; l = l->next);
+  for(l = *list; l->next != ZERO; l = l->next);
 
   return l;
 }
@@ -146,11 +146,11 @@ list_add(list_t list, void *item)
   /* Make sure not to add the same element twice */
   list_remove(list, item);
 
-  ((struct list *)item)->next = NULL;
+  ((struct list *)item)->next = ZERO;
 
   l = list_tail(list);
 
-  if(l == NULL) {
+  if(l == ZERO) {
     *list = item;
   } else {
     l->next = item;
@@ -186,19 +186,19 @@ list_chop(list_t list)
 {
   struct list *l, *r;
 
-  if(*list == NULL) {
-    return NULL;
+  if(*list == ZERO) {
+    return ZERO;
   }
-  if(((struct list *)*list)->next == NULL) {
+  if(((struct list *)*list)->next == ZERO) {
     l = *list;
-    *list = NULL;
+    *list = ZERO;
     return l;
   }
 
-  for(l = *list; l->next->next != NULL; l = l->next);
+  for(l = *list; l->next->next != ZERO; l = l->next);
 
   r = l->next;
-  l->next = NULL;
+  l->next = ZERO;
 
   return r;
 }
@@ -218,7 +218,7 @@ list_pop(list_t list)
 {
   struct list *l;
   l = *list;
-  if(*list != NULL) {
+  if(*list != ZERO) {
     *list = ((struct list *)*list)->next;
   }
 
@@ -240,21 +240,21 @@ list_remove(list_t list, void *item)
 {
   struct list *l, *r;
 
-  if(*list == NULL) {
+  if(*list == ZERO) {
     return;
   }
 
-  r = NULL;
-  for(l = *list; l != NULL; l = l->next) {
+  r = ZERO;
+  for(l = *list; l != ZERO; l = l->next) {
     if(l == item) {
-      if(r == NULL) {
+      if(r == ZERO) {
 	/* First on list */
 	*list = l->next;
       } else {
 	/* Not first on list */
 	r->next = l->next;
       }
-      l->next = NULL;
+      l->next = ZERO;
       return;
     }
     r = l;
@@ -276,7 +276,7 @@ list_length(list_t list)
   struct list *l;
   int n = 0;
 
-  for(l = *list; l != NULL; l = l->next) {
+  for(l = *list; l != ZERO; l = l->next) {
     ++n;
   }
 
@@ -294,14 +294,14 @@ list_length(list_t list)
  *             item on the list. This function is useful when using
  *             the list module to ordered lists.
  *
- *             If previtem is NULL, the new item is placed at the
+ *             If previtem is ZERO, the new item is placed at the
  *             start of the list.
  *
  */
 void
 list_insert(list_t list, void *previtem, void *newitem)
 {
-  if(previtem == NULL) {
+  if(previtem == ZERO) {
     list_push(list, newitem);
   } else {
 
@@ -316,14 +316,14 @@ list_insert(list_t list, void *previtem, void *newitem)
  * \returns    A next item on the list
  *
  *             This function takes a list item and returns the next
- *             item on the list, or NULL if there are no more items on
+ *             item on the list, or ZERO if there are no more items on
  *             the list. This function is used when iterating through
  *             lists.
  */
 void *
 list_item_next(void *item)
 {
-  return item == NULL? NULL: ((struct list *)item)->next;
+  return item == ZERO? ZERO: ((struct list *)item)->next;
 }
 /*---------------------------------------------------------------------------*/
 /** @} */

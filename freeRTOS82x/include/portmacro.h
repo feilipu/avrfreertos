@@ -67,13 +67,6 @@
     1 tab == 4 spaces!
 */
 
-/*
-Changes from V1.2.3
-
-	+ portCPU_CLOSK_HZ definition changed to 8MHz base 10, previously it
-	  base 16.
-*/
-
 #ifndef PORTMACRO_H
 #define PORTMACRO_H
 
@@ -180,12 +173,12 @@ typedef unsigned char	UBaseType_t;
 	See also the symbolic constants WDTO_15MS et al.
 */
 #define wdt_interrupt_reset_enable(value)	__asm__ __volatile__ (				\
-										"in __tmp_reg__,__SREG__" "\n\t"        \
-										"cli" "\n\t"                            \
-										"wdr" "\n\t"                            \
-										"sts %0,%1" "\n\t"                      \
-										"out __SREG__,__tmp_reg__" "\n\t"       \
-										"sts %0,%2" "\n\t"                      \
+										"in __tmp_reg__,__SREG__"        "\n\t" \
+										"cli"                            "\n\t" \
+										"wdr"                            "\n\t" \
+										"sts %0,%1"                      "\n\t" \
+										"out __SREG__,__tmp_reg__"       "\n\t" \
+										"sts %0,%2"                      "\n\t" \
 										: /* no outputs */                      \
 										: "M" (_SFR_MEM_ADDR(_WD_CONTROL_REG)), \
 										"r" (_BV(_WD_CHANGE_BIT) | _BV(WDE)),   \
@@ -200,6 +193,8 @@ typedef unsigned char	UBaseType_t;
 #define portSTACK_GROWTH			( -1 )
 #define portBYTE_ALIGNMENT			1
 #define portNOP()					__asm__ __volatile__ ( "nop" );
+
+#define sleep_reset()				do { _SLEEP_CONTROL_REG = 0; } while(0) // reset all sleep_mode() configurations.
 
 /* Timing for the scheduler. */
 #if defined( portUSE_WDTO )
