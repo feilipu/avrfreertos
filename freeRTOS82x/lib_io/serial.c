@@ -713,7 +713,7 @@ void xSerialPortReInit( const xComPortHandlePtr oldComPortPtr )
 		UCSR1B = ( _BV(RXCIE1) | _BV(RXEN1) | _BV(TXEN1));
 		UCSR1C = ( _BV(USBS1) | _BV(UCSZ11) | _BV(UCSZ10) );
 #else
-		UBRR1 = (uint16_t)((configCPU_CLOCK_HZ + ulWantedBaud * 4UL) / (ulWantedBaud * 8UL) - 1);  // for 2x mode, using 16 bit avr-gcc capability.
+		UBRR1 = (uint16_t)((configCPU_CLOCK_HZ + (oldComPortPtr->baudRate * 4UL) / ((oldComPortPtr->baudRate * 8UL) - 1);  // for 2x mode, using 16 bit avr-gcc capability.
 		UCSR1A = _BV(U2X0); // 2x mode.		// 2x speed mode bit
 		UCSR1B = ( _BV(RXCIE1) | _BV(RXEN1) | _BV(TXEN1));
 		UCSR1C = ( _BV(USBS1) | _BV(UCSZ11) | _BV(UCSZ10) );
