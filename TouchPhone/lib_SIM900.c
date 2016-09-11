@@ -96,7 +96,7 @@ static int8_t waitForAnswer2(SIM900StateHandlePtr SIM900_State_Ptr, const char* 
 */
 void getIfReady(SIM900StateHandlePtr SIM900_State_Ptr){
 
-	xSerialFlush( SIM900_State_Ptr->SIM900SerialPortPtr );	// always flush Rx first, otherwise Tx interrupt misbehaves
+	xSerialRxFlush( SIM900_State_Ptr->SIM900SerialPortPtr );	// always flush Rx first, otherwise Tx interrupt misbehaves
 	xSerialxPrint_P( SIM900_State_Ptr->SIM900SerialPortPtr, PSTR( "AT\r\n") );
 
 	if( waitForAnswer1( SIM900_State_Ptr, ECHO_RESPONSE, SIM900_MAX_TIME_OUT / portTICK_PERIOD_MS) == 1 )
