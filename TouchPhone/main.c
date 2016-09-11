@@ -166,9 +166,9 @@ static void TaskCharEcho(void *pvParameters) // Echo characters from one USART p
 
 		if(stimer_expired(&secs_timer))
 		{
-			xSerialFlush( &xSerialPort );	// always flush Rx regularly
-			xSerialFlush( &xSerial1Port );	// always flush Rx regularly
-			stimer_reset( &secs_timer );	// reset the timer once per flush cycle.
+			xSerialRxFlush( &xSerialPort ); // always flush Rx regularly
+			xSerialRxFlush( &xSerial1Port ); // always flush Rx regularly
+			stimer_reset( &secs_timer ); // reset the timer once per flush cycle.
 		}
 
 		if(stimer_expired(&call_secs_timer) && hungup != 1)
