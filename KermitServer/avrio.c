@@ -191,7 +191,7 @@ devsettings(char * s) {
 int
 devrestore(void) {
     /* Put device back as we found it */
-    xSerialFlush( &xSerial1Port ); // flush the USART port to allow packets to arrive with a clean start.
+    xSerialRxFlush( &xSerial1Port ); // flush the USART port to allow packets to arrive with a clean start.
     return(1);
 }
 
