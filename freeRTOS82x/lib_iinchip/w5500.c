@@ -644,7 +644,7 @@ void WIZCHIP_send_data_processing(SOCKET s, uint8_t *data, uint16_t len)
 	xSerialPrintf_P(PSTR("ISR_TX: tx_ptr: %.4x tx_len: %.4x\r\n"), ptr, len);
 #endif
 
-  addrbsb = (uint32_t)(ptr<<8) + (s<<5) + 0x10;
+  addrbsb = ((uint32_t)ptr<<8) + (s<<5) + 0x10;
   WIZCHIP_write_buf(addrbsb, data, len);
   ptr += len;
 
@@ -672,7 +672,7 @@ void WIZCHIP_recv_data_processing(SOCKET s, uint8_t *data, uint16_t len)
 	xSerialPrintf_P(PSTR("ISR_RX: rd_ptr: %.4x rd_len: %.4x\r\n"), ptr, len);
 #endif
 
-  addrbsb = (uint32_t)(ptr<<8) + (s<<5) + 0x18;
+  addrbsb = ((uint32_t)ptr<<8) + (s<<5) + 0x18;
   WIZCHIP_read_buf(addrbsb, data, len);
   ptr += len;
 
