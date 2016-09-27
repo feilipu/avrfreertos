@@ -708,7 +708,7 @@ void xSerialPortReInit( const xComPortHandlePtr oldComPortPtr )
 	case USART1:
 #if defined(__AVR_ATmega324P__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega324PA__) || defined(__AVR_ATmega644PA__) || defined(__AVR_ATmega640__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)
 #if defined(__AVR_ATmega324P__) || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega324PA__) || defined(__AVR_ATmega644PA__)
-		UBRR1 = (uint16_t)((configCPU_CLOCK_HZ + oldComPortPtr->baudRate * 8UL) / (oldComPortPtr->baudRate * 16UL) - 1); // for 1x mode, using 16 bit avr-gcc capability.
+		UBRR1 = (uint16_t)((configCPU_CLOCK_HZ + oldComPortPtr->baudRate * 8UL) / ((oldComPortPtr->baudRate * 16UL) - 1); // for 1x mode, using 16 bit avr-gcc capability.
 		UCSR1A = 0x00; // 1x mode.
 		UCSR1B = ( _BV(RXCIE1) | _BV(RXEN1) | _BV(TXEN1));
 		UCSR1C = ( _BV(USBS1) | _BV(UCSZ11) | _BV(UCSZ10) );
