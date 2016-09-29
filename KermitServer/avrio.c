@@ -29,7 +29,7 @@
     int writefile()  Output file - write data
     int closefile()  Input or output file - close
 
-  Full definitions below, prototypes in kermit.h.
+  Full definitions below, prototypes in platform.h.
 
   These routines must handle speed setting, parity, flow control, file i/o,
   and similar items without the kermit() routine knowing anything about it.
@@ -39,6 +39,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <errno.h>
 #ifndef O_WRONLY
 #ifdef X_OK
@@ -48,9 +49,8 @@
 
 #include "cdefs.h"
 #include "debug.h"
-#include "platform.h"
 #include "kermit.h"
-
+#include "platform.h"
 
 UCHAR o_buf[OBUFLEN+8];			/* File output buffer */
 UCHAR i_buf[IBUFLEN+8];			/* File input buffer */
@@ -154,7 +154,7 @@ dodebug(int fc, UCHAR * label, UCHAR * sval, long nval) {
 */
 int
 devopen(char *device) {
-	// turn on the serial port for debugging or for other USART reasons.
+	// turn on the Serial 1 port to connect to the HP-48.
 	xSerial1Port = xSerialPortInitMinimal( USART1, 9600, IBUFLEN+8, OBUFLEN+8);
 	//  (serial port number, WantedBaud, TxQueueLength, RxQueueLength (8n1))
     return(1);
@@ -168,8 +168,9 @@ devopen(char *device) {
   Returns: 0 on failure, 1 on success.
 */
 int
-pktmode(short on) {
-    xSerialFlush( &xSerial1Port ); // flush the USART port to allow packets to arrive with a clean start.
+pktmode(int on) {
+    xSerialTxFlush( &xSerial1Port ); // flush the USART Tx port to allow packets to depart with a clean start.
+    xSerialRxFlush( &xSerial1Port ); // flush the USART Rx port to allow packets to arrive with a clean start.
 //    system(on ? "stty raw -echo" : "stty sane"); /* Crude but effective */
     return(1);
 }
@@ -191,7 +192,8 @@ devsettings(char * s) {
 int
 devrestore(void) {
     /* Put device back as we found it */
-    xSerialRxFlush( &xSerial1Port ); // flush the USART port to allow packets to arrive with a clean start.
+    xSerialTxFlush( &xSerial1Port ); // flush the USART Tx port to allow packets to depart with a clean start.
+    xSerialRxFlush( &xSerial1Port ); // flush the USART Rx port to allow packets to arrive with a clean start.
     return(1);
 }
 
@@ -239,7 +241,7 @@ inchk(struct k_data * k) {
 */
 
 int
-readpkt(struct k_data * k, UCHAR *p, int len, int fc) {
+readpkt(struct k_data * k, UCHAR *p, int len) {
     uint8_t flag;
     int n;
 
@@ -417,7 +419,7 @@ openfile(struct k_data * k, UCHAR * s, int mode) {
 #define SCANSIZ 49152
 #endif /* F_SCAN */
 
-int
+ULONG
 fileinfo(struct k_data * k,
 	UCHAR * filename, UCHAR * buf, int buflen, short * type, short mode) {
     FILINFO statbuf;
@@ -496,7 +498,7 @@ fileinfo(struct k_data * k,
     }
 #endif /* F_SCAN */
 
-    return(X_OK);
+    return(statbuf.fsize);
 }
 
 
@@ -633,12 +635,13 @@ closefile(struct k_data * k, UCHAR c, int mode) {
 }
 
 #ifdef DEBUG
-int xerror() {
-    unsigned int x;
-    extern int errorrate;		/* Fix this - NO EXTERNS */
-    if (!errorrate)
+uint8_t
+xerror(void) {
+    uint32_t x;
+    extern uint8_t errorrate;
+    if (errorrate == 0)
       return(0);
-    x = rand() % 100;			/* Fix this - NO C LIBRARY */
+    x = random() % 100;
     debug(DB_LOG,"RANDOM",0,x);
     debug(DB_LOG,"ERROR",0,(x < errorrate));
     return(x < errorrate);

@@ -437,7 +437,10 @@ float ReadADCSensors(void) // Read ADC Sensor for Thermal LM335z
 			// so we don't want it getting stolen during the middle of a conversion.
 
 		    setAnalogMode(MODE_10_BIT);	// 10-bit analogue-to-digital conversions
-		    DIDR0 = _BV(ADC0D);			// Disable the digital IO circuit on the ADC0 pin, used for the temperature sensor.
+
+		    // Disable the digital IO circuit on the ADC0 pin, used for the temperature sensor.
+			DIDR0 = _BV(ADC5D)|_BV(ADC4D)|_BV(ADC3D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D); // turn off digital inputs
+			DIDR1 = _BV(AIN1D)|_BV(AIN0D);
 
 			do
 			{

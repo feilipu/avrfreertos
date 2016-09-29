@@ -77,10 +77,13 @@ void audioCodec_dsp( uint16_t * ch_A, uint16_t * ch_B) __attribute__ ((hot, flat
 // setup ADC
 void AudioCodec_ADC_init(void)
 {
+	// turn off digital input for pin ADC7 Mic input and ADC6 Line.
+	DIDR0 = _BV(ADC7D)|_BV(ADC6D)|_BV(ADC5D)|_BV(ADC4D)|_BV(ADC3D)|_BV(ADC2D)|_BV(ADC1D)|_BV(ADC0D); // turn off digital inputs
+	DIDR1 = _BV(AIN1D)|_BV(AIN0D);
+
 	ADMUX  = _BV(REFS1)|_BV(REFS0)|_BV(ADLAR)|_BV(MUX2)|_BV(MUX1)|_BV(MUX0); // 2.56V reference with external capacitor at AREF pin - left justify - start with MIC input ADC7
 	ADCSRA = _BV(ADEN)|_BV(ADSC)|_BV(ADATE)|_BV(ADPS2)|_BV(ADPS1)|_BV(ADPS0); // ADC enable, auto trigger, ck/128 = 192kHz
 	ADCSRB =  0x00;			// free running mode
-	DIDR0  = _BV(ADC7D)|_BV(ADC6D);	// turn off digital input for pin ADC7 Mic input and ADC6 Line.
 }
 
 // adc sampling routine

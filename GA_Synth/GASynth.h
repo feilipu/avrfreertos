@@ -10,6 +10,10 @@
 /* debouncer include file, */
 #include "buttonDebounce.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*--------------------------------------------------*/
 /*------------Often Configured Parameters-----------*/
 /*--------------------------------------------------*/
@@ -278,5 +282,9 @@ static void shieldDButtonInit(debouncer * portDebounce, uint8_t buttons, uint8_t
 	// initialise the debouncer with D7, D6 and D5 pins pulled up.
 	buttonDebounceInit( portDebounce, pulledUpButtons );
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // GASynth_h end include guard

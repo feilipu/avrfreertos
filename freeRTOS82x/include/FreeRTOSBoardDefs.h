@@ -347,20 +347,20 @@ extern "C" {
 #elif defined(_GOLDILOCKS_)
 
 // I2C pins
-#define I2C_PORT			PORTC
+#define I2C_PORT		PORTC
 #define I2C_PORT_DIR		DDRC
 #define I2C_PORT_STATUS		PINC
-#define I2C_BIT_SDA			_BV(PC1)
-#define I2C_BIT_SCL			_BV(PC0)
+#define I2C_BIT_SDA		_BV(PC1)
+#define I2C_BIT_SCL		_BV(PC0)
 
 // SPI pins
-#define SPI_PORT			PORTB
+#define SPI_PORT		PORTB
 #define SPI_PORT_DIR		DDRB
 #define SPI_PORT_PIN		PINB
-#define SPI_BIT_SCK			_BV(PB7)
+#define SPI_BIT_SCK		_BV(PB7)
 #define SPI_BIT_MISO		_BV(PB6)
 #define SPI_BIT_MOSI		_BV(PB5)
-#define SPI_BIT_SS			_BV(PB4)
+#define SPI_BIT_SS		_BV(PB4)
 
 #define SPI_BIT_SS_WIZNET	_BV(PB4)	// added for Wiznet 5100/5200 support with SS on PB4 (Pin 10)
 
@@ -381,10 +381,10 @@ extern "C" {
 #define SPI_PORT_PIN_SS_SD	PINB
 #define SPI_BIT_SS_SD		_BV(PB0)	// added for support of integrated SD card on PB0, on Goldilocks Analogue.
 
-#define SD_CARD_DETECT_PORT PORTC		// Card Detect on PC2
-#define SD_CARD_DETECT_DIR  DDRC		// Card Detect on PC2
-#define SD_CARD_DETECT_PIN  PINC		// Card Detect on PC2
-#define SD_CARD_DETECT_BIT  _BV(PC2)	// Card Detect on PC2
+#define SD_CARD_DETECT_PORT	PORTC		// Card Detect on PC2
+#define SD_CARD_DETECT_DIR	DDRC		// Card Detect on PC2
+#define SD_CARD_DETECT_PIN	PINC		// Card Detect on PC2
+#define SD_CARD_DETECT_BIT	_BV(PC2)	// Card Detect on PC2
 
 #else
 #define SPI_PORT_SS_SD		PORTD

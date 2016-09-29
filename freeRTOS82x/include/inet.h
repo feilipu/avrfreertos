@@ -17,11 +17,11 @@
 
 /* SYSTEM DEFINES */
 
-#define HOST_NAME			"Goldilocks"		/**< Host Name */
+#define HOST_NAME		"Goldilocks"		/**< Host Name */
 
 #define GATEWAY_IP_ADDR		"192.168.1.254"		// Gateway IP Address (only needed if DHCP not utilised).
 #define SUBNET_IP_MASK		"255.255.255.0"		// Subnet Mask saved off chip (only needed if DHCP not utilised).
-#define SRC_IP_ADDR			"192.168.1.32"		// Local IP Address (only needed if DHCP not utilised).
+#define SRC_IP_ADDR		"192.168.1.32"		// Local IP Address (only needed if DHCP not utilised).
 
 #define NTP_SERVER_4		"150.203.1.10"		// Australian National University NTP Server
 #define NTP_SERVER_3		"192.231.203.132"	// Internode NTP Server
@@ -37,8 +37,8 @@ extern "C" {
 
 /////////////////////////// EXTERNAL DATA ///////////////////////////
 
-extern uint8_t src_mac_addr[];						// Local MAC address, defined in main program, always needed.
-													// uint8_t src_mac_addr[6] = {0x00, 0x08, 0xDC, 0x00, 0xCA, 0xFE};
+extern uint8_t src_mac_addr[];					// Local MAC address, defined in main program, always needed.
+								// uint8_t src_mac_addr[6] = {0x00, 0x08, 0xDC, 0x00, 0xCA, 0xFE};
 
 
 ////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 
 #if ( defined(portEXT_RAM) && !defined(portEXT_RAMFS) )
 #define FILE_BUFFER_SIZE 		2048	// size of file working buffer (on heap) with extended RAM (set to less than MTP, best efficiency).
-										// On the wire 54 bytes added to this size.
+						// On the wire 54 bytes added to this size.
 #elif defined(_GOLDILOCKS_)
 #define FILE_BUFFER_SIZE 		2048	// size of file working buffer (on heap) for Goldilocks 16kByte RAM
 
@@ -57,23 +57,23 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 
 
 /* ping Definitions. */
-#define PING_OPT_LEN			56		// length of a ping packet optional data (+8 bytes for full packet construct).
-										// probably 32 bytes is enough, but if RAM is available... use it.
-#define PING_ID					0xBEEF  // ID of pinging device
+#define PING_OPT_LEN			120		// length of a ping packet optional data (+8 bytes for full packet construct).
+							// probably 32 bytes is enough, but if RAM is available... use it.
+#define PING_ID				0xBEEF  	// ID of pinging device
 
 /* dhcp Definitions. */
-#define DHCP_PREFERRED_SOCKET	1			// This is just set to any socket. 1 is not special.
+#define DHCP_PREFERRED_SOCKET		1		// This is just set to any socket. 1 is not special.
 #define DHCP_INITIAL_XID		0xCAFEF00D	// Initial XID value, incremented for each request.
 #define DEFAULT_LEASETIME		0xffffffff	// Infinite lease time.
 
 /* ntp Definitions. */
-#define NTP_PREFERRED_SOCKET	2		// This is just set to any socket. 2 is not special.
-#define NTP_REFRESH_PERIOD		14400	// Refresh every 14400 seconds (4 hours), or 300 seconds (5 minutes).
-#define NTP_TIMEOUT				500		// Timeout waiting for NTP response in system milliseconds.
+#define NTP_PREFERRED_SOCKET		2		// This is just set to any socket. 2 is not special.
+#define NTP_REFRESH_PERIOD		14400		// Refresh every 14400 seconds (4 hours), or 300 seconds (5 minutes).
+#define NTP_TIMEOUT			500		// Timeout waiting for NTP response in system milliseconds.
 
 /* http Definitions. */
-#define HTTP_PREFERRED_SOCKET	3		// This is just set to any socket. 3 is not special.
-#define HTTP_FS					1		// Drive number for HTTP - see _FS_LOCK  and _VOLUMES in ffconfig.h
+#define HTTP_PREFERRED_SOCKET		3		// This is just set to any socket. 3 is not special.
+#define HTTP_FS				1		// Drive number for HTTP - see _FS_LOCK  and _VOLUMES in ffconfig.h
 #define HTTP_PATH				"/http" // directory for web server. Files placed here will be seen in http root.
 #define MAX_URI_SIZE			1024 	// Length of the requested file URI.
 
@@ -82,11 +82,11 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 #define	DHCP_MAX_RETRY			3
 #define	DHCP_WAIT_TIME			5
 
-#define DHCP_STATE_INITIAL      0
+#define DHCP_STATE_INITIAL     		0
 #define	DHCP_STATE_DISCOVER		1
 #define	DHCP_STATE_REQUEST		2
 #define	DHCP_STATE_LEASED		3
-#define	DHCP_STATE_REREQUEST	4
+#define	DHCP_STATE_REREQUEST		4
 #define	DHCP_STATE_RELEASE		5
 
 #define DHCP_FLAGSBROADCAST		0x8000
@@ -99,20 +99,20 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 
 /* DHCP message type */
 #define	DHCP_DISCOVER			1
-#define DHCP_OFFER				2
+#define DHCP_OFFER			2
 #define	DHCP_REQUEST			3
 #define	DHCP_DECLINE			4
-#define	DHCP_ACK				5
-#define DHCP_NAK				6
+#define	DHCP_ACK			5
+#define DHCP_NAK			6
 #define	DHCP_RELEASE			7
-#define DHCP_INFORM				8
+#define DHCP_INFORM			8
 
 #define DHCP_HTYPE_10MB			1
 #define DHCP_HTYPE_100MB		2
 
 #define DHCP_HLEN_ETHERNET		6
-#define DHCP_HOPS				0
-#define DHCP_SECS				0
+#define DHCP_HOPS			0
+#define DHCP_SECS			0
 
 #define DHCP_MAX_OPT			16
 #define MAGIC_COOKIE			0x63825363
@@ -137,7 +137,7 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 #define		PTYPE_ICO		10		/**< ICO file.   */
 
 /* HTTP response */
-#define		STATUS_OK			200
+#define		STATUS_OK		200
 #define		STATUS_CREATED		201
 #define		STATUS_ACCEPTED		202
 #define		STATUS_NO_CONTENT	204
@@ -153,7 +153,7 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 #define		STATUS_BAD_GATEWAY	502
 #define		STATUS_SERV_UNAVAIL	503
 
-#define		MAX_INT_STR			80
+#define		MAX_INT_STR		80
 
 /* HTML Doc. for ERROR */
 #define ERROR_HTML_PAGE PSTR("HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: 95\r\n\r\n<HTML>\r\n<BODY>\r\nDoh! The page you requested was not found.\r\n</BODY>\r\n</HTML>\r\n\0")
@@ -219,12 +219,12 @@ extern uint8_t src_mac_addr[];						// Local MAC address, defined in main progra
 #define IP_PROTO_RAW            255         /**< Raw IP packet */
 
 /* ARP PROTOCOL */
-#define H_TYPE					0x0001		/**< Hardware Ethernet */
-#define P_TYPE_IP				ETHERTYPE_IP
-#define H_LEN_ETH				0x06		/**< Link Address (MAC) Length */
-#define P_LEN_IP				0x04		/**< IPv4 Address Length */
-#define ARP_REQUEST				0x0001
-#define ARP_REPLY				0x0002
+#define H_TYPE				0x0001		/**< Hardware Ethernet */
+#define P_TYPE_IP			ETHERTYPE_IP
+#define H_LEN_ETH			0x06		/**< Link Address (MAC) Length */
+#define P_LEN_IP			0x04		/**< IPv4 Address Length */
+#define ARP_REQUEST			0x0001
+#define ARP_REPLY			0x0002
 #define ARP_REQUEST_REVERSE		0x0003		/**< ARP request Reverse [RFC903] */
 #define ARP_REPLY_REVERSE		0x0004		/**< ARP reply Reverse	[RFC903] */
 
@@ -275,7 +275,7 @@ typedef struct _PING_MSG
 	uint8_t		type;		/* Type = 8 Ping 8 */
 	uint8_t		code;		/* Code = 0 */
 	uint16_t	checksum;	/** Internet Checksum */
-	uint16_t	id;			/**< Identification  */
+	uint16_t	id;		/**< Identification  */
 	uint16_t	seqNum;		/**< Sequence Number */
 	uint8_t		OPT[PING_OPT_LEN];
 }PING_MSG;

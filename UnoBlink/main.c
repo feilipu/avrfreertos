@@ -157,15 +157,4 @@ static void TaskBlinkGreenLED(void *pvParameters) // Main Green LED Flash
     }
 }
 
-/*-----------------------------------------------------------*/
-
-void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
-{
-	DDRB  |= _BV(DDB5);
-	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.
-	while(1);
-}
-
-/*--------------------------------------------*/
-
+/*---------------------------------------------------------------------------*/
