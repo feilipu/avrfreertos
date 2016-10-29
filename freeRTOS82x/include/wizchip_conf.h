@@ -138,6 +138,7 @@
 #else
 	#warning "Unknown defined _WIZCHIP_. You should define one of 5100, 5200, and 5500 !!!" // xxx
 	#define _WIZCHIP_ID_                 "NIL\0"
+        #define _WIZCHIP_IO_MODE_            "NIL\0"
 
 #endif
 
