@@ -56,7 +56,7 @@
 #include "FreeRTOS.h"
 
 #define	_ENDIAN_LITTLE_		0	/**<  This must be defined if system is little-endian - like AVR ATmega */
-#define	_ENDIAN_BIG			1
+#define	_ENDIAN_BIG_            1
 
 #define SYSTEM_ENDIAN		_ENDIAN_LITTLE_
 

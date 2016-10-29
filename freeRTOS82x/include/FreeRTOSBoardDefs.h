@@ -105,14 +105,14 @@ extern "C" {
  * Select WIZCHIP.
  * You should select one, \b 5100, \b 5200 ,\b 5500 or etc.
  */
-//	#define _WIZCHIP_                      5100   // 5100, 5200, 5500
+	#define _WIZCHIP_                      5500     // 5100, 5200, 5500
 
-//	#define portHD44780_LCD					// define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
-	#define portSD_CARD						// define the use of the SD Card for Arduino Mega2560 and Freetronics EtherMega
-//	#define portRTC_DEFINED					// RTC DS1307 / DS3231 implemented, therefore define.
+//	#define portHD44780_LCD                         // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
+	#define portSD_CARD                             // define the use of the SD Card for Arduino Mega2560 and Freetronics EtherMega
+//	#define portRTC_DEFINED                         // RTC DS1307 / DS3231 implemented, therefore define.
 
-	#define	portSERIAL_BUFFER_RX	255		// Define the size of the serial receive buffer.
-	#define	portSERIAL_BUFFER_TX	255		// Define the size of the serial transmit buffer, only as long as the longest line of text.
+	#define	portSERIAL_BUFFER_RX	255             // Define the size of the serial receive buffer.
+	#define	portSERIAL_BUFFER_TX	255             // Define the size of the serial transmit buffer, only as long as the longest line of text.
 	#define portSERIAL_BUFFER		portSERIAL_BUFFER_TX // just for compatibility with older programmes.
 
 //  #define portUSE_TIMER1_PWM				// Define which Timer to use as the PWM Timer (not the tick timer).
@@ -166,19 +166,19 @@ extern "C" {
  * Select WIZCHIP.
  * You should select one, \b 5100, \b 5200 ,\b 5500 or etc. \n\n
  */
-	#define _WIZCHIP_						5500   // 5100, 5200, 5500
+	#define _WIZCHIP_                               5500    // 5100, 5200, 5500
 
-//	#define portHD44780_LCD					// define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
-	#define portSD_CARD						// define the use of the SD Card for Goldilocks 1284p
+//	#define portHD44780_LCD                                 // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
+//	#define portSD_CARD                                     // define the use of the SD Card for Goldilocks 1284p
 //	#define portRTC_DEFINED					// RTC DS1307 / DS3231 implemented, therefore define.
-	#define portANALOGUE					// Goldilocks Analogue Capabilities
+//	#define portANALOGUE					// Goldilocks Analogue Capabilities
 //	#define portANALOGSHIELD				// Digilent Analog Shield (only DAC implemented)
 
-	#define	portSERIAL_BUFFER_RX	255		// Define the size of the serial receive buffer.
-	#define	portSERIAL_BUFFER_TX	255		// Define the size of the serial transmit buffer, only as long as the longest text.
-	#define portSERIAL_BUFFER		portSERIAL_BUFFER_TX // just for compatibility with older programmes.
+	#define	portSERIAL_BUFFER_RX	255                     // Define the size of the serial receive buffer.
+	#define	portSERIAL_BUFFER_TX	255                     // Define the size of the serial transmit buffer, only as long as the longest text.
+	#define portSERIAL_BUFFER	portSERIAL_BUFFER_TX    // just for compatibility with older programmes.
 
-//   #define portUSE_TIMER1_PWM				// Define which Timer to use as the PWM Timer (not the tick timer).
+//      #define portUSE_TIMER1_PWM				// Define which Timer to use as the PWM Timer (not the tick timer).
 											// though it is better to use Pololu functions, as they support 8x multiplexed servos.
 
 #elif defined(__AVR_ATmega32U2__) || defined(__AVR_ATmega16U2__) || defined(__AVR_ATmega8U2__)

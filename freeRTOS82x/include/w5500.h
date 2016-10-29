@@ -209,7 +209,7 @@ extern "C" {
 /**
  @brief Protocol of IP Header field register in IP raw mode
  */
-#define Sn_PROTO(ch)					(0x001408 + (ch<<5))
+#define Sn_PROTO(ch)                    (0x001408 + (ch<<5))
 /**
  @brief IP Type of Service(TOS) register
  */
@@ -385,7 +385,7 @@ extern "C" {
 
 /* Sn_SR values */
 #define SOCK_CLOSED                  0x00     /**< closed */
-#define SOCK_ARP					 0x01	  /**< arp protocol initiated */
+#define SOCK_ARP		     0x01     /**< arp protocol initiated */
 #define SOCK_INIT                    0x13     /**< init state */
 #define SOCK_LISTEN                  0x14     /**< listen state */
 #define SOCK_SYNSENT                 0x15     /**< connection state */

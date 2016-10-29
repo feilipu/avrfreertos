@@ -106,7 +106,7 @@ uint8_t socket(
 #endif
 		ret = 0;
 	}
-#ifdef __DEF_W5100_DBG__
+#ifdef __DEF_WIZCHIP_DBG__
 	xSerialPrintf_P(PSTR(" Sn_SR = %.2x , Protocol = %.2x\r\n"), WIZCHIP_read(Sn_SR(s)), WIZCHIP_read(Sn_MR(s)));
 #endif
 	return ret;

@@ -196,10 +196,10 @@ extern uint8_t src_mac_addr[];					// Local MAC address, defined in main program
 #define IP_PORT_ICMP            1           /**< Control message protocol */
 #define IP_PORT_FTP             21          /**< FTP */
 #define IP_PORT_SSH             22          /**< SSH */
-#define IP_PORT_TELNET			23			/**< TELNET */
-#define IP_PORT_SMTP			25			/**< SMTP Mail Transfer*/
-#define	IP_PORT_DHCP_SERVER		67			/* < DHCP from server to client */
-#define IP_PORT_DHCP_CLIENT		68			/* < DHCP from client to server */
+#define IP_PORT_TELNET          23          /**< TELNET */
+#define IP_PORT_SMTP            25          /**< SMTP Mail Transfer*/
+#define	IP_PORT_DHCP_SERVER     67          /* < DHCP from server to client */
+#define IP_PORT_DHCP_CLIENT     68          /* < DHCP from client to server */
 #define IP_PORT_TFTP            69          /**< TFTP Trivial File Transfer */
 #define IP_PORT_HTTP            80          /**< HTTP well-known port number */
 #define IP_PORT_NTP             123         /**< NTP */
