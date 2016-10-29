@@ -445,14 +445,14 @@ void getGAR(uint8_t * addr);
 void getSHAR(uint8_t * addr);
 void getSIPR(uint8_t * addr);
 
-uint16_t WIZCHIP_write_buf(uint32_t addrbsb, const uint8_t* buf,uint16_t len) __attribute__ ((hot, flatten));
-uint16_t WIZCHIP_read_buf(uint32_t addrbsb, uint8_t* buf,uint16_t len) __attribute__ ((hot, flatten));
+uint16_t WIZCHIP_write_buf(uint32_t addrbsb, uint8_t * buf,uint16_t len) __attribute__ ((hot));
+uint16_t WIZCHIP_read_buf(uint32_t addrbsb, uint8_t* buf,uint16_t len) __attribute__ ((hot));
 
 void WIZCHIP_send_data_processing(SOCKET s, uint8_t *wizdata, uint16_t len);
 void WIZCHIP_recv_data_processing(SOCKET s, uint8_t *wizdata, uint16_t len);
 
-void WIZCHIP_write_data(SOCKET s, const uint8_t * src, uint8_t * dst, uint16_t len) __attribute__ ((flatten));
-void WIZCHIP_read_data(SOCKET s, uint8_t * src, uint8_t * dst, uint16_t len)__attribute__ ((flatten));
+void WIZCHIP_write_data(SOCKET s, uint8_t * src, uint8_t * dst, uint16_t len);
+void WIZCHIP_read_data(SOCKET s, uint8_t * src, uint8_t * dst, uint16_t len);
 
 #endif // #if (_WIZCHIP_ == 5500)
 

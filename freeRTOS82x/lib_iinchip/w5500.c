@@ -87,7 +87,7 @@ void WIZCHIP_write( uint32_t addrbsb,  uint8_t data)
 	Byte = (uint8_t)((addrbsb & 0x0000FF00)>> 8);	// pre-load the Address byte 2 to be transmitted
 	while ( !(SPSR & _BV(SPIF)) );
 
-	SPDR = Byte;									// load the lower address to be transmitted
+	SPDR = Byte;					// load the lower address to be transmitted
 	Byte = (uint8_t)((addrbsb & 0x000000F8) + 0x04);// pre-load the Data Write command
 	while ( !(SPSR & _BV(SPIF)) );
 
@@ -102,7 +102,7 @@ void WIZCHIP_write( uint32_t addrbsb,  uint8_t data)
 
 	spiDeselect(Wiznet);			// CS=1, SPI end, give semaphore
 
-    WIZCHIP_ISR_ENABLE();			// Interrupt Service Routine Enable
+	WIZCHIP_ISR_ENABLE();			// Interrupt Service Routine Enable
 }
 
 /**
@@ -160,7 +160,7 @@ uint8_t WIZCHIP_read(uint32_t addrbsb)
 /**
 @brief	This function writes into W5500 memory(Buffer)
 */
-uint16_t WIZCHIP_write_buf(uint32_t addrbsb, const uint8_t* buf, uint16_t len)
+uint16_t WIZCHIP_write_buf(uint32_t addrbsb, uint8_t * buf, uint16_t len)
 {
 	uint16_t idx;
 	uint8_t Byte;
@@ -326,8 +326,8 @@ bit 15-14 : memory size of channel #7 \n
 Maximum memory size for Tx, Rx in the W5500 is 16K Bytes,\n
 In the range of 16KBytes, the memory size could be allocated dynamically by each channel.\n
 Be attentive to sum of memory size shouldn't exceed 8Kbytes\n
-and to data transmission and receiption from non-allocated channel may cause some problems.\n
-If the 16KBytes memory is already  assigned to centain channel, \n
+and to data transmission and reception from non-allocated channel may cause some problems.\n
+If the 16KBytes memory is already  assigned to certain channel, \n
 other 3 channels couldn't be used, for there's no available memory.\n
 If two 4KBytes memory are assigned to two each channels, \n
 other 2 channels couldn't be used, for there's no available memory.\n
@@ -587,9 +587,11 @@ uint8_t getSn_SR(SOCKET s)
 This gives free buffer size of transmit buffer. This is the data size that user can transmit.
 User should check this value first and control the size of transmitted data.
 */
-uint16_t getSn_TX_FSR(SOCKET s)
+uint16_t
+getSn_TX_FSR (SOCKET s)
 {
-  uint16_t val=0,val1=0;
+  uint16_t val = 0;
+  uint16_t val1 = 0;
   do
   {
     val1 = WIZCHIP_read(Sn_TX_FSR0(s));
@@ -690,7 +692,7 @@ buffer of the chip. It calculates the actual physical address where one has to w
 the data in transmit buffer. The Tx memory upper-bound of socket is wrapped automatically.
 The entire 16bit address space is valid.
 */
-void WIZCHIP_write_data(SOCKET s, const uint8_t * src, uint8_t * dst, uint16_t len)
+void WIZCHIP_write_data(SOCKET s, uint8_t * src, uint8_t * dst, uint16_t len)
 {
 	uint32_t addrbsb;
 
