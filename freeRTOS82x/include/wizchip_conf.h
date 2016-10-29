@@ -281,7 +281,7 @@ typedef enum
    CN_SET_NETMODE,  ///< Set network mode as WOL, PPPoE, Ping Block, and Force ARP mode
    CN_GET_NETMODE,  ///< Get network mode as WOL, PPPoE, Ping Block, and Force ARP mode
    CN_SET_TIMEOUT,  ///< Set network timeout as retry count and time.
-   CN_GET_TIMEOUT,  ///< Get network timeout as retry count and time.
+   CN_GET_TIMEOUT   ///< Get network timeout as retry count and time.
 }ctlnetwork_type;
 
 /**
