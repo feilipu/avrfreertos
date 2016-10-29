@@ -407,8 +407,8 @@ uint16_t WIZCHIP_read_buf( uint16_t addr, uint8_t *buf, uint16_t len) __attribut
 void	WIZCHIP_send_data_processing(SOCKET s, uint8_t *wizdata, uint16_t len);
 void	WIZCHIP_recv_data_processing(SOCKET s, uint8_t *wizdata, uint16_t len);
 
-void	WIZCHIP_write_data(SOCKET s, volatile uint8_t * src, volatile uint8_t * dst, uint16_t len);
-void	WIZCHIP_read_data(SOCKET s, volatile uint8_t * src, volatile uint8_t * dst, uint16_t len);
+void	WIZCHIP_write_data(SOCKET s, uint8_t * src, uint8_t * dst, uint16_t len);
+void	WIZCHIP_read_data(SOCKET s, uint8_t * src, uint8_t * dst, uint16_t len);
 
 #endif // #if (_WIZCHIP_ == 5200)
 

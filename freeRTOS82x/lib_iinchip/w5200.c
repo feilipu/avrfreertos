@@ -138,7 +138,7 @@ uint8_t WIZCHIP_write(uint16_t addr, uint8_t data)
 
 	spiDeselect(Wiznet);			// CS=1, SPI end, give semaphore
 
-    WIZCHIP_ISR_ENABLE();			// Interrupt Service Routine Enable
+	WIZCHIP_ISR_ENABLE();			// Interrupt Service Routine Enable
 
 	return 1;
 }
@@ -274,7 +274,7 @@ uint16_t WIZCHIP_write_buf(uint16_t addr, uint8_t * buf, uint16_t len)
 /**
 @brief	This function reads from W5200 memory(Buffer)
 */
-uint16_t WIZCHIP_read_buf(uint16_t addr, uint8_t * buf,uint16_t len)
+uint16_t WIZCHIP_read_buf(uint16_t addr, uint8_t * buf, uint16_t len)
 {
 	uint16_t idx;
 	uint8_t Byte;
@@ -798,7 +798,7 @@ buffer of the chip. It calculates the actual physical address where one has to w
 the data in transmit buffer. Here also takes care of the condition that it exceeds
 the Tx memory upper-bound of socket.
 */
-void WIZCHIP_write_data(SOCKET s, volatile uint8_t * src, volatile uint8_t * dst, uint16_t len)
+void WIZCHIP_write_data(SOCKET s, uint8_t * src, uint8_t * dst, uint16_t len)
 {
 	uint16_t size;
 	uint16_t dst_mask;
@@ -830,7 +830,7 @@ It calculate the actual physical address where one has to read
 the data from Receive buffer. Here also take care of the condition that it exceeds
 the Rx memory upper-bound of socket.
 */
-void WIZCHIP_read_data(SOCKET s, volatile uint8_t * src, volatile uint8_t * dst, uint16_t len)
+void WIZCHIP_read_data(SOCKET s, uint8_t * src, uint8_t * dst, uint16_t len)
 {
 	uint16_t size;
 	uint16_t src_mask;
