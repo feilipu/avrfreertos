@@ -1,0 +1,79 @@
+g711.rme - Readme for the G.711 module
+
+
+                                   U G S T
+
+                         Read me file for G711 module
+                                (01.Feb.2000)
+
+       =============================================================
+       COPYRIGHT NOTE: This source code, and all of its derivations,
+       is subject to the "ITU-T General Public License". Please have
+       it  read  in    the  distribution  disk,   or  in  the  ITU-T
+       Recommendation G.191 on "SOFTWARE TOOLS FOR SPEECH AND  AUDIO
+       CODING STANDARDS".
+       =============================================================
+
+
+The UGST G711 module, version 3.01 (31.Jan.2000) needs the following
+files:
+
+g711.c .......... G711 module itself; needs the prototypes in G711.H.
+g711demo.c ...... Demonstration program for the G711 module; needs the files 
+                  g711.c and ugstdemo.h in the current directory.
+ugstdemo.h ...... prototypes and definitions needed by UGST demo programs.
+g711.h .......... prototypes and definitions needed by the G711 module.
+
+As an auxiliary program, there is:
+shiftbit.c ...... program to shift (with sign extension) to left or right the
+                  input file, saving in the output file. You may need this if
+                  you speech data file has less than 16 bit resolution and not
+                  left-justified.
+
+Makefiles:
+~~~~~~~~~~
+Makefiles have been provided for automatic build-up of the executable program
+and to process the test files:
+makefile.unx .... makefile for compiling on an Unix environment
+makefile.tcc .... makefile for compiling with MSDOS Borland [bt]cc
+makefile.cl ..... makefile for compiling with MS Visual C compiler
+makefile.djc .... makefile for compiling with DJGPP MSDOS port of gcc
+make-vms.com .... DCL for compiling in the VAX/VMS environment
+
+Testing:
+~~~~~~~~
+The provided makefiles can run a portability test on the demo program. They 
+need the archive tst-g711.zip ([pk]zip compatible archive) and [pk]unzip to 
+extract the proper source and reference processed files. The contents of this
+archive file is:
+sweep.src ....... THE reference file
+sweep-r.a ....... reference file: sweep.src encoded by A-law (A lilo)
+sweep-r.a-a ..... reference file: sweep-r.a decoded by A-law (A loli)
+sweep-r.rea ..... reference file: sweep.src enc'd *and* decoded by A-law (lili)
+sweep-r.u ....... reference file: sweep.src enc'd by u-law (u lilo)
+sweep-r.u-u ..... reference file: sweep-r.u dec'd by u-law (u loli)
+sweep-r.reu ..... reference file: sweep.src enc'd *and* decoded by u-law (lili)
+
+NOTE! These files are in the big-endian (high-byte first) format. Therefore, 
+      before using under MSDOS or VAX/VMS, the files need to be byte-swapped. 
+      See unsupported program sb in the ../unsup directory.
+      The CRC-32 (unsup utility crc) for each of the test files are
+      given below:
+
+      File name       CRC32-BE  CRC32-LE  Size
+      ------------------------------------------
+      sweep-r.a       E714C343  74719FE4  131072
+      sweep-r.a-a     1595D5BA  ABCEAA69  131072
+      sweep-r.rea     1595D5BA  ABCEAA69  131072
+      sweep-r.reu     D6812645  63641C01  131072
+      sweep-r.u       E7513B35  CD170E15  131072
+      sweep-r.u-u     D6812645  63641C01  131072
+      sweep.src       67B11DDE  C8BA7682  131072
+      ------------------------------------------
+      Notes:
+      - CRC32-BE: CRC-32 for the big endian format (i.e., most 
+        non-Intel Unix systems)
+      - CRC32-LE: CRC-32 for the little endian format (Intel CPUs, etc)
+      - Size: file size, in bytes
+--
+<simao@ctd.comsat.com> - 31.Jan.2000
