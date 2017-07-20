@@ -30,29 +30,29 @@ Also, for the Arduino platform, there is an [Arduino freeRTOS Library](https://g
 available in the Arduino IDE Library manager, or by directly downloading the ZIP file and importing it into your Arduino IDE.
 
 # Features
-- freeRTOS 8.2.3 implemented for selected AVR ATmega devices
+- freeRTOS 9.0.0 implemented for selected AVR ATmega devices
 - Arduino Uno, Pro, Mini, Nano, & LilyPad with ATmega328p supported
 - Arduino Mega (Seeed ADK, Freetronics EtherMega) with ATmega2560 supported
 - Goldilocks (Analogue) & Pololu Orangutan SVP with ATmega1284p supported
 - Integrated Timer2 for real time system_time operation with 32.768kHz Crystal
-- [Multiple DAC Support](https://github.com/feilipu/avrfreertos/blob/master/freeRTOS82x/include/DAC.h): Goldilocks Analogue MCP4822 and the DAC8564 & WM8731.
+- [Multiple DAC Support](https://github.com/feilipu/avrfreertos/blob/master/freeRTOS9xx/include/DAC.h): Goldilocks Analogue MCP4822 and the DAC8564 & WM8731.
 - Master SPI Mode on ATmega1284p USART1 for MCP4822 DAC
-- [ChaN's SD Card FAT FS library](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_fatf) (Update March 9, 2015: v0.11)
-- [Standard C90 Library](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_time) from avr-libc upstream for standard and esoteric time calculations
-- [IP protocols](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_inet), DHCP, NTP, PING, HTTP web server for WIZNET W5x00
-- [W5500 Driver](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_iinchip), same BSD Socket API as W5100
-- [W5200 v1.3 Driver](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_iinchip), same BSD Socket API as W5100
-- [W5100 v1.6.1 Driver](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_iinchip) with BSD Socket API
+- [ChaN's SD Card FAT FS library](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_fatf) (Update July 4, 2017: v0.13p1)
+- [Standard C90 Library](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_time) from avr-libc upstream for standard and esoteric time calculations
+- [IP protocols](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_inet), DHCP, NTP, PING, HTTP web server for WIZNET W5x00
+- [W5500 Driver](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_iinchip), same BSD Socket API as W5100
+- [W5200 v1.3 Driver](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_iinchip), same BSD Socket API as W5100
+- [W5100 v1.6.1 Driver](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_iinchip) with BSD Socket API
 - [USB Host support through MAX3421E](https://github.com/feilipu/avrfreertos/tree/master/microbridge) for Seeed ADK (and Shields).
-- [EEFS (NASA Flash File System v2.0)](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_eefs) for SPI EEPROM, FRAM, SRAM
-- [uIP (working) and uIPv6 (untested)](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib-uIP) on Wiznet (IINChip) W5x00 MACRAW
+- [EEFS (NASA Flash File System v2.0)](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_eefs) for SPI EEPROM, FRAM, SRAM
+- [uIP (working) and uIPv6 (untested)](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib-uIP) on Wiznet (IINChip) W5x00 MACRAW
 - uIP support for BlackWidow WiFi (TESTING ONLY)
-- [Library for 2560 XRAM](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_ext_ram) using Rugged Circuits QuadRAM (512kB) & MegaRAM (128kB)
+- [Library for 2560 XRAM](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_ext_ram) using Rugged Circuits QuadRAM (512kB) & MegaRAM (128kB)
 - [XRAMFS (16x Arduino Clients sharing 512kByte Supervisor SDRAM) Supervisor](https://github.com/feilipu/avrfreertos/tree/master/ramfs_supervisor) and [Client](https://github.com/feilipu/avrfreertos/tree/master/ramfs_load_gen) for [ArduSat](http://feilipu.me/?s=ArduSat).
-- [Abstract Serial to support multiple USART (1284p, 2560)](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_io) with [fast ring buffers](https://github.com/feilipu/avrfreertos/blob/master/freeRTOS82x/include/ringBuffer.h)
-- [XBee API Mode](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_xbee) support.
-- [FTDI FT800 EVE](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_ft800) support for the Gameduino2 (1284p, 328p) & 4D Systems ADAM
-- [HD44780 for Freetronics LCD (and other) Shields](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS82x/lib_hd44780) (based on ChaN)
+- [Abstract Serial to support multiple USART (1284p, 2560)](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_io) with [fast ring buffers](https://github.com/feilipu/avrfreertos/blob/master/freeRTOS9xx/include/ringBuffer.h)
+- [XBee API Mode](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_xbee) support.
+- [FTDI FT800 EVE](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_ft800) support for the Gameduino2 (1284p, 328p) & 4D Systems ADAM
+- [HD44780 for Freetronics LCD (and other) Shields](https://github.com/feilipu/avrfreertos/tree/master/freeRTOS9xx/lib_hd44780) (based on ChaN)
 - [Nokia 6100 LCD](https://github.com/feilipu/avrfreertos/tree/master/LCD6100_Driver) support.
 - [stk500v2 (wiring) bootloader (with boot monitor) for Arduino Mega2560 & Goldilocks 1284p](https://github.com/feilipu/avrfreertos/tree/master/AVRstk500v2_bootloader).
 
