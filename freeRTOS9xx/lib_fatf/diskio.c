@@ -329,7 +329,7 @@ uint16_t send_cmd (		/* Returns R1/R2 resp (bit7==1:Send failed) */
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_initialize (
-	uint8_t drv		/* Physical drive number (default is 0) */
+	BYTE drv		/* Physical drive number (default is 0) */
 )
 {
 	uint8_t type, ocr[4];
@@ -450,7 +450,7 @@ DSTATUS disk_initialize (
 /*-----------------------------------------------------------------------*/
 
 DSTATUS disk_status (
-	uint8_t drv		/* Physical drive number (0) */
+	BYTE drv		/* Physical drive number (0) */
 )
 {
 	if (drv != 0)
@@ -473,10 +473,10 @@ DSTATUS disk_status (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_read (
-	uint8_t drv,			/* Physical drive number (0) */
-	uint8_t *buff,			/* Pointer to the data buffer to store read data */
-	uint32_t sector,		/* Start sector number (LBA) */
-	uint8_t count			/* Sector count (1..255) */
+	BYTE drv,			/* Physical drive number (0) */
+	BYTE *buff,			/* Pointer to the data buffer to store read data */
+	DWORD sector,		/* Start sector number (LBA) */
+	UINT count			/* Sector count (1..255) */
 )
 {
 	uint8_t rattempt = READ_ATTEMPTS;		/* Read attempts */
@@ -550,10 +550,10 @@ DRESULT disk_read (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_write (
-	uint8_t drv,			/* Physical drive number (0) */
-	uint8_t const *buff,	/* Pointer to the data to be written */
-	uint32_t sector,		/* Start sector number (LBA) */
-	uint8_t count			/* Sector count (1..255) */
+	BYTE drv,			/* Physical drive number (0) */
+	BYTE const *buff,	/* Pointer to the data to be written */
+	DWORD sector,		/* Start sector number (LBA) */
+	UINT count			/* Sector count (1..255) */
 
 )
 {
@@ -645,8 +645,8 @@ DRESULT disk_write (
 /*-----------------------------------------------------------------------*/
 
 DRESULT disk_ioctl (
-	uint8_t drv,		/* Physical drive number (0) */
-	uint8_t ctrl,	/* Control code */
+	BYTE drv,		/* Physical drive number (0) */
+	BYTE ctrl,	    /* Control code */
 	void *buff		/* Buffer to send/receive control data */
 )
 {

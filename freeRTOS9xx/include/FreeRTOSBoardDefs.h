@@ -127,7 +127,7 @@ extern "C" {
 	// System Tick  - Scheduler timer
 	// Prefer to use the Watchdog timer, but also Timer 0, 1, or 3 are ok.
 
-//	#define portUSE_WDTO			WDTO_15MS						// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
+//	#define portUSE_WDTO			WDTO_15MS	// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
 
 	/* Watchdog period options: 	WDTO_15MS
 									WDTO_30MS
@@ -138,13 +138,13 @@ extern "C" {
 
 	*/
 
-	#define portUSE_TIMER0                                          // portUSE_TIMER0 to use 8 bit Timer0 for xTaskIncrementTick
-//	#define portUSE_TIMER1											// portUSE_TIMER1 to use 16 bit Timer1 for xTaskIncrementTick
-//	#define portUSE_TIMER2                                          // portUSE_TIMER2 to use 8 bit Timer2 using 32,768Hz for xTaskIncrementTick
-//	#define portUSE_TIMER3											// portUSE_TIMER3 to use 16 bit Timer3 for xTaskIncrementTick
+//	#define portUSE_TIMER0                      // portUSE_TIMER0 to use 8 bit Timer0 for xTaskIncrementTick
+//	#define portUSE_TIMER1						// portUSE_TIMER1 to use 16 bit Timer1 for xTaskIncrementTick
+	#define portUSE_TIMER2                      // portUSE_TIMER2 to use 8 bit Timer2 using 32,768Hz for xTaskIncrementTick
+//	#define portUSE_TIMER3						// portUSE_TIMER3 to use 16 bit Timer3 for xTaskIncrementTick
 
 // Use Timer 2 for a Real Time Clock, if you have a 32kHz watch crystal attached.
-//	#define portUSE_TIMER2_RTC										// portUSE_TIMER2_RTC to use 8 bit RTC Timer2 for system_tick (not xTaskIncrementTick)
+//	#define portUSE_TIMER2_RTC					// portUSE_TIMER2_RTC to use 8 bit RTC Timer2 for system_tick (not xTaskIncrementTick)
 
 #if defined (portUSE_WDTO)
 //	xxx Watchdog Timer is 128kHz nominal, but 120 kHz at 5V DC and 25 degrees is actually more accurate, from data sheet.
@@ -166,20 +166,20 @@ extern "C" {
  * Select WIZCHIP.
  * You should select one, \b 5100, \b 5200 ,\b 5500 or etc. \n\n
  */
-	#define _WIZCHIP_                               5500    // 5100, 5200, 5500
+//	#define _WIZCHIP_                               5500    // 5100, 5200, 5500
 
 //	#define portHD44780_LCD                                 // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
-//	#define portSD_CARD                                     // define the use of the SD Card for Goldilocks 1284p
-//	#define portRTC_DEFINED					// RTC DS1307 / DS3231 implemented, therefore define.
-//	#define portANALOGUE					// Goldilocks Analogue Capabilities
-//	#define portANALOGSHIELD				// Digilent Analog Shield (only DAC implemented)
+	#define portSD_CARD                                     // define the use of the SD Card for Goldilocks 1284p
+//	#define portRTC_DEFINED					                // RTC DS1307 / DS3231 implemented, therefore define.
+//	#define portANALOGUE					                // Goldilocks Analogue Capabilities
+//	#define portANALOGSHIELD				                // Digilent Analog Shield (only DAC implemented)
 
 	#define	portSERIAL_BUFFER_RX	255                     // Define the size of the serial receive buffer.
 	#define	portSERIAL_BUFFER_TX	255                     // Define the size of the serial transmit buffer, only as long as the longest text.
-	#define portSERIAL_BUFFER	portSERIAL_BUFFER_TX    // just for compatibility with older programmes.
+	#define portSERIAL_BUFFER	portSERIAL_BUFFER_TX        // just for compatibility with older programmes.
 
-//      #define portUSE_TIMER1_PWM				// Define which Timer to use as the PWM Timer (not the tick timer).
-											// though it is better to use Pololu functions, as they support 8x multiplexed servos.
+//  #define portUSE_TIMER1_PWM				                // Define which Timer to use as the PWM Timer (not the tick timer).
+											                // though it is better to use Pololu functions, as they support 8x multiplexed servos.
 
 #elif defined(__AVR_ATmega32U2__) || defined(__AVR_ATmega16U2__) || defined(__AVR_ATmega8U2__)
 // Arduino Serial I/O MCU Compatible notation.
