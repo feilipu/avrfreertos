@@ -1,4 +1,4 @@
-#Description
+# Description
 
 AVR ATmega port of freeRTOS
 A port of freeRTOS which can be flexibly flexibly configured use almost any available Timer on AVR ATmega devices and will operate with almost any classic Arduino device from Arduino, SeeedStudio, Sparkfun, Freetronics or Pololu.
@@ -13,10 +13,10 @@ The first [Goldilocks 1284p story is here](http://feilipu.me/2013/03/08/goldiloc
 Ths idea was launched as a [Pozible campaign in 2013](http://www.pozible.com/goldilocks/).
 It was successfully funded and the [Goldilocks](http://freetronics.com/goldilocks/) was developed and supported by Freetronics. 
 
-This repo has been hosted on [Sourceforge avrfreertos](https://sourceforge.net/projects/avrfreertos/) since 2012, and has been [downloaded over 20,000 times](https://sourceforge.net/projects/avrfreertos/files/stats/timeline?dates=2011-09-22+to+2016-02-29).
+This repo has been hosted on [Sourceforge avrfreertos](https://sourceforge.net/projects/avrfreertos/) since 2011, and has been [downloaded over 25,000 times](https://sourceforge.net/projects/avrfreertos/files/stats/timeline?dates=2011-09-22+to+2017-11-30).
 Going forward Sourceforge will be updated less often and only with major releases.
 
-Please [follow @_feilipu](https://twitter.com/_feilipu) on Twitter.
+[Follow @_feilipu](https://twitter.com/_feilipu) on Twitter.
 
 # Getting Started
 
