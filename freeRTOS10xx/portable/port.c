@@ -162,9 +162,9 @@ static void prvSetupRTCInterrupt( void );
 /* 3-Byte PC Save */
 #define portSAVE_CONTEXT()                                                              \
         __asm__ __volatile__ (  "push   __tmp_reg__                             \n\t"   \
-                                "in		__tmp_reg__, __SREG__                   \n\t"   \
+                                "in     __tmp_reg__, __SREG__                   \n\t"   \
                                 "cli                                            \n\t"   \
-                                "push	__tmp_reg__                             \n\t"   \
+                                "push   __tmp_reg__                             \n\t"   \
                                 "in     __tmp_reg__, __RAMPZ__                  \n\t"   \
                                 "push   __tmp_reg__                             \n\t"   \
                                 "in     __tmp_reg__, __EIND__                   \n\t"   \
