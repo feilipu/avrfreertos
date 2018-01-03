@@ -50,7 +50,6 @@
 #define configCPU_CLOCK_HZ                  ( ( uint32_t ) F_CPU )			// This F_CPU variable set by the environment
 #define configMAX_PRIORITIES                4
 #define configMINIMAL_STACK_SIZE            ( ( UBaseType_t ) 85 )
-#define configIDLE_STACK_SIZE               configMINIMAL_STACK_SIZE
 #define configMAX_TASK_NAME_LEN             ( 8 )
 #define configUSE_TRACE_FACILITY            0
 #define configUSE_16_BIT_TICKS              1
@@ -77,6 +76,9 @@
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES               0
 #define configMAX_CO_ROUTINE_PRIORITIES     ( (UBaseType_t ) 2 )
+
+/* Set the stack depth type to be uint16_t. */
+#define configSTACK_DEPTH_TYPE              uint16_t
 
 /* Set the stack pointer type to be uint16_t, otherwise it defaults to unsigned long */
 #define portPOINTER_SIZE_TYPE               uint16_t

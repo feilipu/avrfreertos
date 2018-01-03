@@ -505,7 +505,7 @@ static void prvAddCurrentTaskToDelayedList( TickType_t xTicksToWait, const BaseT
  */
 #if ( ( configUSE_TRACE_FACILITY == 1 ) || ( INCLUDE_uxTaskGetStackHighWaterMark == 1 ) )
 
-	static uint16_t prvTaskCheckFreeStackSpace( const uint8_t * pucStackByte ) PRIVILEGED_FUNCTION;
+	static configSTACK_DEPTH_TYPE prvTaskCheckFreeStackSpace( const uint8_t * pucStackByte ) PRIVILEGED_FUNCTION;
 
 #endif
 
@@ -658,7 +658,7 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB ) PRIVILEGED_FUNCTION;
 
 			prvInitialiseNewTask(	pxTaskDefinition->pvTaskCode,
 									pxTaskDefinition->pcName,
-									( uint32_t ) pxTaskDefinition->usStackDepth,
+									pxTaskDefinition->usStackDepth,
 									pxTaskDefinition->pvParameters,
 									pxTaskDefinition->uxPriority,
 									pxCreatedTask, pxNewTCB,
@@ -706,7 +706,7 @@ static void prvAddNewTaskToReadyList( TCB_t *pxNewTCB ) PRIVILEGED_FUNCTION;
 
 				prvInitialiseNewTask(	pxTaskDefinition->pvTaskCode,
 										pxTaskDefinition->pcName,
-										( uint32_t ) pxTaskDefinition->usStackDepth,
+										pxTaskDefinition->usStackDepth,
 										pxTaskDefinition->pvParameters,
 										pxTaskDefinition->uxPriority,
 										pxCreatedTask, pxNewTCB,
@@ -1930,7 +1930,7 @@ BaseType_t xReturn;
 		/* The Idle task is being created using dynamically allocated RAM. */
 		xReturn = xTaskCreate(	prvIdleTask,
 								configIDLE_TASK_NAME,
-								configIDLE_STACK_SIZE,
+								configMINIMAL_STACK_SIZE,
 								( void * ) NULL,
 								( tskIDLE_PRIORITY | portPRIVILEGE_BIT ),
 								&xIdleTaskHandle ); /*lint !e961 MISRA exception, justified as it is not a redundant explicit cast to all supported compilers. */
@@ -3622,7 +3622,7 @@ static void prvCheckTasksWaitingTermination( void )
 
 #if ( ( configUSE_TRACE_FACILITY == 1 ) || ( INCLUDE_uxTaskGetStackHighWaterMark == 1 ) )
 
-	static uint16_t prvTaskCheckFreeStackSpace( const uint8_t * pucStackByte )
+	static configSTACK_DEPTH_TYPE prvTaskCheckFreeStackSpace( const uint8_t * pucStackByte )
 	{
 	uint32_t ulCount = 0U;
 
@@ -3634,13 +3634,15 @@ static void prvCheckTasksWaitingTermination( void )
 
 		ulCount /= ( uint32_t ) sizeof( StackType_t ); /*lint !e961 Casting is not redundant on smaller architectures. */
 
-		return ( uint16_t ) ulCount;
+		return ( configSTACK_DEPTH_TYPE ) ulCount;
 	}
 
 #endif /* ( ( configUSE_TRACE_FACILITY == 1 ) || ( INCLUDE_uxTaskGetStackHighWaterMark == 1 ) ) */
 /*-----------------------------------------------------------*/
 
 #if ( INCLUDE_uxTaskGetStackHighWaterMark == 1 )
+
+#if configENABLE_BACKWARD_COMPATIBILITY == 1
 
 	UBaseType_t uxTaskGetStackHighWaterMark( TaskHandle_t xTask )
 	{
@@ -3664,6 +3666,33 @@ static void prvCheckTasksWaitingTermination( void )
 
 		return uxReturn;
 	}
+
+#else
+
+	configSTACK_DEPTH_TYPE uxTaskGetStackHighWaterMark( TaskHandle_t xTask )
+	{
+	TCB_t *pxTCB;
+	uint8_t *pucEndOfStack;
+	configSTACK_DEPTH_TYPE uxReturn;
+
+		pxTCB = prvGetTCBFromHandle( xTask );
+
+		#if portSTACK_GROWTH < 0
+		{
+			pucEndOfStack = ( uint8_t * ) pxTCB->pxStack;
+		}
+		#else
+		{
+			pucEndOfStack = ( uint8_t * ) pxTCB->pxEndOfStack;
+		}
+		#endif
+
+		uxReturn = prvTaskCheckFreeStackSpace( pucEndOfStack );
+
+		return uxReturn;
+	}
+
+#endif /* configENABLE_BACKWARD_COMPATIBILITY */
 
 #endif /* INCLUDE_uxTaskGetStackHighWaterMark */
 /*-----------------------------------------------------------*/

@@ -82,10 +82,10 @@ extern "C" {
 								WDTO_500MS
 */
 
-	#define portUSE_TIMER0                                          // portUSE_TIMER0 to use 8 bit Timer0 for xTaskIncrementTick
+//	#define portUSE_TIMER0                                          // portUSE_TIMER0 to use 8 bit Timer0 for xTaskIncrementTick
 //	#define portUSE_TIMER1											// portUSE_TIMER1 to use 16 bit Timer1 for xTaskIncrementTick
 //	#define portUSE_TIMER2                                          // portUSE_TIMER2 to use 8 bit Timer2 using 32,768Hz for xTaskIncrementTick
-//	#define portUSE_TIMER3											// portUSE_TIMER3 to use 16 bit Timer3 for xTaskIncrementTick
+	#define portUSE_TIMER3											// portUSE_TIMER3 to use 16 bit Timer3 for xTaskIncrementTick
 
 // Use Timer 2 for a Real Time Clock, if you have a 32kHz watch crystal attached.
 //	#define portUSE_TIMER2_RTC										// portUSE_TIMER2_RTC to use 8 bit RTC Timer2 for system_tick (not xTaskIncrementTick)
@@ -132,7 +132,7 @@ extern "C" {
  * Select WIZCHIP.
  * You should select one, \b 5100, \b 5200 ,\b 5500 or etc.
  */
-//	#define _WIZCHIP_                      5500     // 5100, 5200, 5500
+	#define _WIZCHIP_                      5500     // 5100, 5200, 5500
 
 //	#define portHD44780_LCD                         // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
 	#define portSD_CARD                             // define the use of the SD Card for Arduino Mega2560 and Freetronics EtherMega
@@ -193,7 +193,7 @@ extern "C" {
  * Select WIZCHIP.
  * You should select one, \b 5100, \b 5200 ,\b 5500 or etc. \n\n
  */
-//	#define _WIZCHIP_                               5500    // 5100, 5200, 5500
+	#define _WIZCHIP_                               5500    // 5100, 5200, 5500
 
 //	#define portHD44780_LCD                                 // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
 	#define portSD_CARD                                     // define the use of the SD Card for Goldilocks 1284p
@@ -309,7 +309,7 @@ extern "C" {
  * Select WIZCHIP.
  * You should select one, \b 5100, \b 5200 ,\b 5500 or etc.
  */
-//	#define _WIZCHIP_                       5200    // 5100, 5200, 5500
+	#define _WIZCHIP_                       5200    // 5100, 5200, 5500
 
 //	#define portHD44780_LCD                         // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
 //	#define portRTC_DEFINED                         // RTC DS1307 / DS3231 implemented, therefore define.
