@@ -217,15 +217,14 @@ extern "C" {
 // System Tick timer
 // Prefer to use the Watchdog timer, but also Timer 0 or 3 are ok.
 
-#define portUSE_WDTO			WDTO_15MS							// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
+#define portUSE_WDTO		WDTO_15MS	// portUSE_WDTO to use the Watchdog Timer for xTaskIncrementTick
 
 /* Watchdog period options: 	WDTO_15MS
-								WDTO_30MS
-								WDTO_60MS
-								WDTO_120MS
-								WDTO_250MS
-								WDTO_500MS
-
+				WDTO_30MS
+				WDTO_60MS
+				WDTO_120MS
+				WDTO_250MS
+				WDTO_500MS
 */
 
 //	#define portUSE_TIMER0                                          // portUSE_TIMER0 to use 8 bit Timer0 for xTaskIncrementTick
@@ -234,7 +233,7 @@ extern "C" {
 
 #if defined (portUSE_WDTO)
 //	xxx Watchdog Timer is 128kHz nominal, but 120 kHz at 5V DC and 25 degrees is actually more accurate, from data sheet.
-#define configTICK_RATE_HZ 			( (TickType_t)( (uint32_t)128000 >> (portUSE_WDTO + 11) ) )  // 2^11 = 2048 WDT Scale-factor
+#define configTICK_RATE_HZ 		( (TickType_t)( (uint32_t)128000 >> (portUSE_WDTO + 11) ) )  // 2^11 = 2048 WDT Scale-factor
 
 
 #elif defined (portUSE_TIMER0) || defined (portUSE_TIMER1)
