@@ -118,7 +118,7 @@ void spiBegin(SPI_SLAVE_SELECT SS_pin)
     }
 }
 
-void spiEnd()
+void spiEnd(void)
 {
 	if( xSPISemaphore != NULL )
 		vQueueDelete( xSPISemaphore );		/* FreeRTOS semaphore */
@@ -148,12 +148,12 @@ void spiSetDataMode(SPI_MODE_t mode)
 }
 
 
-void spiAttachInterrupt()
+void spiAttachInterrupt(void)
 {
 	SPCR |= _BV(SPIE);
 }
 
-void spiDetachInterrupt()
+void spiDetachInterrupt(void)
 {
 	SPCR &= ~_BV(SPIE);
 }

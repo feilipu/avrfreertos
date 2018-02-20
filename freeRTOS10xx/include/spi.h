@@ -59,15 +59,15 @@ void spiSetClockDivider(SPI_CLOCK_DIV_t rate) __attribute__ ((flatten));
 void spiSetBitOrder(uint8_t bitOrder) __attribute__ ((flatten));
 void spiSetDataMode(SPI_MODE_t mode) __attribute__ ((flatten));
 
-void spiAttachInterrupt() __attribute__ ((flatten));
-void spiDetachInterrupt() __attribute__ ((flatten));
+void spiAttachInterrupt(void) __attribute__ ((flatten));
+void spiDetachInterrupt(void) __attribute__ ((flatten));
 
 uint8_t spiSelect (SPI_SLAVE_SELECT SS_pin) __attribute__ ((hot, flatten));
 void spiDeselect (SPI_SLAVE_SELECT SS_pin) __attribute__ ((hot, flatten));
 
 void spiBegin(SPI_SLAVE_SELECT SS_pin) __attribute__ ((flatten));
 
-void spiEnd() __attribute__ ((flatten));
+void spiEnd(void) __attribute__ ((flatten));
 
 /*
  * In testing with a Freetronics EtherMega driving an SD card
