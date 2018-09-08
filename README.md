@@ -13,7 +13,7 @@ The first [Goldilocks 1284p story is here](http://feilipu.me/2013/03/08/goldiloc
 Ths idea was launched as a [Pozible campaign in 2013](http://www.pozible.com/goldilocks/).
 It was successfully funded and the [Goldilocks](http://freetronics.com/goldilocks/) was developed and supported by Freetronics. 
 
-This repo has been hosted on [Sourceforge avrfreertos](https://sourceforge.net/projects/avrfreertos/) since 2011, and has been [downloaded over 25,000 times](https://sourceforge.net/projects/avrfreertos/files/stats/timeline?dates=2011-09-22+to+2017-11-30).
+This repo has been hosted on [Sourceforge avrfreertos](https://sourceforge.net/projects/avrfreertos/) since 2011, and has been [downloaded over 25,000 times](https://sourceforge.net/projects/avrfreertos/files/stats/timeline?dates=2011-09-22+to+2018-8-31).
 Going forward Sourceforge will be updated less often and only with major releases.
 
 [Follow @_feilipu](https://twitter.com/_feilipu) on Twitter.
@@ -30,7 +30,7 @@ Also, for the Arduino platform, there is an [Arduino freeRTOS Library](https://g
 available in the Arduino IDE Library manager, or by directly downloading the ZIP file and importing it into your Arduino IDE.
 
 # Features
-- freeRTOS 9.0.0 implemented for selected AVR ATmega devices
+- freeRTOS 10.1.1 implemented for selected AVR ATmega devices
 - Arduino Uno, Pro, Mini, Nano, & LilyPad with ATmega328p supported
 - Arduino Mega (Seeed ADK, Freetronics EtherMega) with ATmega2560 supported
 - Goldilocks (Analogue) & Pololu Orangutan SVP with ATmega1284p supported

@@ -1,6 +1,6 @@
 /*
- * FreeRTOS Kernel V10.0.0
- * Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.1.1
+ * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -10,8 +10,7 @@
  * subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software. If you wish to use our Amazon
- * FreeRTOS name, please do so in a fair use way that does not cause confusion.
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
@@ -35,10 +34,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "time.h" 		// Needed for system_tick();
+#include "time.h"           // Needed for system_tick();
 
 #if defined (portQUAD_RAM) || defined (portMEGA_RAM)
-#include "ext_ram.h"	// Needed for extRAMcheck();
+    #include "ext_ram.h"    // Needed for extRAMcheck();
 #endif
 
 /*-----------------------------------------------------------
@@ -46,67 +45,67 @@
  *----------------------------------------------------------*/
 
 /* Start tasks with interrupts enabled. */
-#define portFLAGS_INT_ENABLED				( (StackType_t) 0x80 )
+#define portFLAGS_INT_ENABLED                       ( (StackType_t) 0x80 )
 
 #if defined( portUSE_WDTO)
-	#warning "Watchdog Timer used for scheduler."
-	#define	portSCHEDULER_ISR		WDT_vect
+    #warning "Watchdog Timer used for scheduler."
+    #define portSCHEDULER_ISR                       WDT_vect
 
 #elif defined( portUSE_TIMER0 )
 /* Hardware constants for Timer0. */
-	#warning "Timer0 used for scheduler."
-	#define	portSCHEDULER_ISR			TIMER0_COMPA_vect
-	#define portCLEAR_COUNTER_ON_MATCH		( (uint8_t) _BV(WGM01) )
-	#define portPRESCALE_1024			( (uint8_t) (_BV(CS02)|_BV(CS00)) )
-	#define portCLOCK_PRESCALER			( (uint32_t) 1024 )
-	#define portCOMPARE_MATCH_A_INTERRUPT_ENABLE	( (uint8_t) _BV(OCIE0A) )
-	#define portOCRL				OCR0A
-	#define portTCCRa				TCCR0A
-	#define portTCCRb				TCCR0B
-	#define portTIMSK				TIMSK0
-	#define portTIFR				TIFR0
+    #warning "Timer0 used for scheduler."
+    #define portSCHEDULER_ISR                       TIMER0_COMPA_vect
+    #define portCLEAR_COUNTER_ON_MATCH              ( (uint8_t) _BV(WGM01) )
+    #define portPRESCALE_1024                       ( (uint8_t) (_BV(CS02)|_BV(CS00)) )
+    #define portCLOCK_PRESCALER                     ( (uint32_t) 1024 )
+    #define portCOMPARE_MATCH_A_INTERRUPT_ENABLE    ( (uint8_t) _BV(OCIE0A) )
+    #define portOCRL                                OCR0A
+    #define portTCCRa                               TCCR0A
+    #define portTCCRb                               TCCR0B
+    #define portTIMSK                               TIMSK0
+    #define portTIFR                                TIFR0
 
 #elif defined( portUSE_TIMER1 )
 /* Hardware constants for Timer1. */
-	#warning "Timer1 used for scheduler."
-	#define	portSCHEDULER_ISR			TIMER1_COMPA_vect
-	#define portCLEAR_COUNTER_ON_MATCH		( (uint8_t) _BV(WGM12) )
-	#define portPRESCALE_64				( (uint8_t) (_BV(CS11)|_BV(CS10)) )
-	#define portCLOCK_PRESCALER			( (uint32_t) 64 )
-	#define portCOMPARE_MATCH_A_INTERRUPT_ENABLE	( (uint8_t) _BV(OCIE1A) )
-	#define portOCRL				OCR1AL
-	#define portOCRH				OCR1AH
-	#define portTCCRa				TCCR1A
-	#define portTCCRb				TCCR1B
-	#define portTIMSK				TIMSK1
-	#define portTIFR				TIFR1
+    #warning "Timer1 used for scheduler."
+    #define portSCHEDULER_ISR                       TIMER1_COMPA_vect
+    #define portCLEAR_COUNTER_ON_MATCH              ( (uint8_t) _BV(WGM12) )
+    #define portPRESCALE_64                         ( (uint8_t) (_BV(CS11)|_BV(CS10)) )
+    #define portCLOCK_PRESCALER                     ( (uint32_t) 64 )
+    #define portCOMPARE_MATCH_A_INTERRUPT_ENABLE    ( (uint8_t) _BV(OCIE1A) )
+    #define portOCRL                                OCR1AL
+    #define portOCRH                                OCR1AH
+    #define portTCCRa                               TCCR1A
+    #define portTCCRb                               TCCR1B
+    #define portTIMSK                               TIMSK1
+    #define portTIFR                                TIFR1
 
 #elif defined( portUSE_TIMER2 )
 /* Hardware constants for Timer2. */
-	#warning "Timer2 used for scheduler."
-	#define	portSCHEDULER_ISR			TIMER2_COMPA_vect
-	#define portCOMPARE_MATCH_A_INTERRUPT_ENABLE	( (uint8_t) _BV(OCIE2A) )
-	#define portOCRL				OCR2A
-	#define portTCCRa				TCCR2A
-	#define portTCCRb				TCCR2B
-	#define portTIMSK				TIMSK2
-	#define portTCNT				TCNT2
-	#define portTIFR				TIFR2
+    #warning "Timer2 used for scheduler."
+    #define portSCHEDULER_ISR                       TIMER2_COMPA_vect
+    #define portCOMPARE_MATCH_A_INTERRUPT_ENABLE    ( (uint8_t) _BV(OCIE2A) )
+    #define portOCRL                                OCR2A
+    #define portTCCRa                               TCCR2A
+    #define portTCCRb                               TCCR2B
+    #define portTIMSK                               TIMSK2
+    #define portTCNT                                TCNT2
+    #define portTIFR                                TIFR2
 
 #elif defined( portUSE_TIMER3 )
 /* Hardware constants for Timer3. */
-	#warning "Timer3 used for scheduler."
-	#define	portSCHEDULER_ISR			TIMER3_COMPA_vect
-	#define portCLEAR_COUNTER_ON_MATCH		( (uint8_t) _BV(WGM32) )
-	#define portPRESCALE_64				( (uint8_t) (_BV(CS31)|_BV(CS30)) )
-	#define portCLOCK_PRESCALER			( (uint32_t) 64 )
-	#define portCOMPARE_MATCH_A_INTERRUPT_ENABLE	( (uint8_t) _BV(OCIE3A) )
-	#define portOCRL				OCR3AL
-	#define portOCRH				OCR3AH
-	#define portTCCRa				TCCR3A
-	#define portTCCRb				TCCR3B
-	#define portTIMSK				TIMSK3
-	#define portTIFR				TIFR3
+    #warning "Timer3 used for scheduler."
+    #define portSCHEDULER_ISR                       TIMER3_COMPA_vect
+    #define portCLEAR_COUNTER_ON_MATCH              ( (uint8_t) _BV(WGM32) )
+    #define portPRESCALE_64                         ( (uint8_t) (_BV(CS31)|_BV(CS30)) )
+    #define portCLOCK_PRESCALER                     ( (uint32_t) 64 )
+    #define portCOMPARE_MATCH_A_INTERRUPT_ENABLE    ( (uint8_t) _BV(OCIE3A) )
+    #define portOCRL                                OCR3AL
+    #define portOCRH                                OCR3AH
+    #define portTCCRa                               TCCR3A
+    #define portTCCRb                               TCCR3B
+    #define portTIMSK                               TIMSK3
+    #define portTIFR                                TIFR3
 
 #endif
 
@@ -126,7 +125,7 @@ volatile TickType_t ticksRemainingInSec;
 
 /*-----------------------------------------------------------*/
 /*
- * Perform hardware setup to enable ticks from timer compare match A.
+ * Perform hardware setup to enable ticks from configured timer.
  */
 static void prvSetupTimerInterrupt( void );
 
@@ -369,153 +368,151 @@ StackType_t *pxPortInitialiseStack( StackType_t *pxTopOfStack, TaskFunction_t px
 uint16_t usAddress;
 
 #if defined (portQUAD_RAM) || defined (portMEGA_RAM)
-	// This function just here to ensure the library is included.
-	// Can go anywhere, as it is just to ensure that the .init3 code is included
-	extRAMcheck(); // This function just returns XMCRA. SRE is set if extended RAM enabled.
+    // This function just here to ensure the library is included.
+    // Can go anywhere, as it is just to ensure that the .init3 code is included
+    extRAMcheck(); // This function just returns XMCRA. SRE is set if extended RAM enabled.
 #warning "Ext RAM Enabled."
 #endif
 
-	/* Place a few bytes of known values on the bottom of the stack.
-	This is just useful for debugging. */
+    /* Place a few bytes of known values on the bottom of the stack.
+    This is just useful for debugging. */
 
-	*pxTopOfStack = 0x11;
-	pxTopOfStack--;
-	*pxTopOfStack = 0x22;
-	pxTopOfStack--;
-	*pxTopOfStack = 0x33;
-	pxTopOfStack--;
+    *pxTopOfStack = 0x11;
+    pxTopOfStack--;
+    *pxTopOfStack = 0x22;
+    pxTopOfStack--;
+    *pxTopOfStack = 0x33;
+    pxTopOfStack--;
 
-	/* Simulate how the stack would look after a call to vPortYield() generated by
-	the compiler. */
+    /* Simulate how the stack would look after a call to vPortYield() generated by
+    the compiler. */
 
-	/* The start of the task code will be popped off the stack last, so place
-	it on first. */
+    /* The start of the task code will be popped off the stack last, so place
+    it on first. */
 
 #if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)
-	/* The AVR ATmega2560/ATmega2561 have 256KBytes of program memory and a 17-bit
-	 * program counter.  When a code address is stored on the stack, it takes 3 bytes
-	 * instead of 2 for the other ATmega* chips.
-	 *
-	 * Store 0 as the top byte since we force all task routines to the bottom 128K
-	 * of flash. We do this by using the .lowtext label in the linker script.
-	 *
-	 * In order to do this properly, we would need to get a full 3-byte pointer to
-	 * pxCode.  That requires a change to GCC.  Not likely to happen any time soon.
-	 */
-	usAddress = ( uint16_t ) pxCode;
-	*pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
-	pxTopOfStack--;
+    /* The AVR ATmega2560/ATmega2561 have 256KBytes of program memory and a 17-bit
+     * program counter.  When a code address is stored on the stack, it takes 3 bytes
+     * instead of 2 for the other ATmega* chips.
+     *
+     * Store 0 as the top byte since we force all task routines to the bottom 128K
+     * of flash. We do this by using the .lowtext label in the linker script.
+     *
+     * In order to do this properly, we would need to get a full 3-byte pointer to
+     * pxCode.  That requires a change to GCC.  Not likely to happen any time soon.
+     */
+    usAddress = ( uint16_t ) pxCode;
+    *pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
+    pxTopOfStack--;
 
-	usAddress >>= 8;
-	*pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
-	pxTopOfStack--;
+    usAddress >>= 8;
+    *pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
+    pxTopOfStack--;
 
-	*pxTopOfStack = 0;
-	pxTopOfStack--;
+    *pxTopOfStack = 0;
+    pxTopOfStack--;
 #else
-	usAddress = ( uint16_t ) pxCode;
-	*pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
-	pxTopOfStack--;
+    usAddress = ( uint16_t ) pxCode;
+    *pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
+    pxTopOfStack--;
 
-	usAddress >>= 8;
-	*pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
-	pxTopOfStack--;
+    usAddress >>= 8;
+    *pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
+    pxTopOfStack--;
 #endif
 
-	/* Next simulate the stack as if after a call to portSAVE_CONTEXT().
-	portSAVE_CONTEXT places the flags on the stack immediately after r0
-	to ensure the interrupts get disabled as soon as possible, and so ensuring
-	the stack use is minimal should a context switch interrupt occur. */
-	*pxTopOfStack = ( StackType_t ) 0x00;	/* R0 */
-	pxTopOfStack--;
-	*pxTopOfStack = portFLAGS_INT_ENABLED;
-	pxTopOfStack--;
+    /* Next simulate the stack as if after a call to portSAVE_CONTEXT().
+    portSAVE_CONTEXT places the flags on the stack immediately after r0
+    to ensure the interrupts get disabled as soon as possible, and so ensuring
+    the stack use is minimal should a context switch interrupt occur. */
+    *pxTopOfStack = ( StackType_t ) 0x00;    /* R0 */
+    pxTopOfStack--;
+    *pxTopOfStack = portFLAGS_INT_ENABLED;
+    pxTopOfStack--;
 
 #if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)
 
-	/* If we have an ATmega256x, we are also saving the RAMPZ and EIND registers.
-	 * We should default those to 0.
-	 */
-	*pxTopOfStack = ( StackType_t ) 0x00;	/* EIND */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x00;	/* RAMPZ */
-	pxTopOfStack--;
+    /* If we have an ATmega256x, we are also saving the RAMPZ and EIND registers.
+     * We should default those to 0.
+     */
+    *pxTopOfStack = ( StackType_t ) 0x00;    /* EIND */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x00;    /* RAMPZ */
+    pxTopOfStack--;
 
 #endif
 
-	/* Now the remaining registers.   The compiler expects R1 to be 0. */
-	*pxTopOfStack = ( StackType_t ) 0x00;	/* R1 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x02;	/* R2 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x03;	/* R3 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x04;	/* R4 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x05;	/* R5 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x06;	/* R6 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x07;	/* R7 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x08;	/* R8 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x09;	/* R9 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x10;	/* R10 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x11;	/* R11 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x12;	/* R12 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x13;	/* R13 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x14;	/* R14 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x15;	/* R15 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x16;	/* R16 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x17;	/* R17 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x18;	/* R18 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x19;	/* R19 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x20;	/* R20 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x21;	/* R21 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x22;	/* R22 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x23;	/* R23 */
-	pxTopOfStack--;
+    /* Now the remaining registers.   The compiler expects R1 to be 0. */
+    *pxTopOfStack = ( StackType_t ) 0x00;    /* R1 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x02;    /* R2 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x03;    /* R3 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x04;    /* R4 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x05;    /* R5 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x06;    /* R6 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x07;    /* R7 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x08;    /* R8 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x09;    /* R9 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x10;    /* R10 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x11;    /* R11 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x12;    /* R12 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x13;    /* R13 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x14;    /* R14 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x15;    /* R15 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x16;    /* R16 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x17;    /* R17 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x18;    /* R18 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x19;    /* R19 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x20;    /* R20 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x21;    /* R21 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x22;    /* R22 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x23;    /* R23 */
+    pxTopOfStack--;
 
-	/* Place the parameter on the stack in the expected location. */
-	usAddress = ( uint16_t ) pvParameters;
-	*pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
-	pxTopOfStack--;
+    /* Place the parameter on the stack in the expected location. */
+    usAddress = ( uint16_t ) pvParameters;
+    *pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
+    pxTopOfStack--;
 
-	usAddress >>= 8;
-	*pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
-	pxTopOfStack--;
+    usAddress >>= 8;
+    *pxTopOfStack = ( StackType_t ) ( usAddress & ( uint16_t ) 0x00ff );
+    pxTopOfStack--;
 
-	*pxTopOfStack = ( StackType_t ) 0x26;	/* R26 X */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x27;	/* R27 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x28;	/* R28 Y */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x29;	/* R29 */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x30;	/* R30 Z */
-	pxTopOfStack--;
-	*pxTopOfStack = ( StackType_t ) 0x031;	/* R31 */
-	pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x26;    /* R26 X */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x27;    /* R27 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x28;    /* R28 Y */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x29;    /* R29 */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x30;    /* R30 Z */
+    pxTopOfStack--;
+    *pxTopOfStack = ( StackType_t ) 0x031;   /* R31 */
+    pxTopOfStack--;
 
-	/*lint +e950 +e611 +e923 */
-
-	return pxTopOfStack;
+    return pxTopOfStack;
 }
 /*-----------------------------------------------------------*/
 
@@ -523,50 +520,50 @@ BaseType_t xPortStartScheduler( void )
 {
 
 #if defined(DEBUG_PING)
-		DDRD |= _BV(DDD7);		// set the debugging ping
-		PORTD &= ~_BV(PORTD7);
+    DDRD |= _BV(DDD7);        // set the debugging ping
+    PORTD &= ~_BV(PORTD7);
 #endif
 
 #if defined( portUSE_TIMER2_RTC ) && !defined( portUSE_TIMER2 )
-	/* Setup the timer hardware to generate the RTC sys_tick(), at 1 sec intervals. */
-	prvSetupRTCInterrupt();
+    /* Setup the timer hardware to generate the RTC sys_tick(), at 1 sec intervals. */
+    prvSetupRTCInterrupt();
 #endif
 
-	/* Setup the relevant timer hardware to generate the tick. */
-	prvSetupTimerInterrupt();
+    /* Setup the relevant timer hardware to generate the tick. */
+    prvSetupTimerInterrupt();
 
-	/* Restore the context of the first task that is going to run. */
-	portRESTORE_CONTEXT();
+    /* Restore the context of the first task that is going to run. */
+    portRESTORE_CONTEXT();
 
-	/* Simulate a function call end as generated by the compiler.  We will now
-	jump to the start of the task the context of which we have just restored. */
-	__asm__ __volatile__ ( "ret" );
+    /* Simulate a function call end as generated by the compiler.  We will now
+    jump to the start of the task the context of which we have just restored. */
+    __asm__ __volatile__ ( "ret" );
 
-	/* Should not get here. */
-	return pdTRUE;
+    /* Should not get here. */
+    return pdTRUE;
 }
 /*-----------------------------------------------------------*/
 
 void vPortEndScheduler( void )
 {
-	/* It is unlikely that the AVR port will get stopped.  If required simply
-	disable the tick interrupt here. */
+    /* It is unlikely that the AVR port will get stopped.  If required simply
+    disable the tick interrupt here. */
 
 #if defined (portUSE_WDTO)
-        wdt_disable();											// disable Watchdog Timer
+    wdt_disable();                                          // disable Watchdog Timer
 
 #elif defined( portUSE_TIMER0 )
-        portTIMSK &= ~( _BV(OCIE0B)|_BV(OCIE0A)|_BV(TOIE0) );	// disable all Timer0 interrupts
+    portTIMSK &= ~( _BV(OCIE0B)|_BV(OCIE0A)|_BV(TOIE0) );   // disable all Timer0 interrupts
 
 #elif defined( portUSE_TIMER1 )
-        portTIMSK &= ~( _BV(OCIE1B)|_BV(OCIE1A)|_BV(TOIE1) );	// disable all Timer1 interrupts
+    portTIMSK &= ~( _BV(OCIE1B)|_BV(OCIE1A)|_BV(TOIE1) );   // disable all Timer1 interrupts
 
 #elif defined( portUSE_TIMER2 )
-        portTIMSK &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );	// disable all Timer2 interrupts
-        ASSR = 0x00;              								// set Timer/Counter2 to be off
+    portTIMSK &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );   // disable all Timer2 interrupts
+    ASSR = 0x00;                                            // set Timer/Counter2 to be off
 
 #elif defined( portUSE_TIMER3 )
-        portTIMSK &= ~( _BV(OCIE3B)|_BV(OCIE3A)|_BV(TOIE3) );	// disable all Timer3 interrupts
+    portTIMSK &= ~( _BV(OCIE3B)|_BV(OCIE3A)|_BV(TOIE3) );   // disable all Timer3 interrupts
 
 #endif
 }
@@ -579,11 +576,11 @@ void vPortEndScheduler( void )
 void vPortYield( void ) __attribute__ ( ( hot, flatten, naked ) );
 void vPortYield( void )
 {
-	portSAVE_CONTEXT();
-	vTaskSwitchContext();
-	portRESTORE_CONTEXT();
+    portSAVE_CONTEXT();
+    vTaskSwitchContext();
+    portRESTORE_CONTEXT();
 
-	__asm__ __volatile__ ( "ret" );
+    __asm__ __volatile__ ( "ret" );
 }
 /*-----------------------------------------------------------*/
 
@@ -596,37 +593,37 @@ void vPortYield( void )
 void vPortYieldFromTick( void ) __attribute__ ( ( hot, flatten, naked ) );
 void vPortYieldFromTick( void )
 {
-	portSAVE_CONTEXT();
+    portSAVE_CONTEXT();
 
-	sleep_reset();		//	 reset the sleep_mode() faster than sleep_disable();
+    sleep_reset();        //     reset the sleep_mode() faster than sleep_disable();
 
 #if defined(DEBUG_PING)
-	// start mark - check for start of interrupt - for debugging only
-	PORTD |=  _BV(PORTD7);				// Ping IO line.
+    // start mark - check for start of interrupt - for debugging only
+    PORTD |=  _BV(PORTD7);                // Ping IO line.
 #endif
 
 #if !defined(portUSE_TIMER2_RTC)
-	if (--ticksRemainingInSec == 0)
-	{
-		system_tick();
-		ticksRemainingInSec = portTickRateHz;
-	}
+    if (--ticksRemainingInSec == 0)
+    {
+        system_tick();
+        ticksRemainingInSec = portTickRateHz;
+    }
 #endif
 
-	if( xTaskIncrementTick() != pdFALSE )
-	{
-		vTaskSwitchContext();
+    if( xTaskIncrementTick() != pdFALSE )
+    {
+        vTaskSwitchContext();
 
-	}
+    }
 
 #if defined(DEBUG_PING)
-	// end mark - check for end of interrupt - for debugging only
-	PORTD &= ~_BV(PORTD7);
+    // end mark - check for end of interrupt - for debugging only
+    PORTD &= ~_BV(PORTD7);
 #endif
 
-	portRESTORE_CONTEXT();
+    portRESTORE_CONTEXT();
 
-	__asm__ __volatile__ ( "ret" );
+    __asm__ __volatile__ ( "ret" );
 }
 /*-----------------------------------------------------------*/
 
@@ -635,16 +632,16 @@ void vPortYieldFromTick( void )
 //initialize watchdog
 void prvSetupTimerInterrupt( void )
 {
-	//reset watchdog
-	wdt_reset();
+    //reset watchdog
+    wdt_reset();
 
- 	/* actual port tick rate in Hz, calculated */
-	portTickRateHz = configTICK_RATE_HZ;
-	/* initialise first second of ticks */
-	ticksRemainingInSec = portTickRateHz;
+    /* actual port tick rate in Hz, calculated */
+    portTickRateHz = configTICK_RATE_HZ;
+    /* initialise first second of ticks */
+    ticksRemainingInSec = portTickRateHz;
 
-	//set up WDT Interrupt (rather than the WDT Reset).
-	wdt_interrupt_enable( portUSE_WDTO );
+    //set up WDT Interrupt (rather than the WDT Reset).
+    wdt_interrupt_enable( portUSE_WDTO );
 }
 
 #elif defined (portUSE_TIMER0) || defined (portUSE_TIMER1) || defined (portUSE_TIMER3)
@@ -660,7 +657,7 @@ uint8_t ucHighByte;
 uint8_t ucLowByte;
 
     /* Using 8bit Timer0 or 16bit Timer1 or Timer3 to generate the tick. Correct fuses must be
-	selected for the configCPU_CLOCK_HZ clock.*/
+    selected for the configCPU_CLOCK_HZ clock.*/
 
     // ulCompareMatch 40,000 = 20,000,000 / 500; 20MHz
     // ulCompareMatch 110,592 = 22,118,400 / 200; 22.1184 MHz
@@ -671,13 +668,13 @@ uint8_t ucLowByte;
     //ulCompareMatch = 108 /= portCLOCK_PRESCALER; 22.1184 MHz with 1024 prescale
     ulCompareMatch /= portCLOCK_PRESCALER;
 
- 	/* actual port tick rate in Hz, calculated */
-	portTickRateHz = (TickType_t) ((uint32_t) configCPU_CLOCK_HZ / ( portCLOCK_PRESCALER * ulCompareMatch ));
-	/* initialise first second of ticks */
-	ticksRemainingInSec = portTickRateHz;
+     /* actual port tick rate in Hz, calculated */
+    portTickRateHz = (TickType_t) ((uint32_t) configCPU_CLOCK_HZ / ( portCLOCK_PRESCALER * ulCompareMatch ));
+    /* initialise first second of ticks */
+    ticksRemainingInSec = portTickRateHz;
 
     /* Adjust for correct value. */
-	ulCompareMatch -= ( uint32_t ) 1;
+    ulCompareMatch -= ( uint32_t ) 1;
 
     /* Setup compare match value for compare match A.  Interrupts are disabled
     before this is called so we need not worry here. */
@@ -701,14 +698,14 @@ uint8_t ucLowByte;
    portTCCRb = portPRESCALE_1024;
 
 #elif defined( portUSE_TIMER1 )
-	/* Setup clock source and compare match behaviour. Assuming 328p (with Timer1) */
-	ucLowByte = portCLEAR_COUNTER_ON_MATCH | portPRESCALE_64;
-	portTCCRb = ucLowByte;
+    /* Setup clock source and compare match behaviour. Assuming 328p (with Timer1) */
+    ucLowByte = portCLEAR_COUNTER_ON_MATCH | portPRESCALE_64;
+    portTCCRb = ucLowByte;
 
 #elif defined( portUSE_TIMER3 )
-	/* Setup clock source and compare match behaviour. Assuming  640 / 1280 /1281 / 1284p / 2560 / 2561 (with Timer3) */
-	ucLowByte = portCLEAR_COUNTER_ON_MATCH | portPRESCALE_64;
-	portTCCRb = ucLowByte;
+    /* Setup clock source and compare match behaviour. Assuming  640 / 1280 /1281 / 1284p / 2560 / 2561 (with Timer3) */
+    ucLowByte = portCLEAR_COUNTER_ON_MATCH | portPRESCALE_64;
+    portTCCRb = ucLowByte;
 #endif
 
     /* Enable the interrupt - this is okay as interrupt are currently globally disabled. */
@@ -725,60 +722,60 @@ uint8_t ucLowByte;
 
 static void prvSetupTimerInterrupt( void )
 {
-	uint16_t usCompareMatch;
+    uint16_t usCompareMatch;
 
-	/* Using 8bit Timer2 to generate the tick.  A 32.768 KHz crystal
-	 * must be attached to the appropriate pins.  We then adjust the number
-	 * to a power of two so we can get EXACT seconds for the Real Time clock.
-	 */
+    /* Using 8bit Timer2 to generate the tick.  A 32.768 KHz crystal
+     * must be attached to the appropriate pins.  We then adjust the number
+     * to a power of two so we can get EXACT seconds for the Real Time clock.
+     */
 
-	usCompareMatch = (uint16_t) ((uint32_t) 32768) / configTICK_RATE_HZ;
+    usCompareMatch = (uint16_t) ((uint32_t) 32768) / configTICK_RATE_HZ;
 
-	if ( usCompareMatch > 192 )
-	{
-		usCompareMatch = 256;
-	}
-	else
-	{
-		for (uint8_t i = 7; i >= 1; --i)
-		{
-			if ( usCompareMatch & ((uint16_t)1 << i) )
-			{
-				/* found the power - now let's see if we round up or down */
-				if ( usCompareMatch & ((uint16_t)1 << (i-1)) )
-				{
-					usCompareMatch = ((uint16_t)1 << (i+1));
-				}
-				else
-				{
-					usCompareMatch = ((uint16_t)1 << i);
-				}
-				break;
-			}
-		}
-	}
+    if ( usCompareMatch > 192 )
+    {
+        usCompareMatch = 256;
+    }
+    else
+    {
+        for (uint8_t i = 7; i >= 1; --i)
+        {
+            if ( usCompareMatch & ((uint16_t)1 << i) )
+            {
+                /* found the power - now let's see if we round up or down */
+                if ( usCompareMatch & ((uint16_t)1 << (i-1)) )
+                {
+                    usCompareMatch = ((uint16_t)1 << (i+1));
+                }
+                else
+                {
+                    usCompareMatch = ((uint16_t)1 << i);
+                }
+                break;
+            }
+        }
+    }
 
-	/* actual port tick rate in Hz, calculated */
-	portTickRateHz = (TickType_t) ((uint32_t) 32768 / usCompareMatch );
-	/* initialise first second of ticks */
-	ticksRemainingInSec = portTickRateHz;
+    /* actual port tick rate in Hz, calculated */
+    portTickRateHz = (TickType_t) ((uint32_t) 32768 / usCompareMatch );
+    /* initialise first second of ticks */
+    ticksRemainingInSec = portTickRateHz;
 
-	/* Adjust for correct value. */
-	usCompareMatch -= ( uint16_t ) 1;
+    /* Adjust for correct value. */
+    usCompareMatch -= ( uint16_t ) 1;
 
-	portTIMSK &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );	// disable all Timer2 interrupts
-	portTIFR |=  _BV(OCF2B)|_BV(OCF2A)|_BV(TOV2);			// clear all pending interrupts
-    ASSR = _BV(AS2);              							// set Timer/Counter2 to be asynchronous from the CPU clock
-                                  	  	  	  	  	  		// with a second external clock (32,768kHz) driving it.
-    portTCNT  = 0x00;				  						// zero out the counter
-    portTCCRa = _BV(WGM21);									// mode CTC (clear on counter match)
-	portTCCRb = _BV(CS20);									// divide timer clock by 1 (No prescaling)
-	portOCRL  = usCompareMatch;								// set the counter
+    portTIMSK &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );   // disable all Timer2 interrupts
+    portTIFR |=  _BV(OCF2B)|_BV(OCF2A)|_BV(TOV2);           // clear all pending interrupts
+    ASSR = _BV(AS2);                                        // set Timer/Counter2 to be asynchronous from the CPU clock
+                                                            // with a second external clock (32,768kHz) driving it.
+    portTCNT  = 0x00;                                       // zero out the counter
+    portTCCRa = _BV(WGM21);                                 // mode CTC (clear on counter match)
+    portTCCRb = _BV(CS20);                                  // divide timer clock by 1 (No prescaling)
+    portOCRL  = usCompareMatch;                             // set the counter
 
     while( ASSR & (_BV(TCN2UB)|_BV(OCR2AUB)|_BV(TCR2AUB))); // Wait until Timer2 update complete
 
     /* Enable the interrupt - this is okay as interrupts are currently globally disabled. */
-    portTIMSK |= portCOMPARE_MATCH_A_INTERRUPT_ENABLE;		// interrupt on Timer2 compare match
+    portTIMSK |= portCOMPARE_MATCH_A_INTERRUPT_ENABLE;      // interrupt on Timer2 compare match
 
 }
 #endif
@@ -788,33 +785,33 @@ static void prvSetupTimerInterrupt( void )
 /*
  * Setup Crystal-controlled timer2 compare match A to generate a tick interrupt.
  */
-	#warning "Timer2 used for RTC. This is a 1 second clock."
+    #warning "Timer2 used for RTC. This is a 1 second clock."
 
 static void prvSetupRTCInterrupt( void )
 {
 
-	/* Using 8bit Timer2 to generate the tick.
-	 * A 32.768 KHz crystal must be attached to the appropriate pins.
-	 * We then adjust the scale factor and counter to roll over at the top
-	 * so we can get EXACT seconds for the Real Time clock.
-	 */
+    /* Using 8bit Timer2 to generate the tick.
+     * A 32.768 KHz crystal must be attached to the appropriate pins.
+     * We then adjust the scale factor and counter to roll over at the top
+     * so we can get EXACT seconds for the Real Time clock.
+     */
 
-	TIMSK2 &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );		// disable all Timer2 interrupts
-	TIFR2 |=  _BV(OCF2B)|_BV(OCF2A)|_BV(TOV2);				// clear all pending interrupts
-    ASSR = _BV(AS2);              							// set Timer/Counter2 to be asynchronous from the CPU clock
-                                  	  	  	  	  	  		// with a second external clock (32,768kHz) driving it.
-    TCNT2  = 0x00;				  							// zero out the counter
-    TCCR2A = 0x00;											// Normal mode
-    TCCR2B = _BV(CS22) | _BV(CS20);							// divide timer clock by 128 so counter will roll over at MAX
+    TIMSK2 &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );      // disable all Timer2 interrupts
+    TIFR2 |=  _BV(OCF2B)|_BV(OCF2A)|_BV(TOV2);              // clear all pending interrupts
+    ASSR = _BV(AS2);                                        // set Timer/Counter2 to be asynchronous from the CPU clock
+                                                            // with a second external clock (32,768kHz) driving it.
+    TCNT2  = 0x00;                                          // zero out the counter
+    TCCR2A = 0x00;                                          // Normal mode
+    TCCR2B = _BV(CS22) | _BV(CS20);                         // divide timer clock by 128 so counter will roll over at MAX
 
     while( ASSR & (_BV(TCN2UB)|_BV(OCR2AUB)|_BV(TCR2AUB))); // Wait until Timer2 update complete
 
     /* Enable the interrupt - this is okay as interrupts are currently globally disabled. */
-    TIMSK2 |= _BV(TOIE2);									// When the TOIE2 bit is written to one, the interrupt is enabled
+    TIMSK2 |= _BV(TOIE2);                                   // When the TOIE2 bit is written to one, the interrupt is enabled
 }
 
 #elif defined(portUSE_TIMER2_RTC) && defined(portUSE_TIMER2)
-	#warning "Trying to configure Timer 2 for both sys_tick() and xTaskIncrementTick()."
+    #warning "Trying to configure Timer 2 for both sys_tick() and xTaskIncrementTick()."
 
 #endif
 
@@ -823,53 +820,60 @@ static void prvSetupRTCInterrupt( void )
 
 #if configUSE_PREEMPTION == 1
 
-	/*
-	 * Tick ISR for preemptive scheduler.  We can use a naked attribute as
-	 * the context is saved at the start of vPortYieldFromTick().  The tick
-	 * count is incremented after the context is saved.
-	 */
-	ISR(portSCHEDULER_ISR, ISR_NAKED) __attribute__ ((hot, flatten));
-	ISR(portSCHEDULER_ISR)
-	{
-		vPortYieldFromTick();
-		__asm__ __volatile__ ( "reti" );
-	}
+    /*
+     * Tick ISR for preemptive scheduler.  We can use a naked attribute as
+     * the context is saved at the start of vPortYieldFromTick().  The tick
+     * count is incremented after the context is saved.
+	 *
+	 * use ISR_NOBLOCK where there is an important timer running, that should preempt the scheduler.
+	 *
+     */
+    ISR(portSCHEDULER_ISR, ISR_NAKED) __attribute__ ((hot, flatten));
+//  ISR(portSCHEDULER_ISR, ISR_NAKED ISR_NOBLOCK) __attribute__ ((hot, flatten));
+    ISR(portSCHEDULER_ISR)
+    {
+        vPortYieldFromTick();
+        __asm__ __volatile__ ( "reti" );
+    }
 
 #else
-	/*
-	 * Tick ISR for the cooperative scheduler.  All this does is increment the
-	 * tick count.  We don't need to switch context, this can only be done by
-	 * manual calls to taskYIELD();
-	 */
-	ISR(portSCHEDULER_ISR) __attribute__ ((hot, flatten));
-	ISR(portSCHEDULER_ISR)
-	{
+    /*
+     * Tick ISR for the cooperative scheduler.  All this does is increment the
+     * tick count.  We don't need to switch context, this can only be done by
+     * manual calls to taskYIELD();
+	 *
+	 * use ISR_NOBLOCK where there is an important timer running, that should preempt the scheduler.
+     */
+//  ISR(portSCHEDULER_ISR) __attribute__ ((hot, flatten));
+    ISR(portSCHEDULER_ISR, ISR_NOBLOCK) __attribute__ ((hot, flatten));
+    ISR(portSCHEDULER_ISR)
+    {
 #if !defined(portUSE_TIMER2_RTC)
-		if (--ticksRemainingInSec == 0)
-		{
-			system_tick();
-			ticksRemainingInSec = portTickRateHz;
-		}
+        if (--ticksRemainingInSec == 0)
+        {
+            system_tick();
+            ticksRemainingInSec = portTickRateHz;
+        }
 #endif
-		xTaskIncrementTick();
-	}
+        xTaskIncrementTick();
+    }
 
 #endif // configUSE_PREEMPTION
 
 
 
 #if defined (portUSE_TIMER2_RTC) && !defined(portUSE_TIMER2)
-	/*
-	 * Tick ISR for the RTC.  All this does is increment the RTC tick count, once per second.
-	 * Use ISR_NOBLOCK where there is an important timer running, that should preempt the RTC.
-	 * As long as it completes within one second, then there is no issue.
-	 */
-	//ISR(TIMER2_OVF_vect, ISR_NAKED ISR_NOBLOCK ) __attribute__ ((hot, flatten));
-	ISR(TIMER2_OVF_vect, ISR_NAKED ) __attribute__ ((hot, flatten));
-	ISR(TIMER2_OVF_vect)
-	{
-		system_tick();
-		reti();
-	}
+    /*
+     * Tick ISR for the RTC.  All this does is increment the RTC tick count, once per second.
+     * Use ISR_NOBLOCK where there is an important timer running, that should preempt the RTC.
+     * As long as it completes within one second, then there is no issue.	
+     */
+//  ISR(TIMER2_OVF_vect, ISR_NAKED ) __attribute__ ((hot, flatten));
+    ISR(TIMER2_OVF_vect, ISR_NAKED ISR_NOBLOCK ) __attribute__ ((hot, flatten));
+    ISR(TIMER2_OVF_vect)
+    {
+        system_tick();
+        reti();
+    }
 
 #endif

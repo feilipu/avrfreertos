@@ -1,6 +1,6 @@
 /*
- * FreeRTOS Kernel V10.0.0
- * Copyright (C) 2017 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.1.1
+ * Copyright (C) 2018 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -10,8 +10,7 @@
  * subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software. If you wish to use our Amazon
- * FreeRTOS name, please do so in a fair use way that does not cause confusion.
+ * copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
@@ -24,13 +23,6 @@
  * http://aws.amazon.com/freertos
  *
  * 1 tab == 4 spaces!
- */
-
-/*
-Changes from V1.2.3
-
-    + portCPU_CLOSK_HZ definition changed to 8MHz base 10, previously it
-      base 16.
 */
 
 #ifndef PORTMACRO_H
