@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 Phillip Stevens  All Rights Reserved.
+ * Copyright (C) 2019 Phillip Stevens  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -26,7 +26,6 @@
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/pgmspace.h>
 #include <avr/sleep.h>
 
 #include <util/delay.h>
@@ -235,7 +234,8 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask __attribute__((unused)), 
 
 #else
 
-void vApplicationStackOverflowHook( TaskHandle_t xTask __attribute__((unused)), portCHAR *pcTaskName __attribute__((unused)) )
+void vApplicationStackOverflowHook( TaskHandle_t xTask,
+									portCHAR *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:
