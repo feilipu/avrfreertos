@@ -273,8 +273,8 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 
     /* Force the UART control register to be the way we want, just in case */
 
-    UCSR0C = ( _BV( UCSZ01 ) | _BV( UCSZ00 ) );        // 8 data bits
-    UCSR0B = _BV( TXEN0 );                            // only enable transmit
+    UCSR0C = ( _BV( UCSZ01 ) | _BV( UCSZ00 ) );     // 8 data bits
+    UCSR0B = _BV( TXEN0 );                          // only enable transmit
     UCSR0A = 0;
 
     /* Calculate the baud rate register value from the equation in the

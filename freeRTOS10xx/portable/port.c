@@ -74,11 +74,11 @@
     #define portCLOCK_PRESCALER         ( (uint32_t) 64 )
     #define portCOMPARE_MATCH_A_INTERRUPT_ENABLE    ( (uint8_t) _BV(OCIE1A) )
     #define portOCRL                    OCR1AL
-    #define portOCRH                OCR1AH
-    #define portTCCRa                TCCR1A
-    #define portTCCRb                TCCR1B
-    #define portTIMSK                TIMSK1
-    #define portTIFR                TIFR1
+    #define portOCRH                    OCR1AH
+    #define portTCCRa                   TCCR1A
+    #define portTCCRb                   TCCR1B
+    #define portTIMSK                   TIMSK1
+    #define portTIFR                    TIFR1
 
 #elif defined( portUSE_TIMER2 )
 /* Hardware constants for Timer2. */
@@ -763,19 +763,19 @@ static void prvSetupTimerInterrupt( void )
     /* Adjust for correct value. */
     usCompareMatch -= ( uint16_t ) 1;
 
-    portTIMSK &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );    // disable all Timer2 interrupts
-    portTIFR |=  _BV(OCF2B)|_BV(OCF2A)|_BV(TOV2);            // clear all pending interrupts
-    ASSR = _BV(AS2);                                          // set Timer/Counter2 to be asynchronous from the CPU clock
-                                                                        // with a second external clock (32,768kHz) driving it.
-    portTCNT  = 0x00;                                          // zero out the counter
-    portTCCRa = _BV(WGM21);                                    // mode CTC (clear on counter match)
-    portTCCRb = _BV(CS20);                                    // divide timer clock by 1 (No prescaling)
-    portOCRL  = usCompareMatch;                                // set the counter
+    portTIMSK &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );       // disable all Timer2 interrupts
+    portTIFR |=  _BV(OCF2B)|_BV(OCF2A)|_BV(TOV2);               // clear all pending interrupts
+    ASSR = _BV(AS2);                                            // set Timer/Counter2 to be asynchronous from the CPU clock
+                                                                // with a second external clock (32,768kHz) driving it.
+    portTCNT  = 0x00;                                           // zero out the counter
+    portTCCRa = _BV(WGM21);                                     // mode CTC (clear on counter match)
+    portTCCRb = _BV(CS20);                                      // divide timer clock by 1 (No prescaling)
+    portOCRL  = usCompareMatch;                                 // set the counter
 
-    while( ASSR & (_BV(TCN2UB)|_BV(OCR2AUB)|_BV(TCR2AUB))); // Wait until Timer2 update complete
+    while( ASSR & (_BV(TCN2UB)|_BV(OCR2AUB)|_BV(TCR2AUB)));     // Wait until Timer2 update complete
 
     /* Enable the interrupt - this is okay as interrupts are currently globally disabled. */
-    portTIMSK |= portCOMPARE_MATCH_A_INTERRUPT_ENABLE;        // interrupt on Timer2 compare match
+    portTIMSK |= portCOMPARE_MATCH_A_INTERRUPT_ENABLE;          // interrupt on Timer2 compare match
 
 }
 #endif
@@ -796,18 +796,18 @@ static void prvSetupRTCInterrupt( void )
      * so we can get EXACT seconds for the Real Time clock.
      */
 
-    TIMSK2 &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );        // disable all Timer2 interrupts
-    TIFR2 |=  _BV(OCF2B)|_BV(OCF2A)|_BV(TOV2);                // clear all pending interrupts
-    ASSR = _BV(AS2);                                          // set Timer/Counter2 to be asynchronous from the CPU clock
-                                                                        // with a second external clock (32,768kHz) driving it.
+    TIMSK2 &= ~( _BV(OCIE2B)|_BV(OCIE2A)|_BV(TOIE2) );          // disable all Timer2 interrupts
+    TIFR2 |=  _BV(OCF2B)|_BV(OCF2A)|_BV(TOV2);                  // clear all pending interrupts
+    ASSR = _BV(AS2);                                            // set Timer/Counter2 to be asynchronous from the CPU clock
+                                                                // with a second external clock (32,768kHz) driving it.
     TCNT2  = 0x00;                                              // zero out the counter
-    TCCR2A = 0x00;                                            // Normal mode
-    TCCR2B = _BV(CS22) | _BV(CS20);                            // divide timer clock by 128 so counter will roll over at MAX
+    TCCR2A = 0x00;                                              // Normal mode
+    TCCR2B = _BV(CS22) | _BV(CS20);                             // divide timer clock by 128 so counter will roll over at MAX
 
-    while( ASSR & (_BV(TCN2UB)|_BV(OCR2AUB)|_BV(TCR2AUB))); // Wait until Timer2 update complete
+    while( ASSR & (_BV(TCN2UB)|_BV(OCR2AUB)|_BV(TCR2AUB)));     // Wait until Timer2 update complete
 
     /* Enable the interrupt - this is okay as interrupts are currently globally disabled. */
-    TIMSK2 |= _BV(TOIE2);                                    // When the TOIE2 bit is written to one, the interrupt is enabled
+    TIMSK2 |= _BV(TOIE2);                                       // When the TOIE2 bit is written to one, the interrupt is enabled
 }
 
 #elif defined(portUSE_TIMER2_RTC) && defined(portUSE_TIMER2)
