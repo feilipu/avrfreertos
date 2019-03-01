@@ -44,8 +44,6 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
 
-#include "task.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

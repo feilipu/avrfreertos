@@ -24,7 +24,7 @@
 
 #include "FreeRTOS.h"
 #include "time.h"
-j
+
 #if defined(portSD_CARD) || defined (portEXT_RAMFS)
 
 #include "ff.h"         /* FatFs configurations and declarations */
