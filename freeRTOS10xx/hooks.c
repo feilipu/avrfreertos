@@ -43,63 +43,63 @@ void vApplicationIdleHook( void ) __attribute__((weak));
 
 void vApplicationIdleHook( void )
 {
-	// Digital Input Disable on Analogue Pins
-	// When this bit is written logic one, the digital input buffer on the corresponding ADC pin is disabled.
-	// The corresponding PIN Register bit will always read as zero when this bit is set. When an
-	// analogue signal is applied to the ADC7..0 pin and the digital input from this pin is not needed, this
-	// bit should be written logic one to reduce power consumption in the digital input buffer.
+    // Digital Input Disable on Analogue Pins
+    // When this bit is written logic one, the digital input buffer on the corresponding ADC pin is disabled.
+    // The corresponding PIN Register bit will always read as zero when this bit is set. When an
+    // analogue signal is applied to the ADC7..0 pin and the digital input from this pin is not needed, this
+    // bit should be written logic one to reduce power consumption in the digital input buffer.
 
 #if defined(__AVR_ATmega640__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__) // Arduino Mega with 2560
-	DIDR0 = 0xFF;
-	DIDR2 = 0xFF;
+    DIDR0 = 0xFF;
+    DIDR2 = 0xFF;
 
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284PA__) // with 1284p
-	DIDR0 = 0xFF;
+    DIDR0 = 0xFF;
 
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega8__) // assume we're using an Arduino with 328p
-	DIDR0 = 0x3F;
+    DIDR0 = 0x3F;
 
 #elif defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__) // assume we're using an Arduino Leonardo with 32u4
-	DIDR0 = 0xF3;
-	DIDR2 = 0x3F;
+    DIDR0 = 0xF3;
+    DIDR2 = 0x3F;
 
 #endif
 
-	// Analogue Comparator Disable
-	// When the ACD bit is written logic one, the power to the Analogue Comparator is switched off.
-	// This bit can be set at any time to turn off the Analogue Comparator.
-	// This will reduce power consumption in Active and Idle mode.
-	// When changing the ACD bit, the Analogue Comparator Interrupt must be disabled by clearing the ACIE bit in ACSR.
-	// Otherwise an interrupt can occur when the ACD bit is changed.
-	ACSR &= ~_BV(ACIE);
-	ACSR |=  _BV(ACD);
+    // Analogue Comparator Disable
+    // When the ACD bit is written logic one, the power to the Analogue Comparator is switched off.
+    // This bit can be set at any time to turn off the Analogue Comparator.
+    // This will reduce power consumption in Active and Idle mode.
+    // When changing the ACD bit, the Analogue Comparator Interrupt must be disabled by clearing the ACIE bit in ACSR.
+    // Otherwise an interrupt can occur when the ACD bit is changed.
+    ACSR &= ~_BV(ACIE);
+    ACSR |=  _BV(ACD);
 
-	// There are several macros provided in this header file to actually put the device into sleep mode.
-	// The simplest way is to optionally set the desired sleep mode using set_sleep_mode()
-	// (it usually defaults to idle mode where the CPU is put on sleep but all peripheral clocks are still running),
-	// and then call sleep_mode(). This macro automatically sets the sleep enable bit,
-	// goes to sleep, and clears the sleep enable bit.
+    // There are several macros provided in this header file to actually put the device into sleep mode.
+    // The simplest way is to optionally set the desired sleep mode using set_sleep_mode()
+    // (it usually defaults to idle mode where the CPU is put on sleep but all peripheral clocks are still running),
+    // and then call sleep_mode(). This macro automatically sets the sleep enable bit,
+    // goes to sleep, and clears the sleep enable bit.
 
-	// SLEEP_MODE_IDLE         (0)
-	// SLEEP_MODE_ADC          _BV(SM0)
-	// SLEEP_MODE_PWR_DOWN     _BV(SM1)
-	// SLEEP_MODE_PWR_SAVE     (_BV(SM0) | _BV(SM1))
-	// SLEEP_MODE_STANDBY      (_BV(SM1) | _BV(SM2))
-	// SLEEP_MODE_EXT_STANDBY  (_BV(SM0) | _BV(SM1) | _BV(SM2))
+    // SLEEP_MODE_IDLE         (0)
+    // SLEEP_MODE_ADC          _BV(SM0)
+    // SLEEP_MODE_PWR_DOWN     _BV(SM1)
+    // SLEEP_MODE_PWR_SAVE     (_BV(SM0) | _BV(SM1))
+    // SLEEP_MODE_STANDBY      (_BV(SM1) | _BV(SM2))
+    // SLEEP_MODE_EXT_STANDBY  (_BV(SM0) | _BV(SM1) | _BV(SM2))
 
-	set_sleep_mode( SLEEP_MODE_IDLE );
+    set_sleep_mode( SLEEP_MODE_IDLE );
 
-	portENTER_CRITICAL();
-	sleep_enable();
+    portENTER_CRITICAL();
+    sleep_enable();
 
 #if defined(BODS) && defined(BODSE) // only if there is support to disable the BOD.
-	sleep_bod_disable();
+    sleep_bod_disable();
 #endif
 
-	portEXIT_CRITICAL();
-	sleep_cpu();		// good night.
+    portEXIT_CRITICAL();
+    sleep_cpu();            // good night.
 
-	sleep_reset();		// reset the sleep_mode() faster than sleep_disable();
+    sleep_reset();          // reset the sleep_mode() faster than sleep_disable();
 }
 
 #endif /* configUSE_IDLE_HOOK == 1 */
@@ -112,59 +112,59 @@ void vApplicationMallocFailedHook( void ) __attribute__((weak));
 
 void vApplicationMallocFailedHook( void )
 {
-	/*---------------------------------------------------------------------------*\
-	Usage:
-	   called by task system when a malloc failure is noticed
-	Description:
-	   Malloc failure handler -- Shut down all interrupts, send serious complaint
-	    to command port. FAST Blink.
-	Arguments:
-	   pxTask - pointer to task handle
-	   pcTaskName - pointer to task name
-	Results:
-	   <none>
-	Notes:
-	   This routine will never return.
-	   This routine is referenced in the task.c file of FreeRTOS as an extern.
-	\*---------------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------------*\
+    Usage:
+       called by task system when a malloc failure is noticed
+    Description:
+       Malloc failure handler -- Shut down all interrupts, send serious complaint
+        to command port. FAST Blink.
+    Arguments:
+       pxTask - pointer to task handle
+       pcTaskName - pointer to task name
+    Results:
+       <none>
+    Notes:
+       This routine will never return.
+       This routine is referenced in the task.c file of FreeRTOS as an extern.
+    \*---------------------------------------------------------------------------*/
 
 #if defined(__AVR_ATmega640__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__) // Arduino Mega with 2560
-	DDRB  |= _BV(DDB7);
-	PORTB |= _BV(PORTB7);       // Main (red PB7) LED on. Main LED on.
+    DDRB  |= _BV(DDB7);
+    PORTB |= _BV(PORTB7);       // Main (red PB7) LED on. Main LED on.
 
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284PA__) // Goldilocks with 1284p
-	DDRB  |= _BV(DDB7);
-	PORTB |= _BV(PORTB7);       // Main (red PB7) LED on. Main LED on.
+    DDRB  |= _BV(DDB7);
+    PORTB |= _BV(PORTB7);       // Main (red PB7) LED on. Main LED on.
 
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega8__) // assume we're using an Arduino Uno with 328p
-	DDRB  |= _BV(DDB5);
-	PORTB |= _BV(PORTB5);       // Main (red PB5) LED on. Main LED on.
+    DDRB  |= _BV(DDB5);
+    PORTB |= _BV(PORTB5);       // Main (red PB5) LED on. Main LED on.
 
 #elif defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__) // assume we're using an Arduino Leonardo with 32u4
-	DDRC  |= _BV(DDC7);
-	PORTC |= _BV(PORTC7);       // Main (red PC7) LED on. Main LED on.
+    DDRC  |= _BV(DDC7);
+    PORTC |= _BV(PORTC7);       // Main (red PC7) LED on. Main LED on.
 
 #endif
 
-	for(;;)
-	{
-		_delay_ms(50);
+    for(;;)
+    {
+        _delay_ms(50);
 
 #if defined(__AVR_ATmega640__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)  // Arduino Mega with 2560
-		PINB  |= _BV(PINB7);       // Main (red PB7) LED toggle. Main LED fast blink.
+        PINB  |= _BV(PINB7);       // Main (red PB7) LED toggle. Main LED fast blink.
 
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284PA__) // Goldilocks with 1284p
-		PINB  |= _BV(PINB7);       // Main (red PB7) LED toggle. Main LED fast blink.
+        PINB  |= _BV(PINB7);       // Main (red PB7) LED toggle. Main LED fast blink.
 
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega8__) // assume we're using an Arduino Uno with 328p
-		PINB  |= _BV(PINB5);       // Main (red PB5) LED toggle. Main LED fast blink.
+        PINB  |= _BV(PINB5);       // Main (red PB5) LED toggle. Main LED fast blink.
 
 #elif defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__) // assume we're using an Arduino Leonardo with 32u4
-		PINC  |= _BV(PINC7);       // Main (red PC7) LED toggle. Main LED fast blink.
+        PINC  |= _BV(PINC7);       // Main (red PC7) LED toggle. Main LED fast blink.
 
 #endif
 
-	}
+    }
 }
 
 #endif /* configUSE_MALLOC_FAILED_HOOK == 1 */
@@ -177,126 +177,126 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask, portCHAR *pcTaskName ) _
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask __attribute__((unused)), portCHAR *pcTaskName __attribute__((unused)) )
 {
-	/*---------------------------------------------------------------------------*\
-	Usage:
-	   called by task system when a stack overflow is noticed
-	Description:
-	   Stack overflow handler -- Shut down all interrupts, send serious complaint
-	    to command port. SLOW Blink.
-	Arguments:
-	   pxTask - pointer to task handle
-	   pcTaskName - pointer to task name
-	Results:
-	   <none>
-	Notes:
-	   This routine will never return.
-	   This routine is referenced in the task.c file of FreeRTOS as an extern.
-	\*---------------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------------*\
+    Usage:
+       called by task system when a stack overflow is noticed
+    Description:
+       Stack overflow handler -- Shut down all interrupts, send serious complaint
+        to command port. SLOW Blink.
+    Arguments:
+       pxTask - pointer to task handle
+       pcTaskName - pointer to task name
+    Results:
+       <none>
+    Notes:
+       This routine will never return.
+       This routine is referenced in the task.c file of FreeRTOS as an extern.
+    \*---------------------------------------------------------------------------*/
 
 #if defined(__AVR_ATmega640__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)  // Arduino Mega with 2560
-	DDRB  |= _BV(DDB7);
-	PORTB |= _BV(PORTB7);       // Main (red PB7) LED on. Main LED on.
+    DDRB  |= _BV(DDB7);
+    PORTB |= _BV(PORTB7);       // Main (red PB7) LED on. Main LED on.
 
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284PA__) // Goldilocks with 1284p
-	DDRB  |= _BV(DDB7);
-	PORTB |= _BV(PORTB7);       // Main (red PB7) LED on. Main LED on.
+    DDRB  |= _BV(DDB7);
+    PORTB |= _BV(PORTB7);       // Main (red PB7) LED on. Main LED on.
 
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega8__) // assume we're using an Arduino Uno with 328p
-	DDRB  |= _BV(DDB5);
-	PORTB |= _BV(PORTB5);       // Main (red PB5) LED on. Main LED on.
+    DDRB  |= _BV(DDB5);
+    PORTB |= _BV(PORTB5);       // Main (red PB5) LED on. Main LED on.
 
 #elif defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__) // assume we're using an Arduino Leonardo with 32u4
-	DDRC  |= _BV(DDC7);
-	PORTC |= _BV(PORTC7);       // Main (red PC7) LED on. Main LED on.
+    DDRC  |= _BV(DDC7);
+    PORTC |= _BV(PORTC7);       // Main (red PC7) LED on. Main LED on.
 
 #endif
 
-	for(;;)
-	{
-		_delay_ms(2000);
+    for(;;)
+    {
+        _delay_ms(2000);
 
 #if defined(__AVR_ATmega640__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega1281__) || defined(__AVR_ATmega2560__) || defined(__AVR_ATmega2561__)  // Arduino Mega with 2560
-		PINB  |= _BV(PINB7);       // Main (red PB7) LED toggle. Main LED slow blink.
+        PINB  |= _BV(PINB7);       // Main (red PB7) LED toggle. Main LED slow blink.
 
 #elif defined(__AVR_ATmega644P__) || defined(__AVR_ATmega644PA__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega1284PA__) // Goldilocks with 1284p
-		PINB  |= _BV(PINB7);       // Main (red PB7) LED toggle. Main LED slow blink.
+        PINB  |= _BV(PINB7);       // Main (red PB7) LED toggle. Main LED slow blink.
 
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) || defined(__AVR_ATmega8__) // assume we're using an Arduino Uno with 328p
-		PINB  |= _BV(PINB5);       // Main (red PB5) LED toggle. Main LED slow blink.
+        PINB  |= _BV(PINB5);       // Main (red PB5) LED toggle. Main LED slow blink.
 
 #elif defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega16U4__) // assume we're using an Arduino Leonardo with 32u4
-		PINC  |= _BV(PINC7);       // Main (red PC7) LED toggle. Main LED slow blink.
+        PINC  |= _BV(PINC7);       // Main (red PC7) LED toggle. Main LED slow blink.
 
 #endif
 
-	}
+    }
 }
 
 #else
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+                                    portCHAR *pcTaskName )
 {
-	/*---------------------------------------------------------------------------*\
-	Usage:
-	   called by task system when a stack overflow is noticed
-	Description:
-	   Stack overflow handler -- Shut down all interrupts, send serious complaint
-	    to command port.
-	Arguments:
-	   pxTask - pointer to task handle
-	   pcTaskName - pointer to task name
-	Results:
-	   <none>
-	Notes:
-	   This routine will never return.
-	   This routine is referenced in the task.c file of FreeRTOS as an extern.
-	\*---------------------------------------------------------------------------*/
+    /*---------------------------------------------------------------------------*\
+    Usage:
+       called by task system when a stack overflow is noticed
+    Description:
+       Stack overflow handler -- Shut down all interrupts, send serious complaint
+        to command port.
+    Arguments:
+       pxTask - pointer to task handle
+       pcTaskName - pointer to task name
+    Results:
+       <none>
+    Notes:
+       This routine will never return.
+       This routine is referenced in the task.c file of FreeRTOS as an extern.
+    \*---------------------------------------------------------------------------*/
 
-	uint8_t* pC;
-	uint16_t baud;
+    uint8_t* pC;
+    uint16_t baud;
 
-	extern uint8_t * LineBuffer;	// line buffer on heap (with pvPortMalloc).
+    extern uint8_t * LineBuffer;    // line buffer on heap (with pvPortMalloc).
 
-	/* shut down all interrupts */
-	portDISABLE_INTERRUPTS();
+    /* shut down all interrupts */
+    portDISABLE_INTERRUPTS();
 
 
-	/* take over the command line buffer to generate our error message */
-	pC = (uint8_t*) LineBuffer;
+    /* take over the command line buffer to generate our error message */
+    pC = (uint8_t*) LineBuffer;
 
-	strcat_P( (char*) pC, PSTR("\r\n"));
-	strcat( (char*) pC, (char*) pcTaskName );
-	strcat_P( (char*) pC, PSTR("\r\n"));
+    strcat_P( (char*) pC, PSTR("\r\n"));
+    strcat( (char*) pC, (char*) pcTaskName );
+    strcat_P( (char*) pC, PSTR("\r\n"));
 
-	pC = (uint8_t*) LineBuffer;
+    pC = (uint8_t*) LineBuffer;
 
-	/* Force the UART control register to be the way we want, just in case */
+    /* Force the UART control register to be the way we want, just in case */
 
-	UCSR0C = ( _BV( UCSZ01 ) | _BV( UCSZ00 ) );		// 8 data bits
-	UCSR0B = _BV( TXEN0 );							// only enable transmit
-	UCSR0A = 0;
+    UCSR0C = ( _BV( UCSZ01 ) | _BV( UCSZ00 ) );        // 8 data bits
+    UCSR0B = _BV( TXEN0 );                            // only enable transmit
+    UCSR0A = 0;
 
-	/* Calculate the baud rate register value from the equation in the
-	* data sheet.  This calculation rounds to the nearest factor, which
-	* means the resulting rate may be either faster or slower than the
-	* desired rate (the old calculation was always faster).
-	*
-	* If the system clock is one of the Magic Frequencies, this
-	* computation will result in the exact baud rate
-	*/
-	baud = ( ( ( configCPU_CLOCK_HZ / ( ( 16UL * 38400 ) / 2UL ) ) + 1UL ) / 2UL ) - 1UL;
-	UBRR0 = baud;
+    /* Calculate the baud rate register value from the equation in the
+    * data sheet.  This calculation rounds to the nearest factor, which
+    * means the resulting rate may be either faster or slower than the
+    * desired rate (the old calculation was always faster).
+    *
+    * If the system clock is one of the Magic Frequencies, this
+    * computation will result in the exact baud rate
+    */
+    baud = ( ( ( configCPU_CLOCK_HZ / ( ( 16UL * 38400 ) / 2UL ) ) + 1UL ) / 2UL ) - 1UL;
+    UBRR0 = baud;
 
-	/* Send out the message, without interrupts.  Hard wired to USART 0 */
-	while ( *pC )
-	{
-		while (!(UCSR0A & (1 << UDRE0)));
-		UDR0 = *pC;
-		pC++;
-	}
+    /* Send out the message, without interrupts.  Hard wired to USART 0 */
+    while ( *pC )
+    {
+        while (!(UCSR0A & (1 << UDRE0)));
+        UDR0 = *pC;
+        pC++;
+    }
 
-	while(1){ PINB |= _BV(PINB7); _delay_ms(100); } // main (red PB7) LED flash and die.
+    while(1){ PINB |= _BV(PINB7); _delay_ms(100); } // main (red PB7) LED flash and die.
 }
 
 #endif /* configCHECK_FOR_STACK_OVERFLOW >= 1 */
