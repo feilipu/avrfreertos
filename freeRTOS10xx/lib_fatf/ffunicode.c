@@ -25,7 +25,7 @@
 
 #include "ff.h"
 
-#if FF_USE_LFN	/* This module will be blanked at non-LFN configuration */
+#if FF_USE_LFN    /* This module will be blanked at non-LFN configuration */
 
 #if FF_DEFINED != 86604    /* Revision ID */
 #error Wrong include file (ff.h).
@@ -15589,28 +15589,28 @@ DWORD ff_wtoupper (    /* Returns up-converted code point */
     };
 
 
-    if (uni < 0x10000) {    /* Is it in BMP? */
+    if (uni < 0x10000) {                                /* Is it in BMP? */
         uc = (WORD)uni;
         p = uc < 0x1000 ? cvt1 : cvt2;
         for (;;) {
-            bc = *p++;                                /* Get the block base */
-            if (bc == 0 || uc < bc) break;            /* Not matched? */
-            nc = *p++; cmd = nc >> 8; nc &= 0xFF;    /* Get processing command and block size */
-            if (uc < bc + nc) {    /* In the block? */
+            bc = *p++;                                  /* Get the block base */
+            if (bc == 0 || uc < bc) break;              /* Not matched? */
+            nc = *p++; cmd = nc >> 8; nc &= 0xFF;       /* Get processing command and block size */
+            if (uc < bc + nc) {                         /* In the block? */
                 switch (cmd) {
-                case 0:    uc = p[uc - bc]; break;        /* Table conversion */
-                case 1:    uc -= (uc - bc) & 1; break;    /* Case pairs */
-                case 2: uc -= 16; break;            /* Shift -16 */
-                case 3:    uc -= 32; break;            /* Shift -32 */
-                case 4:    uc -= 48; break;            /* Shift -48 */
-                case 5:    uc -= 26; break;            /* Shift -26 */
-                case 6:    uc += 8; break;                /* Shift +8 */
-                case 7: uc -= 80; break;            /* Shift -80 */
-                case 8:    uc -= 0x1C60; break;        /* Shift -0x1C60 */
+                case 0:    uc = p[uc - bc]; break;      /* Table conversion */
+                case 1:    uc -= (uc - bc) & 1; break;  /* Case pairs */
+                case 2: uc -= 16; break;                /* Shift -16 */
+                case 3:    uc -= 32; break;             /* Shift -32 */
+                case 4:    uc -= 48; break;             /* Shift -48 */
+                case 5:    uc -= 26; break;             /* Shift -26 */
+                case 6:    uc += 8; break;              /* Shift +8 */
+                case 7: uc -= 80; break;                /* Shift -80 */
+                case 8:    uc -= 0x1C60; break;         /* Shift -0x1C60 */
                 }
                 break;
             }
-            if (cmd == 0) p += nc;    /* Skip table if needed */
+            if (cmd == 0) p += nc;                      /* Skip table if needed */
         }
         uni = uc;
     }
