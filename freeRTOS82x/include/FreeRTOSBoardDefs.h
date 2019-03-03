@@ -166,7 +166,7 @@ extern "C" {
  * Select WIZCHIP.
  * You should select one, \b 5100, \b 5200 ,\b 5500 or etc. \n\n
  */
-//	#define _WIZCHIP_                               5500    // 5100, 5200, 5500
+	#define _WIZCHIP_                               5500    // 5100, 5200, 5500
 
 //	#define portHD44780_LCD                                 // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
 //	#define portSD_CARD                                     // define the use of the SD Card for Goldilocks 1284p

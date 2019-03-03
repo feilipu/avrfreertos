@@ -40,6 +40,7 @@
   STUFF to see the real stuff.  ANSI C required.  Note: order of the
   following includes is important.
 */
+
 #include "cdefs.h"      /* Data types for all modules */
 #include "debug.h"		/* Debugging */
 #include "platform.h"	/* Platform-specific includes and definitions */
@@ -77,18 +78,18 @@ void TaskKermit(void *pvParameters);   // Task to manage Kermit Server
 
 /* External data */
 
-extern UCHAR o_buf[];                   /* Must be defined in avrio.c */
-extern UCHAR i_buf[];                   /* Must be defined in avrio.c */
+extern UCHAR o_buf[];       /* Must be defined in avrio.c */
+extern UCHAR i_buf[];       /* Must be defined in avrio.c */
 extern int errno;
 
 
 /* Data global to this module */
 
-struct k_data k;                        /* Kermit data structure */
-struct k_response r;                    /* Kermit response structure */
+struct k_data k;            /* Kermit data structure */
+struct k_response r;        /* Kermit response structure */
 
 char **xargv;				/* Global pointer to arg vector */
-UCHAR **cmlist = (UCHAR **)0;		/* Pointer to file list */
+UCHAR **cmlist = (UCHAR **)0;	/* Pointer to file list */
 char * xname = "ek";		/* Default program name */
 
 int xargc;					/* Global argument count */
@@ -107,8 +108,8 @@ int check = 1;
 #endif /* F_CRC */
 int remote = 1;				/* 1 = Remote, 0 = Local */
 #ifdef DEBUG
-int errorrate = 0;			/* Simulated error rate */
-int seed = 1234;			/* Random number generator seed */
+extern uint8_t errorrate;	/* Simulated error rate */
+extern uint32_t seed;		/* Random number generator seed */
 #endif /* DEBUG */
 
 void
@@ -158,15 +159,15 @@ fatal(char *msg1, char *msg2, char *msg3) { /* Not to be called except */
 /* Simple user interface for testing */
 
 int
-doarg(char c) {				/* Command-line option parser */
+doarg(char c) {			/* Command-line option parser */
     int x;				/* Parses one option with its arg(s) */
     char *xp, *s;
     FILINFO statbuf;
 
-    xp = *xargv+1;			/* Pointer for bundled args */
+    xp = *xargv+1;		/* Pointer for bundled args */
     while (c) {
 #ifdef DEBUG
-	if (errorrate) seed += (int)c;
+	if (errorrate) seed += (uint32_t)c;
 #endif /* DEBUG) */
 	switch (c) {
 	  case 'r':			/* Receive */
@@ -186,16 +187,16 @@ doarg(char c) {				/* Command-line option parser */
 		xargv++;
 		s = *xargv;
 #ifdef DEBUG
-		if (errorrate) seed += (int)*s;
+		if (errorrate) seed += (uint32_t)*s;
 #endif /* DEBUG) */
 		if (**xargv == '-')
 		  break;
 		errno = 0;
-		x = stat(s,&statbuf);
+		x = f_stat((const TCHAR *)s, &statbuf);
 		if (x < 0)
 		  fatal("File '",s,"' not found");
-		if (access(s,4) < 0)
-		  fatal("File '",s,"' not accessible");
+//		if (access(s,4) < 0) // xxx don't have access() function available
+//		  fatal("File '",s,"' not accessible");
 		nfils++;
 	    }
 	    xargc++, *xargv--;		/* Adjust argv/argc */
@@ -290,6 +291,7 @@ doarg(char c) {				/* Command-line option parser */
 		  *xargv,
 		  " type 'ek -h' for help."
 		  );
+	    break;
         }
 	c = *++xp;			/* See if options are bundled */
     }
@@ -309,26 +311,26 @@ void TaskKermit(void *pvParameters) // Operate the Kermit Server
     parity = P_PARITY;                  /* Set this to desired parity */
     status = X_OK;                      /* Initial kermit status */
 
-    xargc = argc;
-    xargv = argv;
-    xname = argv[0];
+//    xargc = argc;
+//    xargv = argv;
+//    xname = argv[0];
 
-    while (--xargc > 0) {		/* Loop through command-line words */
+    while (--xargc > 0) {			/* Loop through command-line words */
 	xargv++;
-	if (**xargv == '-') {		/* Have dash */
-	    c = *(*xargv+1);		/* Get the option letter */
-	    x = doarg(c);		/* Go handle the option */
+	if (**xargv == '-') {			/* Have dash */
+	    c = *(*xargv+1);			/* Get the option letter */
+	    x = doarg(c);				/* Go handle the option */
 	    if (x < 0) doexit(FAILURE);
-    	} else {			/* No dash where expected */
+    	} else {					/* No dash where expected */
 	    fatal("Malformed command-line option: '",*xargv,"'");
 	}
     }
-    if (!action)			/* Nothing to do, give usage message */
+    if (!action)					/* Nothing to do, give usage message */
       usage();
 
 #ifdef DEBUG
     debug(DB_LOG,"SIMULATED ERROR RATE:",0,errorrate);
-    if (errorrate) srand(seed);		/* Init random error generator */
+    if (errorrate) srandom(seed);	/* Init random error generator */
 #endif /* DEBUG */
 
 /* THE REAL STUFF IS FROM HERE DOWN */
@@ -346,7 +348,7 @@ void TaskKermit(void *pvParameters) // Operate the Kermit Server
     if (db)				/* Open debug log if requested */
       debug(DB_OPN,"debug.log",0,0);
 
-    debug(DB_MSG,"Initializing...",0,0);
+    debug(DB_MSG,"Initialising...",0,0);
 
 /*  Fill in parameters for this run */
 

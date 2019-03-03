@@ -1,6 +1,8 @@
 #ifndef __CDEFS_H__
 #define __CDEFS_H__
 
+#include <stdint.h>
+
 /*
   By default, the internal routines of kermit.c are not static,
   because this is not allowed in some embedded environments.
@@ -21,13 +23,15 @@
   the cc command line.
 */
 #ifndef HAVE_UCHAR
-typedef unsigned char UCHAR;
+typedef uint8_t UCHAR;
 #endif /* HAVE_UCHARE */
-#ifndef HAVE_ULONG
-typedef unsigned long ULONG;
-#endif /* HAVE_ULONG */
+
 #ifndef HAVE_USHORT
-typedef unsigned short USHORT;
+typedef uint16_t USHORT;
 #endif /* HAVE_USHORT */
+
+#ifndef HAVE_ULONG
+typedef uint32_t ULONG;
+#endif /* HAVE_ULONG */
 
 #endif /* __CDEFS_H__ */

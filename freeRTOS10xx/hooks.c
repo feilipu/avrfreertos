@@ -24,7 +24,10 @@
  *
  */
 
+#include <string.h>
+
 #include <avr/io.h>
+#include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 

@@ -74,8 +74,8 @@ static uint32_t AccSize;				/* Work register for fs command */
 static uint16_t AccFiles, AccDirs;
 static FILINFO Finfo;
 
-static FATFS Fatfs[_VOLUMES];		/* File system object for each logical drive */
-static FIL File[_FS_LOCK];			/* File object. there are _FS_LOCK file objects available */
+static FATFS Fatfs[FF_VOLUMES];		/* File system object for each logical drive */
+static FIL File[FF_FS_LOCK];		/* File object. there are FF_FS_LOCK file objects available */
 
 
 /*-----------------------------------------------------------*/
@@ -212,8 +212,8 @@ static void TaskSDMonitor(void *pvParameters) // Monitor for SD Card
 #endif
 
 	xSerialPrint_P(PSTR("\r\nFatFs module test monitor for AVR"));
-	xSerialPrint_P(_USE_LFN ? PSTR("\r\nLFN Enabled") : PSTR("\r\nLFN Disabled"));
-	xSerialPrintf_P(PSTR(", Code page: %u\r\n"), _CODE_PAGE);
+	xSerialPrint_P(FF_USE_LFN ? PSTR("\r\nLFN Enabled") : PSTR("\r\nLFN Disabled"));
+	xSerialPrintf_P(PSTR(", Code page: %u\r\n"), FF_CODE_PAGE);
 
     for(;;)
     {
@@ -727,7 +727,7 @@ static void TaskBlinkRedLED(void *pvParameters) // Main Red LED Flash
 #endif
 
 		PORTB &= ~_BV(PORTB7);       // main (red IO_B7) LED off. EtherMega LED off
-		vTaskDelayUntil( &xLastWakeTime, ( 448 / portTICK_PERIOD_MS ) );
+		vTaskDelayUntil( &xLastWakeTime, ( 438 / portTICK_PERIOD_MS ) );
 
 //		xSerialPrintf_P(PSTR("RedLED HighWater @ %u\r\r\n"), uxTaskGetStackHighWaterMark(NULL));
     }
@@ -800,7 +800,7 @@ FRESULT scan_files (
 	if (res == FR_OK) {
 		i = strlen((char *) path);
 		while (((res = f_readdir(&dirs, &Finfo)) == FR_OK) && Finfo.fname[0]) {
-			if (_FS_RPATH && Finfo.fname[0] == '.') continue;
+			if (FF_FS_RPATH && Finfo.fname[0] == '.') continue;
 #if _USE_LFN
 			fn = *Finfo.lfname ? Finfo.lfname : Finfo.fname;
 #else
@@ -830,7 +830,7 @@ static
 void put_rc (FRESULT rc)
 {
 	static const uint8_t *p;
-	static const  uint8_t str[] PROGMEM =
+	static const uint8_t str[] PROGMEM =
 		"OK\0" "DISK_ERR\0" "INT_ERR\0" "NOT_READY\0" "NO_FILE\0" "NO_PATH\0"
 		"INVALID_NAME\0" "DENIED\0" "EXIST\0" "INVALID_OBJECT\0" "WRITE_PROTECTED\0"
 		"INVALID_DRIVE\0" "NOT_ENABLED\0" "NO_FILE_SYSTEM\0" "MKFS_ABORTED\0" "TIMEOUT\0"
@@ -886,7 +886,7 @@ test_diskio (
 
     xSerialPrintf_P(PSTR("test_diskio(%u, %u, 0x%08X, 0x%08X)\n"), pdrv, ncyc, (uint16_t)buff, sz_buff);
 
-    if (sz_buff < _MAX_SS + 4) {
+    if (sz_buff < FF_MAX_SS + 4) {
     	xSerialPrint_P(PSTR("Insufficient work area to test.\n"));
         return 1;
     }
@@ -944,7 +944,7 @@ test_diskio (
         }
         xSerialPrintf_P(PSTR(" Size of sector is %u bytes.\n"), sz_sect);
 #else
-        sz_sect = _MAX_SS;
+        sz_sect = FF_MAX_SS;
 #endif
 
         /* Get erase block size */

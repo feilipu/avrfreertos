@@ -137,8 +137,8 @@ extern "C" {
     #define portSD_CARD                                 // define the use of the SD Card for Arduino Mega2560 and Freetronics EtherMega
 //  #define portRTC_DEFINED                             // RTC DS1307 / DS3231 implemented, therefore define.
 
-    #define    portSERIAL_BUFFER_RX     255             // Define the size of the serial receive buffer.
-    #define    portSERIAL_BUFFER_TX     255             // Define the size of the serial transmit buffer, only as long as the longest line of text.
+    #define portSERIAL_BUFFER_RX        255             // Define the size of the serial receive buffer.
+    #define portSERIAL_BUFFER_TX        255             // Define the size of the serial transmit buffer, only as long as the longest line of text.
     #define portSERIAL_BUFFER           portSERIAL_BUFFER_TX    // just for compatibility with older programmes.
 
 //  #define portUSE_TIMER1_PWM                          // Define which Timer to use as the PWM Timer (not the tick timer).
@@ -185,8 +185,8 @@ extern "C" {
 #endif
 
 
-//  #define configTOTAL_HEAP_SIZE    ( (size_t )  15699  )              // used for heap_1.c and heap2.c, and heap_4.c only (measured for GA Synth)
-    #define configTOTAL_HEAP_SIZE    ( (size_t )  12699  )              // used for heap_1.c and heap2.c, and heap_4.c only
+    #define configTOTAL_HEAP_SIZE    ( (size_t )  15600  )              // used for heap_1.c and heap2.c, and heap_4.c only (measured for GA Synth)
+//  #define configTOTAL_HEAP_SIZE    ( (size_t )  12600  )              // used for heap_1.c and heap2.c, and heap_4.c only
 
 /**
  * Select WIZCHIP.
@@ -195,14 +195,14 @@ extern "C" {
     #define _WIZCHIP_                               5500    // 5100, 5200, 5500
 
 //  #define portHD44780_LCD                                 // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
-    #define portSD_CARD                                     // define the use of the SD Card for Goldilocks 1284p
+//  #define portSD_CARD                                     // define the use of the SD Card for Goldilocks 1284p
 //  #define portRTC_DEFINED                                 // RTC DS1307 / DS3231 implemented, therefore define.
-//  #define portANALOGUE                                    // Goldilocks Analogue Capabilities
+    #define portANALOGUE                                    // Goldilocks Analogue Capabilities
 //  #define portANALOGSHIELD                                // Digilent Analog Shield (only DAC implemented)
 
-    #define    portSERIAL_BUFFER_RX    255                  // Define the size of the serial receive buffer.
-    #define    portSERIAL_BUFFER_TX    255                  // Define the size of the serial transmit buffer, only as long as the longest text.
-    #define portSERIAL_BUFFER    portSERIAL_BUFFER_TX       // just for compatibility with older programmes.
+    #define portSERIAL_BUFFER_RX    255                     // Define the size of the serial receive buffer.
+    #define portSERIAL_BUFFER_TX    255                     // Define the size of the serial transmit buffer, only as long as the longest text.
+    #define portSERIAL_BUFFER       portSERIAL_BUFFER_TX    // just for compatibility with older programmes.
 
 //  #define portUSE_TIMER1_PWM                              // Define which Timer to use as the PWM Timer (not the tick timer).
                                                             // though it is better to use Pololu functions, as they support 8x multiplexed servos.
@@ -247,9 +247,9 @@ extern "C" {
     // Watch for the stack overflowing, if you use interrupts. Use configCHECK_FOR_STACK_OVERFLOW
     #define configTOTAL_HEAP_SIZE    ( (size_t ) 830 )      // used for heap_1.c, heap_2.c, and heap_4.c only
 
-    #define    portSERIAL_BUFFER_RX    16                   // Define the size of the serial receive buffer.
-    #define    portSERIAL_BUFFER_TX    128                  // Define the size of the serial transmit buffer, only as long as the longest line of text.
-    #define portSERIAL_BUFFER        portSERIAL_BUFFER_TX
+    #define portSERIAL_BUFFER_RX    16                      // Define the size of the serial receive buffer.
+    #define portSERIAL_BUFFER_TX    128                     // Define the size of the serial transmit buffer, only as long as the longest line of text.
+    #define portSERIAL_BUFFER       portSERIAL_BUFFER_TX
 
 #if  defined(portUSE_TIMER1)                    // Define which Timer to use as the PWM Timer (not the tick timer)
     #define portUSE_TIMER0_PWM                  // It's pointless to use the 8bit Timer0 for Servo PWM,
@@ -312,9 +312,9 @@ extern "C" {
 //  #define portHD44780_LCD                             // define the use of the Freetronics HD44780 LCD (or other). Check include hd44780.h for (flexible) pin assignments.
 //  #define portRTC_DEFINED                             // RTC DS1307 / DS3231 implemented, therefore define.
 
-    #define    portSERIAL_BUFFER_RX    32               // Define the size of the serial receive buffer.
-    #define    portSERIAL_BUFFER_TX    128              // Define the size of the serial transmit buffer, only as long as the longest line of text.
-    #define portSERIAL_BUFFER        portSERIAL_BUFFER_TX   // Set the default serial buffer to be the Tx size.
+    #define portSERIAL_BUFFER_RX    32                  // Define the size of the serial receive buffer.
+    #define portSERIAL_BUFFER_TX    128                 // Define the size of the serial transmit buffer, only as long as the longest line of text.
+    #define portSERIAL_BUFFER       portSERIAL_BUFFER_TX    // Set the default serial buffer to be the Tx size.
 
 #if  defined(portUSE_TIMER1)                            // Define which Timer to use as the PWM Timer (not the tick timer)
     #define portUSE_TIMER0_PWM                          // It's pointless to use the 8bit Timer0 or Timer2 for Servo PWM,

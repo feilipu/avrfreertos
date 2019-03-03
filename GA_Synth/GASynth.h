@@ -35,7 +35,7 @@ extern "C" {
 
 
 
-//#define configTOTAL_HEAP_SIZE	( (size_t )  15699  )		// set this in freeRTOSBoardDefs.h
+//#define configTOTAL_HEAP_SIZE	( (size_t )  15600  )		// set this in freeRTOSBoardDefs.h
 
 /*--------------Definitions-------------------*/
 // Define Touch Tags
