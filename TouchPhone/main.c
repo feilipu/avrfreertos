@@ -142,9 +142,9 @@ static void TaskCharEcho(void *pvParameters) // Echo characters from one USART p
 
 	seconds_timer call_secs_timer;
 	uint8_t hungup = 0;
-	if( SIM900MakeCall(&libelium, "0433220688") )
+	if( SIM900MakeCall(&libelium, "04xxxxxxxx") )
 	{
-		xSerialxPrint_P(&xSerialPort, PSTR("Called: 0433220688\r\n"));
+		xSerialxPrint_P(&xSerialPort, PSTR("Called: 04xxxxxxxx\r\n"));
 	    stimer_set( &call_secs_timer, 120 ); // hold the call for 120 seconds
 	}
 
