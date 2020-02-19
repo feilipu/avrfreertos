@@ -166,13 +166,13 @@ uint8_t setDateTimeDS1307(tm * timeDateSet)
 // Convert normal decimal number byte to binary coded decimal byte
 uint8_t decToBcd(uint8_t val)
 {
-    return ( ((uint16_t)val*16/10) + (val%10) );
+    return (uint8_t)( (val*16/10) + (val%10) );
 }
 
 // Convert binary coded decimal byte to normal decimal number byte
 uint8_t bcdToDec(uint8_t val)
 {
-    return ( ((uint16_t)val*10/16) + (val%16) );
+    return (uint8_t)( (val*10/16) + (val%16) );
 }
 
 /*----------------------------------------------------------------*/
