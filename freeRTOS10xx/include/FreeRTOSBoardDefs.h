@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Phillip Stevens  All Rights Reserved.
+ * Copyright (C) 2020 Phillip Stevens  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -41,12 +41,13 @@
 #ifndef freeRTOSBoardDefs_h
 #define freeRTOSBoardDefs_h
 
-#include <avr/io.h>
-#include <avr/wdt.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include <avr/io.h>
+#include <avr/wdt.h>
+
 /*
  * XXX Ping PD7 to check timing on interrupts.
  * PD7 will be set high when the interrupt is entered, and set low when exited.

@@ -30,7 +30,7 @@ Also, for the Arduino platform, there is an [Arduino freeRTOS Library](https://g
 available in the Arduino IDE Library manager, or by directly downloading the ZIP file and importing it into your Arduino IDE.
 
 # Features
-- freeRTOS 10.1.1 implemented for selected AVR ATmega devices
+- freeRTOS 10.3.0 implemented for selected AVR ATmega devices
 - Arduino Uno, Pro, Mini, Nano, & LilyPad with ATmega328p supported
 - Arduino Mega (Seeed ADK, Freetronics EtherMega) with ATmega2560 supported
 - Goldilocks (Analogue) & Pololu Orangutan SVP with ATmega1284p supported

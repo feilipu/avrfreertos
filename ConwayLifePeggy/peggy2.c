@@ -163,7 +163,7 @@ void clear_data(uint32_t to[])
 void copy_old_new(uint32_t old_gen[], uint32_t new_gen[])
 {
 	for(uint8_t temp = 0; temp < CELLS_X; temp++)
-		old_generation[temp] = current_generation[temp];
+		old_gen[temp] = new_gen[temp];
 	return;
 }
 

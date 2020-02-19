@@ -1,6 +1,6 @@
 /*
- * FreeRTOS Kernel V10.2.0
- * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.3.0
+ * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -49,9 +49,7 @@ task.h is included from an application file. */
 
 #undef MPU_WRAPPERS_INCLUDED_FROM_API_FILE
 
-#if( configSUPPORT_DYNAMIC_ALLOCATION == 0 )
-    #error This file must not be used if configSUPPORT_DYNAMIC_ALLOCATION is 0
-#endif
+#if( configSUPPORT_DYNAMIC_ALLOCATION > 0 )
 
 /*-----------------------------------------------------------*/
 
@@ -93,5 +91,4 @@ void vPortFree( void *pv )
     }
 }
 
-
-
+#endif /* ( configSUPPORT_DYNAMIC_ALLOCATION > 0 ) */
