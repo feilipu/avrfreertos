@@ -59,7 +59,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkRedLED
-		,  (const portCHAR *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
+		,  (const char *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
 		,  256				// Tested 9 free @ 208
 		,  NULL
 		,  3
@@ -68,7 +68,7 @@ int main(void)
 
     xTaskCreate(
 		TaskKermit
-		,  (const portCHAR *) "Kermit"
+		,  (const char *) "Kermit"
 		,  256  // This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  1
@@ -127,7 +127,7 @@ static void TaskBlinkRedLED(void *pvParameters) // Main Red LED Flash
 /*--------------------------------------------------*/
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
+                                    char *pcTaskName )
 {
 
 	DDRB  |= _BV(DDB7);

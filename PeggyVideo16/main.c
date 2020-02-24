@@ -94,7 +94,7 @@ int main(void)
 
     xTaskCreate(
         TaskReadI2CVideo
-        ,  (const portCHAR *)"ReadI2CVideo"
+        ,  (const char *)"ReadI2CVideo"
         ,  256				// Tested x free
         ,  NULL
         ,  2
@@ -103,7 +103,7 @@ int main(void)
 
     xTaskCreate(
 		TaskWriteLED
-		,  (const portCHAR *)"WriteLED"
+		,  (const char *)"WriteLED"
 		,  208				// Tested x free
 		,  NULL
 		,  1
@@ -409,7 +409,7 @@ inline void setPixel(uint8_t x,uint8_t y, uint8_t brightness)
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
+                                    char *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.

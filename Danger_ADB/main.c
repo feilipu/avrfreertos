@@ -97,7 +97,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskBlinkYellowLED
-		,  (const portCHAR *)"YellowLED"
+		,  (const char *)"YellowLED"
 		,  168 // tested 2 free
 		,  NULL
 		,  2
@@ -105,7 +105,7 @@ int16_t main(void)
 
    xTaskCreate(
 		TaskADB
-		,  (const portCHAR *)"ADB"
+		,  (const char *)"ADB"
 		,  1024
 		,  NULL
 		,  1
@@ -114,7 +114,7 @@ int16_t main(void)
 
 /*    xTaskCreate(
 		TaskWrite7SEG
-		,  (const portCHAR *)"Write7SEG"
+		,  (const char *)"Write7SEG"
 		,  168 // tested 4 free
 		,  NULL
 		,  3
@@ -342,7 +342,7 @@ static void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t latchPin, uint8_
 /*-----------------------------------------------------------*/
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
+                                    char *pcTaskName )
 {
 
 	DDRB  |= _BV(DDB7);

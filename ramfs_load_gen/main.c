@@ -65,7 +65,7 @@ int main(void)
 
     xTaskCreate(
  		TaskMonitor
- 		,  (const portCHAR *)"Monitor" // Serial Monitor
+ 		,  (const char *)"Monitor" // Serial Monitor
  		,  208
  		,  NULL
  		,  3
@@ -391,7 +391,7 @@ void get_line (uint8_t *buff, uint8_t len)
 
 
 void vApplicationStackOverflowHook( xTaskHandle xTask,
-                                    signed portCHAR *pcTaskName )
+                                    signed char *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.
@@ -401,7 +401,7 @@ void vApplicationStackOverflowHook( xTaskHandle xTask,
 -----------------------------------------------------------*/
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+									char *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:

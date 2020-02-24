@@ -71,7 +71,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskBlinkGreenLED
-		,  (const portCHAR *)"GreenLED" // Main Arduino Uno 328p (Green) LED Blink
+		,  (const char *)"GreenLED" // Main Arduino Uno 328p (Green) LED Blink
 		,  256				// Tested 9 free @ 208
 		,  NULL
 		,  3
@@ -79,7 +79,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskWriteLCD
-		,  (const portCHAR *)"WriteLCD"
+		,  (const char *)"WriteLCD"
 		,  192
 		,  NULL
 		,  2
@@ -88,7 +88,7 @@ int16_t main(void)
 
    xTaskCreate(
 		TaskMonitor
-		,  (const portCHAR *)"SDMonitor" // Serial Monitor
+		,  (const char *)"SDMonitor" // Serial Monitor
 		,  208
 		,  NULL
 		,  3
@@ -430,7 +430,7 @@ void get_line (uint8_t *buff, uint8_t len)
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									signed portCHAR *pcTaskName )
+									signed char *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:

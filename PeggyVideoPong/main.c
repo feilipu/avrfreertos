@@ -140,7 +140,7 @@ int main(void)
 
     xTaskCreate(
 		TaskPong							// This will be the ball and scoring at 200Hz
-		,  (const portCHAR *)"Pong"
+		,  (const char *)"Pong"
 		,  256				// Tested 13 free
 		,  NULL
 		,  3
@@ -148,7 +148,7 @@ int main(void)
 
 /*   xTaskCreate(
 		TaskBall							// This is a bouncing ball (instead of Pong + SlowLoop)
-		,  (const portCHAR *)"Ball"
+		,  (const char *)"Ball"
 		,  186				// Tested 5 free
 		,  NULL
 		,  3
@@ -156,7 +156,7 @@ int main(void)
 
 /*    xTaskCreate(
 		TaskFace							// This is a digital face (instead of Pong + SlowLoop)
-		,  (const portCHAR *)"Face"
+		,  (const char *)"Face"
 		,  186				// Tested 20 free
 		,  NULL
 		,  3
@@ -164,7 +164,7 @@ int main(void)
 
     xTaskCreate(
 		TaskSlowLoop						// This is the borders, paddles, scoring & ADC running at 20Hz
-		,  (const portCHAR *)"SlowLoop"
+		,  (const char *)"SlowLoop"
 		,  186				// Tested 23 free
 		,  NULL
 		,  2
@@ -172,7 +172,7 @@ int main(void)
 
     xTaskCreate(
         TaskWriteI2CVideo					// This writes to I2C on 200Hz frame rate
-        ,  (const portCHAR *)"WriteI2CVideo"
+        ,  (const char *)"WriteI2CVideo"
         ,  240				// Tested x free
         ,  NULL
         ,  2
@@ -1047,7 +1047,7 @@ void drawCircle (int8_t xCenter, int8_t yCenter, int8_t radius, int8_t circleTyp
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
+                                    char *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.

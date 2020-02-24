@@ -162,7 +162,7 @@ int main(void)
 
     xTaskCreate(
 		TaskWriteLCD
-		,  (const portCHAR *)"WriteLCD"
+		,  (const char *)"WriteLCD"
 		,  400
 		,  NULL
 		,  3
@@ -170,7 +170,7 @@ int main(void)
 
    xTaskCreate(
 		TaskMonitor
-		,  (const portCHAR *)"SerialMonitor"
+		,  (const char *)"SerialMonitor"
 		,  480
 		,  NULL
 		,  2
@@ -178,7 +178,7 @@ int main(void)
 
    xTaskCreate(
 		TaskAnalogue
-		,  (const portCHAR *) "Analogue"
+		,  (const char *) "Analogue"
 		,  96
 		,  NULL
 		,  1

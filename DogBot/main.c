@@ -66,7 +66,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskBlinkGreenLED
-		,  (const portCHAR *)"GreenLED"
+		,  (const char *)"GreenLED"
 		,  128
 		,  NULL
 		,  3
@@ -75,7 +75,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskNavigation
-		,  (const portCHAR *)"Navigation"
+		,  (const char *)"Navigation"
 		,  128
 		,  NULL
 		,  2
@@ -84,7 +84,7 @@ int16_t main(void)
 
     xTaskCreate(
         TaskReadADCSensors
-        ,  (const portCHAR *)"ReadADCSensors"
+        ,  (const char *)"ReadADCSensors"
         ,  128
         ,  NULL
         ,  1
@@ -92,7 +92,7 @@ int16_t main(void)
 
 /*    xTaskCreate(
         TaskReadI2CThermopile
-        ,  (const portCHAR *)"ReadI2CThermopile"
+        ,  (const char *)"ReadI2CThermopile"
         ,  128
         ,  NULL
         ,  2
@@ -100,7 +100,7 @@ int16_t main(void)
 
     xTaskCreate(
         TaskReadI2CSonar
-        ,  (const portCHAR *)"ReadI2CSonar"
+        ,  (const char *)"ReadI2CSonar"
         ,  128
         ,  NULL
         ,  1
@@ -109,7 +109,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskWriteAnalogLCD
-		,  (const portCHAR *)"WriteAnalogLCD"
+		,  (const char *)"WriteAnalogLCD"
 		,  128
 		,  NULL
 		,  2
@@ -117,7 +117,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskWriteSonarLCD
-		,  (const portCHAR *)"WriteSonarLCD"
+		,  (const char *)"WriteSonarLCD"
 		,  128
 		,  NULL
 		,  2
@@ -125,7 +125,7 @@ int16_t main(void)
 
 /*   xTaskCreate(
 		TaskWriteThermopileLCD
-		,  (const portCHAR *)"WriteThermopileLCD"
+		,  (const char *)"WriteThermopileLCD"
 		,  128
 		,  NULL
 		,  3
@@ -133,7 +133,7 @@ int16_t main(void)
 
     xTaskCreate(
 		TaskTransport
-		,  (const portCHAR *)"TransportManagement"
+		,  (const char *)"TransportManagement"
 		,  128
 		,  NULL
 		,  2

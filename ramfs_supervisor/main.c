@@ -51,7 +51,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkRedLED
-		,  (const portCHAR *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
+		,  (const char *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
 		,  132
 		,  NULL
 		,  1
@@ -60,7 +60,7 @@ int main(void)
 
     xTaskCreate(
     	TaskRAMFSManager
- 		,  (const portCHAR *)"RAMFS" // RAMFS Manager
+ 		,  (const char *)"RAMFS" // RAMFS Manager
  		,  256
  		,  NULL
  		,  3
@@ -390,7 +390,7 @@ static void TaskRAMFSManager(void *pvParameters) // RAMFS Manager
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
+                                    char *pcTaskName )
 {
 
 	DDRB  |= _BV(DDB7);

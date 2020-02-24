@@ -77,7 +77,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkRedLED
-		,  (const portCHAR *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
+		,  (const char *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
 		,  256				// Tested 9 free @ 208
 		,  NULL
 		,  1
@@ -86,7 +86,7 @@ int main(void)
 
     xTaskCreate(
 		TaskAnalogue
-		,  (const portCHAR *) "Analogue"
+		,  (const char *) "Analogue"
 		,  256  // This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  1

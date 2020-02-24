@@ -43,7 +43,7 @@ int16_t main(void)
 
 /*    xTaskCreate(
     	vRFID_Task
-		,  (const portCHAR *)"RFID Task" // RFID task
+		,  (const char *)"RFID Task" // RFID task
 		,  200
 		,  NULL
 		,  1
@@ -51,7 +51,7 @@ int16_t main(void)
 
     xTaskCreate(
     	vuIP_Task
-		,  (const portCHAR *)"uIP Task" // IP task including httpd
+		,  (const char *)"uIP Task" // IP task including httpd
 		,  380				// Tested x free
 		,  NULL
 		,  2
@@ -68,7 +68,7 @@ int16_t main(void)
 /*-----------------------------------------------------------*/
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    signed portCHAR *pcTaskName )
+                                    signed char *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.

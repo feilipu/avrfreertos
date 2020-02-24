@@ -66,7 +66,7 @@ int main(void)
 	// DO NOT FLASH THE LED on PB5. It hangs off the SPI bus and kills things for other clients. etc.
 /*    xTaskCreate(
 		TaskBlinkGreenLED
-		,  (const portCHAR *)"GreenLED" // Main Arduino Uno 328p (Green) LED Blink
+		,  (const char *)"GreenLED" // Main Arduino Uno 328p (Green) LED Blink
 		,  96
 		,  NULL
 		,  1
@@ -75,7 +75,7 @@ int main(void)
 
     xTaskCreate(
  		TaskMonitor
- 		,  (const portCHAR *)"Monitor" // Serial Monitor
+ 		,  (const char *)"Monitor" // Serial Monitor
  		,  172
  		,  NULL
  		,  3
@@ -341,7 +341,7 @@ void get_line (uint8_t *buff, uint8_t len)
 
 
 void vApplicationStackOverflowHook( xTaskHandle xTask,
-                                    signed portCHAR *pcTaskName )
+                                    signed char *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.
@@ -351,7 +351,7 @@ void vApplicationStackOverflowHook( xTaskHandle xTask,
 -----------------------------------------------------------*/
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+									char *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:

@@ -59,7 +59,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkRedLED
-		,  (const portCHAR *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
+		,  (const char *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
 		,  256				// Tested 9 free @ 208
 		,  NULL
 		,  3
@@ -68,7 +68,7 @@ int main(void)
 
     xTaskCreate(
 		TaskPixy
-		,  (const portCHAR *) "Pixy"
+		,  (const char *) "Pixy"
 		,  256  // This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  1
@@ -171,7 +171,7 @@ static void TaskPixy(void *pvParameters) // Prepare the Pixy
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    portCHAR *pcTaskName )
+                                    char *pcTaskName )
 {
 
 	DDRB  |= _BV(DDB7);

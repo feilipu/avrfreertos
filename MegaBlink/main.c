@@ -59,7 +59,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkRedLED
-		,  (const portCHAR *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
+		,  (const char *)"RedLED" // Main Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
 		,  256				// Tested 9 free @ 208
 		,  NULL
 		,  3
@@ -67,7 +67,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkGreenLED
-		,  (const portCHAR *)"GreenLED" // Main Arduino Uno 328p (Green) LED Blink
+		,  (const char *)"GreenLED" // Main Arduino Uno 328p (Green) LED Blink
 		,  256				// Tested 9 free @ 208
 		,  NULL
 		,  3

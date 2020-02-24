@@ -32,7 +32,7 @@ int main(void)
 {
     xTaskCreate(	// create a task to write on the Gameduino 2 LCD
 		TaskWriteLCD
-		,  (const portCHAR *)"WriteLCD"
+		,  (const char *)"WriteLCD"
 		,  128		// number of bytes for the task stack
 		,  NULL
 		,  3		// priority of task (1 is highest priority, 4 lowest).
@@ -116,7 +116,7 @@ Notes:
    This routine is referenced in the task.c file of FreeRTOS as an extern.
 \*-----------------------------------------------------------*/
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+									char *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Turn Arduino LED on, and die.

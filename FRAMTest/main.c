@@ -123,7 +123,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkRedLED
-		,  (const portCHAR *)"RedLED" // Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
+		,  (const char *)"RedLED" // Arduino Mega 2560, Freetronics EtherMega (Red) LED Blink
 		,  256				// Tested ok at 188 for LED blink only.
 		,  NULL
 		,  3
@@ -131,7 +131,7 @@ int main(void)
 
     xTaskCreate(
 		TaskSDMonitor
-		,  (const portCHAR *)"SDMonitor" // Arduino Mega 2560, Freetronics EtherMega SD Monitor
+		,  (const char *)"SDMonitor" // Arduino Mega 2560, Freetronics EtherMega SD Monitor
 		,  1768				// Tested x free
 		,  NULL
 		,  2
@@ -1570,7 +1570,7 @@ test_diskio (
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+									char *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:

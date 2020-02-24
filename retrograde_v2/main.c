@@ -104,7 +104,7 @@ int main(void)
 
     xTaskCreate(
 		TaskWriteLCD
-		,  (const portCHAR *)"WriteLCD"
+		,  (const char *)"WriteLCD"
 		,  192
 		,  NULL
 		,  2
@@ -112,7 +112,7 @@ int main(void)
 
    xTaskCreate(
 		TaskWriteRTCRetrograde
-		,  (const portCHAR *)"WriteRTCRetrograde"
+		,  (const char *)"WriteRTCRetrograde"
 		,  120
 		,  NULL
 		,  1
@@ -120,7 +120,7 @@ int main(void)
 
    xTaskCreate(
 		TaskMonitor
-		,  (const portCHAR *)"SerialMonitor"
+		,  (const char *)"SerialMonitor"
 		,  256
 		,  NULL
 		,  3

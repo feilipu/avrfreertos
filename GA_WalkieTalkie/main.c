@@ -83,7 +83,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkRedLED
-		,  (const portCHAR *)"RedLED" // LED Blink
+		,  (const char *)"RedLED" // LED Blink
 		,  256				// Tested 9 free @ 208
 		,  NULL
 		,  1
@@ -92,7 +92,7 @@ int main(void)
 
     xTaskCreate(
 		TaskWalkieTalkie
-		,  (const portCHAR *) "WalkieTalkie"
+		,  (const char *) "WalkieTalkie"
 		,  1024  // This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  3

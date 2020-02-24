@@ -56,7 +56,7 @@ int16_t main(void)
 
 /*    xTaskCreate(
     	vuIP_Task
-		,  (const portCHAR *)"uIP Task" // IP task including httpd
+		,  (const char *)"uIP Task" // IP task including httpd
 		,  1024
 		,  NULL
 		,  3
@@ -64,7 +64,7 @@ int16_t main(void)
 
     xTaskCreate(
     	TaskCharEcho
-		,  (const portCHAR *)"Char Echo Task" // Echo characters
+		,  (const char *)"Char Echo Task" // Echo characters
 		,  3072
 		,  NULL
 		,  3
@@ -185,7 +185,7 @@ static void TaskCharEcho(void *pvParameters) // Echo characters from one USART p
 /*-----------------------------------------------------------*/
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    signed portCHAR *pcTaskName )
+                                    signed char *pcTaskName )
 {
 	DDRB  |= _BV(DDB7);
 	PORTB |= _BV(PORTB7);       // main (red PB7) LED on. Goldilocks LED on and die.

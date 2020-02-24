@@ -87,7 +87,7 @@ int main(void)
 
     xTaskCreate(
 		TaskWriteLCD
-		,  (const portCHAR *)"WriteLCD"
+		,  (const char *)"WriteLCD"
 		,  512		// measured 73 free stack bytes
 		,  (void *)0
 		,  3
@@ -95,7 +95,7 @@ int main(void)
 
    xTaskCreate(
 		TaskMonitor
-		,  (const portCHAR *)"SerialMonitor"
+		,  (const char *)"SerialMonitor"
 		,  512		// measured 124 free stack bytes
 		,  (void *)0
 		,  2
@@ -675,7 +675,7 @@ void get_line (uint8_t *buff, uint8_t len)
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+									char *pcTaskName )
 {
 	/*---------------------------------------------------------------------------*\
 	Usage:

@@ -78,7 +78,7 @@ int main(void)
 
     xTaskCreate(
 		TaskBlinkGreenLED
-		,  (const portCHAR *)"Green LED"
+		,  (const char *)"Green LED"
 		,  168  // 23 bytes free. This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  3
@@ -87,7 +87,7 @@ int main(void)
 
     xTaskCreate(
     		TaskWriteSPILCD
-		,  (const portCHAR *)"Write LCD"
+		,  (const char *)"Write LCD"
 		,  188  // 39 bytes free. This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  1
@@ -258,7 +258,7 @@ int main(void)
 
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+									char *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.

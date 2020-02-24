@@ -48,7 +48,7 @@ int main(void)
 
     xTaskCreate(
 		TaskAudio
-		,  (const portCHAR *) "Audio"
+		,  (const char *)"Audio"
 		,  256  // This stack size can be checked & adjusted by reading Highwater
 		,  NULL
 		,  1
@@ -350,7 +350,7 @@ static void TaskAudio(void *pvParameters) // Prepare the Audio Codec
 /*--------------------------------------------------*/
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-									portCHAR *pcTaskName )
+									char *pcTaskName )
 {
 	DDRB  |= _BV(DDB5);
 	PORTB |= _BV(PORTB5);       // main (red PB5) LED on. Arduino LED on and die.
