@@ -61,6 +61,9 @@
 
 /* Definitions specific to the port being used. */
 #include "portable.h"
+        
+/* Board (AVR) specific configuration options. */
+#include "FreeRTOSBoardDefs.h"
 
 /* Must be defaulted before configUSE_NEWLIB_REENTRANT is used below. */
 #ifndef configUSE_NEWLIB_REENTRANT
