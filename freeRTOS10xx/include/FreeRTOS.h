@@ -61,9 +61,6 @@
 
 /* Definitions specific to the port being used. */
 #include "portable.h"
-        
-/* Board (AVR) specific configuration options. */
-#include "FreeRTOSBoardDefs.h"
 
 /* Must be defaulted before configUSE_NEWLIB_REENTRANT is used below. */
 #ifndef configUSE_NEWLIB_REENTRANT
@@ -1320,5 +1317,8 @@ typedef StaticStreamBuffer_t StaticMessageBuffer_t;
     }
 #endif
 /* *INDENT-ON* */
+        
+/* Board (AVR) specific configuration options. */
+#include "FreeRTOSBoardDefs.h"
 
 #endif /* INC_FREERTOS_H */
