@@ -846,7 +846,6 @@ void vTaskDelay( const TickType_t xTicksToDelay ) PRIVILEGED_FUNCTION;
 BaseType_t xTaskDelayUntil( TickType_t * const pxPreviousWakeTime,
                             const TickType_t xTimeIncrement ) PRIVILEGED_FUNCTION;
 
-
 /**
  * task. h
  * <pre>
@@ -1606,7 +1605,7 @@ configSTACK_DEPTH_TYPE uxTaskGetStackHighWaterMark( TaskHandle_t xTask ) PRIVILE
      * configSUPPORT_STATIC_ALLOCATION is set.  For more information see this URI: https://www.FreeRTOS.org/a00110.html#configSUPPORT_STATIC_ALLOCATION
      *
      * @param ppxIdleTaskTCBBuffer A handle to a statically allocated TCB buffer
-     * @param ppxIdleTaskStackBuffer A handle to a statically allocated Stack buffer for thie idle task
+     * @param ppxIdleTaskStackBuffer A handle to a statically allocated Stack buffer for the idle task
      * @param pulIdleTaskStackSize A pointer to the number of elements that will fit in the allocated stack buffer
      */
     void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer,

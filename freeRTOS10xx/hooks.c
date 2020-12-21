@@ -349,29 +349,3 @@ void vApplicationGetTimerTaskMemory( StaticTask_t ** ppxTimerTaskTCBBuffer,
 
 #endif /* configSUPPORT_STATIC_ALLOCATION >= 1 */
 
-/**
- * configASSERT default implementation
- */
-#if configDEFAULT_ASSERT == 1
-
-void vApplicationAssertHook() {
-
-    taskDISABLE_INTERRUPTS(); // Disable task interrupts
-
-    prvSetMainLedOn(); // Main LED on.
-    for(;;)
-    {
-        _delay_ms(100);
-        prvBlinkMainLed(); // Led off.
-
-        _delay_ms(2000);
-        prvBlinkMainLed(); // Led on.
-
-        _delay_ms(100);
-        prvBlinkMainLed(); // Led off
-
-        _delay_ms(100);
-        prvBlinkMainLed(); // Led on.
-    }
-}
-#endif
