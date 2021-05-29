@@ -1,6 +1,8 @@
 /*
- * FreeRTOS Kernel V10.4.3
- * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.4.4
+ * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ *
+ * SPDX-License-Identifier: MIT
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -82,8 +84,8 @@ void * pvPortMalloc( size_t xWantedSize )
                 if ( (xWantedSize + ( portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK ) )) > xWantedSize )
                 {
                     xWantedSize += ( portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK ) );
-                } 
-                else 
+                }
+                else
                 {
                     xWantedSize = 0;
                 }
@@ -99,7 +101,7 @@ void * pvPortMalloc( size_t xWantedSize )
             pucAlignedHeap = ( uint8_t * ) ( ( ( portPOINTER_SIZE_TYPE ) & ucHeap[ portBYTE_ALIGNMENT ] ) & ( ~( ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK ) ) );
         }
 
-        /* Check there is enough room left for the allocation and, */
+        /* Check there is enough room left for the allocation and. */
         if( ( xWantedSize > 0 ) && /* valid size */
             ( ( xNextFreeByte + xWantedSize ) < configADJUSTED_HEAP_SIZE ) &&
             ( ( xNextFreeByte + xWantedSize ) > xNextFreeByte ) ) /* Check for overflow. */

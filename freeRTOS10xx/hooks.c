@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Phillip Stevens  All Rights Reserved.
+ * Copyright (C) 2021 Phillip Stevens  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -22,8 +22,6 @@
  * This file is NOT part of the FreeRTOS distribution.
  *
  */
-
-#include <string.h>
 
 #include <avr/io.h>
 #include <avr/pgmspace.h>
