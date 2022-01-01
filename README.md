@@ -14,6 +14,9 @@ Ths idea was launched as a [Pozible campaign in 2013](http://www.pozible.com/gol
 It was successfully funded and the [Goldilocks](http://freetronics.com/goldilocks/) was developed and supported by Freetronics. 
 
 This repo has been hosted on [Sourceforge avrfreertos](https://sourceforge.net/projects/avrfreertos/) since 2011, and has been [downloaded over 25,000 times](https://sourceforge.net/projects/avrfreertos/files/stats/timeline?dates=2011-09-22+to+2018-8-31).
+
+Over the past few years freeRTOS development has become increasingly 32-bit orientated, with little change or improvement for the 8-bit world. As such I'm treating this 1st January 2022 10.4.6 snapshot as my LTS release.
+
 Going forward Sourceforge will be updated less often and only with major releases.
 
 [Follow @_feilipu](https://twitter.com/_feilipu) on Twitter.
