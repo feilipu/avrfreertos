@@ -88,6 +88,10 @@ inline void startAnalogConversion(uint8_t channel, uint8_t use_internal_referenc
 	}
 
 	tempADMUX &= ~0x1F;		 // clear channel selection bits of ADMUX
+    if(channel > 0x07){
+        ADCSRB |= _BV(MUX5);
+        channel &= 0x07;
+    }
 	tempADMUX |= channel;    // we only get this far if channel is less than 32
 	ADMUX = tempADMUX;
 	ADCSRA |= _BV(ADSC); // start the conversion
