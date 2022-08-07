@@ -46,7 +46,7 @@
  * privileges.
  */
 
-/* Map standard tasks.h API functions to the MPU equivalents. */
+/* Map standard task.h API functions to the MPU equivalents. */
         #define xTaskCreate                            MPU_xTaskCreate
         #define xTaskCreateStatic                      MPU_xTaskCreateStatic
         #define vTaskDelete                            MPU_vTaskDelete
@@ -163,15 +163,45 @@
  * macro so applications can place data in privileged access sections
  * (useful when using statically allocated objects). */
         #define PRIVILEGED_FUNCTION
-        #define PRIVILEGED_DATA    __attribute__( ( section( "privileged_data" ) ) )
+        #define PRIVILEGED_DATA    __attribute__ ((section( "privileged_data" )))
         #define FREERTOS_SYSTEM_CALL
 
     #else /* MPU_WRAPPERS_INCLUDED_FROM_API_FILE */
 
 /* Ensure API functions go in the privileged execution section. */
-        #define PRIVILEGED_FUNCTION     __attribute__( ( section( "privileged_functions" ) ) )
-        #define PRIVILEGED_DATA         __attribute__( ( section( "privileged_data" ) ) )
-        #define FREERTOS_SYSTEM_CALL    __attribute__( ( section( "freertos_system_calls" ) ) )
+        #define PRIVILEGED_FUNCTION     __attribute__ ((section( "privileged_functions" )))
+        #define PRIVILEGED_DATA         __attribute__ ((section( "privileged_data" )))
+        #define FREERTOS_SYSTEM_CALL    __attribute__ ((section( "freertos_system_calls" )))
+
+/**
+ * @brief Calls the port specific code to raise the privilege.
+ *
+ * Sets xRunningPrivileged to pdFALSE if privilege was raised, else sets
+ * it to pdTRUE.
+ */
+        #define xPortRaisePrivilege( xRunningPrivileged )                  \
+    {                                                                      \
+        /* Check whether the processor is already privileged. */           \
+        xRunningPrivileged = portIS_PRIVILEGED();                          \
+                                                                           \
+        /* If the processor is not already privileged, raise privilege. */ \
+        if( xRunningPrivileged == pdFALSE )                                \
+        {                                                                  \
+            portRAISE_PRIVILEGE();                                         \
+        }                                                                  \
+    }
+
+/**
+ * @brief If xRunningPrivileged is not pdTRUE, calls the port specific
+ * code to reset the privilege, otherwise does nothing.
+ */
+        #define vPortResetPrivilege( xRunningPrivileged ) \
+    {                                                     \
+        if( xRunningPrivileged == pdFALSE )               \
+        {                                                 \
+            portRESET_PRIVILEGE();                        \
+        }                                                 \
+    }
 
     #endif /* MPU_WRAPPERS_INCLUDED_FROM_API_FILE */
 

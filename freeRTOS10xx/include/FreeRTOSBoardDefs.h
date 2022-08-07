@@ -288,8 +288,8 @@ extern "C" {
 
 
 #if defined (portUSE_WDTO)
-//    xxx Watchdog Timer is 128kHz nominal, but 120 kHz at 5V DC and 25 degrees is actually more accurate, from data sheet.
-#define configTICK_RATE_HZ             ( (TickType_t)( (uint32_t)128000 >> (portUSE_WDTO + 11) ) )  // 2^11 = 2048 WDT Scale-factor
+/* Watchdog Timer is 128kHz nominal, but 120 kHz at 5V DC and 25 degrees is actually more accurate, from data sheet. */
+#define configTICK_RATE_HZ  ( (TickType_t)( (uint32_t)128000 >> (portUSE_WDTO + 11) ) )  // 2^11 = 2048 WDT scaler for 128kHz Timer
 
 #elif defined (portUSE_TIMER0) || defined (portUSE_TIMER1)
 #define configTICK_RATE_HZ            ( (TickType_t) 200 )      // Use 1000Hz to get mSec timing using Timer1.

@@ -81,7 +81,7 @@ typedef uint8_t                     UBaseType_t;
 
 /* Architecture specifics. */
 
-#define sleep_reset()                   do { _SLEEP_CONTROL_REG = 0; } while(0)     /* reset all sleep_mode() configurations. */
+#define sleep_reset()               do { _SLEEP_CONTROL_REG = 0; } while(0)     /* reset all sleep_mode() configurations. */
 
 #define portSTACK_GROWTH            ( -1 )
 
@@ -101,11 +101,11 @@ typedef uint8_t                     UBaseType_t;
 /*-----------------------------------------------------------*/
 
 /* Kernel utilities. */
-extern void vPortYield( void )      __attribute__ ( ( naked ) );
+extern void vPortYield( void ) __attribute__ ((naked));
 #define portYIELD()                 vPortYield()
 
-extern void vPortYieldFromISR( void )   __attribute__ ( ( naked ) );
-#define portYIELD_FROM_ISR()            vPortYieldFromISR()
+extern void vPortYieldFromISR( void ) __attribute__ ((naked));
+#define portYIELD_FROM_ISR()        vPortYieldFromISR()
 /*-----------------------------------------------------------*/
 
 #if defined(__AVR_3_BYTE_PC__)

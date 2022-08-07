@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Phillip Stevens  All Rights Reserved.
+ * Copyright (C) 2022 Phillip Stevens  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -39,7 +39,7 @@
 /*-----------------------------------------------------------*/
 #if ( configUSE_IDLE_HOOK == 1 )
 
-void vApplicationIdleHook( void ) __attribute__((weak));
+void vApplicationIdleHook( void ) __attribute__ ((weak));
 
 void vApplicationIdleHook( void )
 {
@@ -108,7 +108,7 @@ void vApplicationIdleHook( void )
 
 #if ( configUSE_MALLOC_FAILED_HOOK == 1 )
 
-void vApplicationMallocFailedHook( void ) __attribute__((weak));
+void vApplicationMallocFailedHook( void ) __attribute__ ((weak));
 
 void vApplicationMallocFailedHook( void )
 {
@@ -174,10 +174,10 @@ void vApplicationMallocFailedHook( void )
 #if ( configCHECK_FOR_STACK_OVERFLOW >= 1 )
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    char * pcTaskName ) __attribute__((weak));
+                                    char * pcTaskName ) __attribute__ ((weak));
 
-void vApplicationStackOverflowHook( TaskHandle_t xTask __attribute__((unused)),
-                                    char * pcTaskName __attribute__((unused)) )
+void vApplicationStackOverflowHook( TaskHandle_t xTask __attribute__ ((unused)),
+                                    char * pcTaskName __attribute__ ((unused)) )
 {
     /*---------------------------------------------------------------------------*\
     Usage:
@@ -237,7 +237,7 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask __attribute__((unused)),
 #else
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
-                                    char * pcTaskName ) __attribute__((weak));
+                                    char * pcTaskName ) __attribute__ ((weak));
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask,
                                     char * pcTaskName )
@@ -311,7 +311,7 @@ void vApplicationStackOverflowHook( TaskHandle_t xTask,
 
 void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer,
                                     StackType_t ** ppxIdleTaskStackBuffer,
-                                    configSTACK_DEPTH_TYPE * puxIdleTaskStackSize ) __attribute__((weak));
+                                    configSTACK_DEPTH_TYPE * puxIdleTaskStackSize ) __attribute__ ((weak));
 
 void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer,
                                     StackType_t ** ppxIdleTaskStackBuffer,
@@ -329,7 +329,7 @@ void vApplicationGetIdleTaskMemory( StaticTask_t ** ppxIdleTaskTCBBuffer,
 
 void vApplicationGetTimerTaskMemory( StaticTask_t ** ppxTimerTaskTCBBuffer,
                                      StackType_t ** ppxTimerTaskStackBuffer,
-                                     configSTACK_DEPTH_TYPE * puxTimerTaskStackSize ) __attribute__((weak));
+                                     configSTACK_DEPTH_TYPE * puxTimerTaskStackSize ) __attribute__ ((weak));
 
 void vApplicationGetTimerTaskMemory( StaticTask_t ** ppxTimerTaskTCBBuffer,
                                      StackType_t ** ppxTimerTaskStackBuffer,
