@@ -1,5 +1,5 @@
 /*
- * FreeRTOS Kernel V10.4.6
+ * FreeRTOS Kernel V10.5.0
  * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -355,7 +355,7 @@ static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
 
     /* To start with there is a single free block that is sized to take up the
      * entire heap space. */
-    pxFirstFreeBlock = ( void * ) pucAlignedHeap;
+    pxFirstFreeBlock = ( BlockLink_t * ) pucAlignedHeap;
     pxFirstFreeBlock->xBlockSize = configADJUSTED_HEAP_SIZE;
     pxFirstFreeBlock->pxNextFreeBlock = &xEnd;
 }
