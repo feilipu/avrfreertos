@@ -104,6 +104,7 @@ extern "C" {
 
 #endif
 
+#define portTICK_PERIOD_MS  ( (TickType_t) 1000 / configTICK_RATE_HZ )
 
 //  XRAM device options. Different methods of enabling and driving.    MegaRAM only implemented for two banks of 56kByte currently.
 //  #define portMEGA_RAM                                            // Use the Rugged Circuits External (128kByte) MegaRAM device. - OR -

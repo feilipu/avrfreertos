@@ -581,7 +581,7 @@ static void prvSetupTimerInterrupt( void );
  * Perform hardware setup to enable 1 second sys_ticks() from RTC Timer2.
 
  */
-static void prvSetupRTCInterrupt( void );
+void prvSetupRTCInterrupt( void );
 #endif
 /*-----------------------------------------------------------*/
 
@@ -819,7 +819,7 @@ void prvSetupTimerInterrupt( void )
 /*
  * Setup Timer 0 or 1 or 3 compare match A to generate a tick interrupt.
  */
-static void prvSetupTimerInterrupt( void )
+void prvSetupTimerInterrupt( void )
 {
 uint32_t ulCompareMatch;
 #ifdef portOCRH
