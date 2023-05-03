@@ -1,5 +1,5 @@
 /*
- * FreeRTOS Kernel V10.5.0
+ * FreeRTOS Kernel <DEVELOPMENT BRANCH>
  * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -141,7 +141,8 @@ static void prvInsertBlockIntoFreeList( BlockLink_t * pxBlockToInsert );
 static const size_t xHeapStructSize = ( sizeof( BlockLink_t ) + ( ( size_t ) ( portBYTE_ALIGNMENT - 1 ) ) ) & ~( ( size_t ) portBYTE_ALIGNMENT_MASK );
 
 /* Create a couple of list links to mark the start and end of the list. */
-static BlockLink_t xStart, * pxEnd = NULL;
+static BlockLink_t xStart;
+static BlockLink_t * pxEnd = NULL;
 
 /* Keeps track of the number of calls to allocate and free memory as well as the
  * number of free bytes remaining, but says nothing about fragmentation. */
@@ -154,7 +155,9 @@ static size_t xNumberOfSuccessfulFrees = 0;
 
 void * pvPortMalloc( size_t xWantedSize )
 {
-    BlockLink_t * pxBlock, * pxPreviousBlock, * pxNewBlockLink;
+    BlockLink_t * pxBlock;
+    BlockLink_t * pxPreviousBlock;
+    BlockLink_t * pxNewBlockLink;
     void * pvReturn = NULL;
     size_t xAdditionalRequiredSize;
 
@@ -167,13 +170,31 @@ void * pvPortMalloc( size_t xWantedSize )
         if( xWantedSize > 0 )
         {
             /* The wanted size must be increased so it can contain a BlockLink_t
-             * structure in addition to the requested amount of bytes. Some
-             * additional increment may also be needed for alignment. */
-            xAdditionalRequiredSize = xHeapStructSize + portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK );
-
-            if( heapADD_WILL_OVERFLOW( xWantedSize, xAdditionalRequiredSize ) == 0 )
+             * structure in addition to the requested amount of bytes. */
+            if( heapADD_WILL_OVERFLOW( xWantedSize, xHeapStructSize ) == 0 )
             {
-                xWantedSize += xAdditionalRequiredSize;
+                xWantedSize += xHeapStructSize;
+
+                /* Ensure that blocks are always aligned to the required number
+                 * of bytes. */
+                if( ( xWantedSize & portBYTE_ALIGNMENT_MASK ) != 0x00 )
+                {
+                    /* Byte alignment required. */
+                    xAdditionalRequiredSize = portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK );
+
+                    if( heapADD_WILL_OVERFLOW( xWantedSize, xAdditionalRequiredSize ) == 0 )
+                    {
+                        xWantedSize += xAdditionalRequiredSize;
+                    }
+                    else
+                    {
+                        xWantedSize = 0;
+                    }
+                }
+                else
+                {
+                    mtCOVERAGE_TEST_MARKER();
+                }
             }
             else
             {
@@ -441,7 +462,8 @@ static void prvInsertBlockIntoFreeList( BlockLink_t * pxBlockToInsert )
 
 void vPortDefineHeapRegions( const HeapRegion_t * const pxHeapRegions )
 {
-    BlockLink_t * pxFirstFreeBlockInRegion = NULL, * pxPreviousFreeBlock;
+    BlockLink_t * pxFirstFreeBlockInRegion = NULL;
+    BlockLink_t * pxPreviousFreeBlock;
     portPOINTER_SIZE_TYPE xAlignedHeap;
     size_t xTotalRegionSize, xTotalHeapSize = 0;
     BaseType_t xDefinedRegions = 0;

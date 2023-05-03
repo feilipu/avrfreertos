@@ -1,5 +1,5 @@
 /*
- * FreeRTOS Kernel V10.5.0
+ * FreeRTOS Kernel V10.5.1+
  * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -574,7 +574,7 @@ volatile TickType_t ticksRemainingInSec;
 /*
  * Perform hardware setup to enable ticks from relevant Timer.
  */
-static void prvSetupTimerInterrupt( void );
+void prvSetupTimerInterrupt( void );
 
 #if defined(portUSE_TIMER2_RTC) && !defined(portUSE_TIMER2)
 /*
@@ -890,7 +890,7 @@ uint8_t ucLowByte;
  * Setup Crystal-controlled timer2 compare match A to generate a tick interrupt.
  */
 
-static void prvSetupTimerInterrupt( void )
+void prvSetupTimerInterrupt( void )
 {
     uint16_t usCompareMatch;
 

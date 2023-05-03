@@ -1,5 +1,5 @@
 /*
- * FreeRTOS Kernel V10.5.0
+ * FreeRTOS Kernel V10.5.1+
  * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
@@ -98,8 +98,8 @@
  * of their memory address. */
 typedef struct A_BLOCK_LINK
 {
-    struct A_BLOCK_LINK * pxNextFreeBlock; /*<< The next free block in the list. */
-    size_t xBlockSize;                     /*<< The size of the free block. */
+    struct A_BLOCK_LINK * pxNextFreeBlock; /*< The next free block in the list. */
+    size_t xBlockSize;                     /*< The size of the free block. */
 } BlockLink_t;
 
 /*-----------------------------------------------------------*/
@@ -125,7 +125,8 @@ static void prvHeapInit( void ) PRIVILEGED_FUNCTION;
 static const size_t xHeapStructSize = ( sizeof( BlockLink_t ) + ( ( size_t ) ( portBYTE_ALIGNMENT - 1 ) ) ) & ~( ( size_t ) portBYTE_ALIGNMENT_MASK );
 
 /* Create a couple of list links to mark the start and end of the list. */
-PRIVILEGED_DATA static BlockLink_t xStart, * pxEnd = NULL;
+PRIVILEGED_DATA static BlockLink_t xStart;
+PRIVILEGED_DATA static BlockLink_t * pxEnd = NULL;
 
 /* Keeps track of the number of calls to allocate and free memory as well as the
  * number of free bytes remaining, but says nothing about fragmentation. */
@@ -138,7 +139,9 @@ PRIVILEGED_DATA static size_t xNumberOfSuccessfulFrees = 0;
 
 void * pvPortMalloc( size_t xWantedSize )
 {
-    BlockLink_t * pxBlock, * pxPreviousBlock, * pxNewBlockLink;
+    BlockLink_t * pxBlock;
+    BlockLink_t * pxPreviousBlock;
+    BlockLink_t * pxNewBlockLink;
     void * pvReturn = NULL;
     size_t xAdditionalRequiredSize;
 
@@ -158,13 +161,31 @@ void * pvPortMalloc( size_t xWantedSize )
         if( xWantedSize > 0 )
         {
             /* The wanted size must be increased so it can contain a BlockLink_t
-             * structure in addition to the requested amount of bytes. Some
-             * additional increment may also be needed for alignment. */
-            xAdditionalRequiredSize = xHeapStructSize + portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK );
-
-            if( heapADD_WILL_OVERFLOW( xWantedSize, xAdditionalRequiredSize ) == 0 )
+             * structure in addition to the requested amount of bytes. */
+            if( heapADD_WILL_OVERFLOW( xWantedSize, xHeapStructSize ) == 0 )
             {
-                xWantedSize += xAdditionalRequiredSize;
+                xWantedSize += xHeapStructSize;
+
+                /* Ensure that blocks are always aligned to the required number
+                 * of bytes. */
+                if( ( xWantedSize & portBYTE_ALIGNMENT_MASK ) != 0x00 )
+                {
+                    /* Byte alignment required. */
+                    xAdditionalRequiredSize = portBYTE_ALIGNMENT - ( xWantedSize & portBYTE_ALIGNMENT_MASK );
+
+                    if( heapADD_WILL_OVERFLOW( xWantedSize, xAdditionalRequiredSize ) == 0 )
+                    {
+                        xWantedSize += xAdditionalRequiredSize;
+                    }
+                    else
+                    {
+                        xWantedSize = 0;
+                    }
+                }
+                else
+                {
+                    mtCOVERAGE_TEST_MARKER();
+                }
             }
             else
             {
@@ -389,7 +410,7 @@ static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
     {
         uxAddress += ( portBYTE_ALIGNMENT - 1 );
         uxAddress &= ~( ( size_t ) portBYTE_ALIGNMENT_MASK );
-        xTotalHeapSize -= uxAddress - ( size_t ) ucHeap;
+        xTotalHeapSize -= ( size_t ) ( uxAddress - ( size_t ) ucHeap );
     }
 
     pucAlignedHeap = ( uint8_t * ) uxAddress;
@@ -401,17 +422,17 @@ static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
 
     /* pxEnd is used to mark the end of the list of free blocks and is inserted
      * at the end of the heap space. */
-    uxAddress = ( ( size_t ) pucAlignedHeap ) + xTotalHeapSize;
+    uxAddress = ( size_t ) ( pucAlignedHeap + xTotalHeapSize );
     uxAddress -= xHeapStructSize;
     uxAddress &= ~( ( size_t ) portBYTE_ALIGNMENT_MASK );
-    pxEnd = ( void * ) uxAddress;
+    pxEnd = ( BlockLink_t * ) uxAddress;
     pxEnd->xBlockSize = 0;
     pxEnd->pxNextFreeBlock = NULL;
 
     /* To start with there is a single free block that is sized to take up the
      * entire heap space, minus the space taken by pxEnd. */
-    pxFirstFreeBlock = ( void * ) pucAlignedHeap;
-    pxFirstFreeBlock->xBlockSize = uxAddress - ( size_t ) pxFirstFreeBlock;
+    pxFirstFreeBlock = ( BlockLink_t * ) pucAlignedHeap;
+    pxFirstFreeBlock->xBlockSize =( size_t ) (uxAddress - ( size_t ) pxFirstFreeBlock );
     pxFirstFreeBlock->pxNextFreeBlock = pxEnd;
 
     /* Only one block exists - and it covers the entire usable heap space. */
