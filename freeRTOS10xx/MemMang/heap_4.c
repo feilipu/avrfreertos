@@ -400,17 +400,17 @@ static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
 {
     BlockLink_t * pxFirstFreeBlock;
     uint8_t * pucAlignedHeap;
-    size_t uxAddress;
+    portPOINTER_SIZE_TYPE uxAddress;
     size_t xTotalHeapSize = configTOTAL_HEAP_SIZE;
 
     /* Ensure the heap starts on a correctly aligned boundary. */
-    uxAddress = ( size_t ) ucHeap;
+    uxAddress = ( portPOINTER_SIZE_TYPE ) ucHeap;
 
     if( ( uxAddress & portBYTE_ALIGNMENT_MASK ) != 0 )
     {
         uxAddress += ( portBYTE_ALIGNMENT - 1 );
-        uxAddress &= ~( ( size_t ) portBYTE_ALIGNMENT_MASK );
-        xTotalHeapSize -= ( size_t ) ( uxAddress - ( size_t ) ucHeap );
+        uxAddress &= ~( ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK );
+        xTotalHeapSize -= ( size_t ) ( uxAddress - ( portPOINTER_SIZE_TYPE ) ucHeap );
     }
 
     pucAlignedHeap = ( uint8_t * ) uxAddress;
@@ -422,9 +422,9 @@ static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
 
     /* pxEnd is used to mark the end of the list of free blocks and is inserted
      * at the end of the heap space. */
-    uxAddress = ( size_t ) ( pucAlignedHeap + xTotalHeapSize );
+    uxAddress = ( portPOINTER_SIZE_TYPE ) ( pucAlignedHeap + xTotalHeapSize );
     uxAddress -= xHeapStructSize;
-    uxAddress &= ~( ( size_t ) portBYTE_ALIGNMENT_MASK );
+    uxAddress &= ~( ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK );
     pxEnd = ( BlockLink_t * ) uxAddress;
     pxEnd->xBlockSize = 0;
     pxEnd->pxNextFreeBlock = NULL;
@@ -432,7 +432,7 @@ static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
     /* To start with there is a single free block that is sized to take up the
      * entire heap space, minus the space taken by pxEnd. */
     pxFirstFreeBlock = ( BlockLink_t * ) pucAlignedHeap;
-    pxFirstFreeBlock->xBlockSize =( size_t ) (uxAddress - ( size_t ) pxFirstFreeBlock );
+    pxFirstFreeBlock->xBlockSize = ( size_t ) ( uxAddress - ( portPOINTER_SIZE_TYPE ) pxFirstFreeBlock );
     pxFirstFreeBlock->pxNextFreeBlock = pxEnd;
 
     /* Only one block exists - and it covers the entire usable heap space. */
