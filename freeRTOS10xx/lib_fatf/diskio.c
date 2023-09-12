@@ -244,6 +244,14 @@ uint16_t send_cmd (        /* Returns R1/R2 resp (bit7==1:Send failed) */
     uint16_t resp;
     uint16_t i;
 
+    if (cmd != CMD0 && cmd != CMD12)           /* Long wait for ready except to initialise or to stop multiple block read */
+    {
+        i = 0;
+        while ( (--i != 0) && (spiTransfer(0xFF) != 0xFF) )     // Long wait while SD busy (0x00 signal).
+            vTaskDelay( 0 );                // It is finishing up a prior command, so swap out.
+                                            // Busy signal 0x00, up to 65536 system ticks.
+    }
+
     if (cmd & 0x80)                            /* ACMD<n> is the command sequence of CMD55 + CMD<n> */
     {
         /* Prepare the special CMD55 precursor command */
@@ -279,14 +287,6 @@ uint16_t send_cmd (        /* Returns R1/R2 resp (bit7==1:Send failed) */
                                             /* Special case Commands needing valid CRC + Stop */
 //    if (cmd == CMD0) send.crc = 0x95;        /* Revise with a Valid CRC + Stop for CMD0(0) */
 //    if (cmd == CMD8) send.crc = 0x87;        /* Revise with a Valid CRC + Stop for CMD8(0x1AA) */
-
-    if (cmd != CMD0)
-    {
-        i = 0;
-        while ( (--i != 0) && (spiTransfer(0xFF) != 0xFF) )     // Long wait while SD busy (0x00 signal).
-            vTaskDelay( 0 );                // It is finishing up a prior command, so swap out.
-                                            // Busy signal 0x00, up to 65536 system ticks.
-    }
 
     /* Send normal Command packet */
     spiMultiByteTx((uint8_t *)&send, sizeof(send)); // send a normal Command and a valid Argument.
@@ -400,12 +400,12 @@ DSTATUS disk_initialize (
         else if ( resp == (R1_ILLEGAL_COMMAND | R1_IDLE_STATE) )
         {    /* SDv1 or MMCv3 legacy card*/
 
-            for (uint8_t i = 250; i && ((resp = send_cmd(ACMD41, 0x00)) == R1_IDLE_STATE); --i) // initialise for 2 second
+            for (uint8_t i = 250; i && ((resp = send_cmd(ACMD41, 0x00)) == R1_READY_STATE); --i) // initialise for 2 second
             {
                 spiTransfer(0xFF);                                    /* Give SD Card 8 Clocks to complete command. */
                 vTaskDelay( 32 / portTICK_PERIOD_MS );
             }
-            if (resp == 0x00) /* SDv1 */
+            if (resp == R1_READY_STATE) /* SDv1 */
                 type = CT_SD1;
             else /* MMCv3 ?? */
             {
@@ -414,7 +414,7 @@ DSTATUS disk_initialize (
                     spiTransfer(0xFF);                                /* Give SD Card 8 Clocks to complete command. */
                     vTaskDelay( 32 / portTICK_PERIOD_MS );
                 }
-                if (resp == 0x00) /* MMCv3 */
+                if (resp == R1_IDLE_STATE) /* MMCv3 */
                     type = CT_MMC;
                 else
                     type = 0;
