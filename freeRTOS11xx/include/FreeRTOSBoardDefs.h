@@ -93,18 +93,17 @@ extern "C" {
 
 
 #if defined (portUSE_WDTO)
-//    xxx Watchdog Timer is 128kHz nominal, but 120 kHz at 5V DC and 25 degrees is actually more accurate, from data sheet.
-#define configTICK_RATE_HZ             ( (TickType_t)( (uint32_t)128000 >> (portUSE_WDTO + 11) ) )  // 2^11 = 2048 WDT Scale-factor
+    #define configTICK_RATE_HZ          ( (TickType_t)( (uint32_t)128000 >> (portUSE_WDTO + 11) ) )  // 2^11 = 2048 WDT scaler for 128kHz Timer
+    #define portTICK_PERIOD_MS          ( (TickType_t) _BV( portUSE_WDTO + 4 ) )
 
 #elif defined (portUSE_TIMER0) || defined (portUSE_TIMER1) || defined (portUSE_TIMER3)
-#define configTICK_RATE_HZ            ( (TickType_t) 200 )          // Use 1000Hz to get mSec timing using Timer1 or Timer3.
+    #define configTICK_RATE_HZ              ( (TickType_t) 200 )          // Use 1000Hz to get mSec timing using Timer1 or Timer3.
+    #define portTICK_PERIOD_MS  ( (TickType_t) ( 1000 / configTICK_RATE_HZ ) )
 
 #elif defined( portUSE_TIMER2 ) && !defined( portUSE_TIMER2_RTC )
-#define configTICK_RATE_HZ            ( (TickType_t) 128 )          // MINIMUM for TIMER2 is 128 Hz because of fixed scale factor.
-
+    #define configTICK_RATE_HZ            ( (TickType_t) 128 )          // MINIMUM for TIMER2 is 128 Hz because of fixed scale factor.
+    #define portTICK_PERIOD_MS  ( (TickType_t) ( 1000 / configTICK_RATE_HZ ) )
 #endif
-
-#define portTICK_PERIOD_MS  ( (TickType_t) 1000 / configTICK_RATE_HZ )
 
 //  XRAM device options. Different methods of enabling and driving.    MegaRAM only implemented for two banks of 56kByte currently.
 //  #define portMEGA_RAM                                            // Use the Rugged Circuits External (128kByte) MegaRAM device. - OR -
