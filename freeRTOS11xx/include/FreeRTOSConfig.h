@@ -77,7 +77,7 @@
 #define configTIMER_QUEUE_LENGTH            ( 10 )
 #define configTIMER_TASK_STACK_DEPTH        configMINIMAL_STACK_SIZE
 
-/* Set the stack depth type to be uint16_t. */
+/* Set the stack depth type to be uint16_t, otherwise it defaults to StackType_t */
 #define configSTACK_DEPTH_TYPE              uint16_t
 
 /* Set the stack pointer type to be uint16_t, otherwise it defaults to unsigned long */

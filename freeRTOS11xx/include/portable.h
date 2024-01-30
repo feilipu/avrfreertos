@@ -85,6 +85,10 @@
     #define portARCH_NAME    NULL
 #endif
 
+#ifndef configSTACK_DEPTH_TYPE
+    #define configSTACK_DEPTH_TYPE    StackType_t
+#endif
+
 #ifndef configSTACK_ALLOCATION_FROM_SEPARATE_HEAP
     /* Defaults to 0 for backward compatibility. */
     #define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP    0
