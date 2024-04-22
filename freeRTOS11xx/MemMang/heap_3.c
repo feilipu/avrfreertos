@@ -1,6 +1,6 @@
 /*
- * FreeRTOS Kernel V11.0.1
- * Copyright (C) 2021 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V11.1.0
+ * Copyright (C) 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * SPDX-License-Identifier: MIT
  *
@@ -90,5 +90,6 @@ void vPortFree( void * pv )
         ( void ) xTaskResumeAll();
     }
 }
+/*-----------------------------------------------------------*/
 
 #endif /* ( configSUPPORT_DYNAMIC_ALLOCATION > 0 ) */
