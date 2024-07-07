@@ -40,12 +40,12 @@
 #ifndef freeRTOSBoardDefs_h
 #define freeRTOSBoardDefs_h
 
+#include <avr/io.h>
+#include <avr/wdt.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <avr/io.h>
-#include <avr/wdt.h>
 
 /*
  * XXX Ping PD7 to check timing on interrupts.
