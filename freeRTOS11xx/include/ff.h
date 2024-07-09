@@ -22,10 +22,6 @@
 #ifndef FF_DEFINED
 #define FF_DEFINED    80286    /* Revision ID */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "FreeRTOS.h"
 #include "semphr.h"
 
@@ -75,6 +71,9 @@ typedef unsigned short  WCHAR;  /* 16-bit unsigned integer */
 typedef unsigned long   DWORD;  /* 32-bit unsigned integer */
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Type of file size and LBA variables */
 
