@@ -73,6 +73,6 @@ Standard C90 system_time is also available as an approximate RTC off other timer
 # Further Reading
 
 The canonical source for information is the [freeRTOS Web Site](http://www.freertos.org/).
-Within this site, the [Getting Started](http://www.freertos.org/FreeRTOS-quick-start-guide.html) page is very useful.
+Within this site, the [Getting Started](https://www.freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/02-Quick-start-guide) page is very useful.
 It is worth having a view from another user, and [manicbug](https://maniacbug.wordpress.com/2012/01/31/freertos/) has some interesting examples.
 This AVRfreeRTOS Repository has plenty of examples, ranging from [Blink](https://github.com/feilipu/avrfreertos/blob/master/MegaBlink/main.c) through to a [Synthesiser](https://github.com/feilipu/avrfreertos/tree/master/GA_Synth) for the Goldilocks Analogue.
