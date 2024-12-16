@@ -24,7 +24,7 @@ Going forward Sourceforge will be updated less often and only with major release
 # Getting Started
 
 To get started, follow the instructions on [freeRTOS & libraries for AVR ATmega](http://feilipu.me/freertos-and-libraries-for-avr-atmega).
-Then do some further reading on the [freeRTOS Quick Start Guide](http://www.freertos.org/FreeRTOS-quick-start-guide.html).
+Then do some further reading on the [freeRTOS Beginner's Guide](https://www.freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/00-Overview).
 
 If this repository is too complicated to get started, a [minimum AVR freeRTOS configured using the Watchdog Timer and Heap 3](https://github.com/feilipu/miniAVRfreeRTOS) is also also available.
 This option is without libraries, and is configured to get started with simple applications.
